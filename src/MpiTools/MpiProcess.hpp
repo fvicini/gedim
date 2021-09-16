@@ -1,10 +1,10 @@
-#ifndef __MPIPROCESS_H
-#define __MPIPROCESS_H
+#ifndef __GEDIM_MPIPROCESS_H
+#define __GEDIM_MPIPROCESS_H
 
 #include <vector>
 #include <string>
 
-#include "Output.hpp"
+#include "IOUtilities.hpp"
 #include "Eigen"
 using namespace Eigen;
 
@@ -46,5 +46,5 @@ namespace Gedim
 }
 
 
-#endif // __MPIPROCESS_H
+#endif // __GEDIM_MPIPROCESS_H
 

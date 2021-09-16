@@ -14,10 +14,10 @@
 //
 // First added:  2014-10-05
 
-#ifndef __OUTPUT_H
-#define __OUTPUT_H
+#ifndef __GEDIM_IOUtilities_H
+#define __GEDIM_IOUtilities_H
 
-#include "MacroDefinitions.hpp"
+#include "Macro.hpp"
 
 #if USE_MPI == 1
 #include <mpi.h>

@@ -1,7 +1,7 @@
-#ifndef __UTILITIES_H
-#define __UTILITIES_H
+#ifndef __GEDIM_UTILITIES_H
+#define __GEDIM_UTILITIES_H
 
-#include "Output.hpp"
+#include "IOUtilities.hpp"
 
 using namespace std;
 
@@ -24,4 +24,4 @@ namespace Gedim
   };
 }
 
-#endif // __UTILITIES_H
+#endif // __GEDIM_UTILITIES_H
