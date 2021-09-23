@@ -1,4 +1,4 @@
-#include "MeshDAOImporterFromCsv.hpp"
+#include "MeshDAOImporter2DFromCsv.hpp"
 #include <iostream>
 #include <fstream>
 #include "FileTextReader.hpp"
@@ -6,16 +6,16 @@
 namespace Gedim
 {
   // ***************************************************************************
-  MeshDAOImporterFromCsv::MeshDAOImporterFromCsv()
+  MeshDAOImporter2DFromCsv::MeshDAOImporter2DFromCsv()
   {
   }
-  MeshDAOImporterFromCsv::~MeshDAOImporterFromCsv()
+  MeshDAOImporter2DFromCsv::~MeshDAOImporter2DFromCsv()
   {
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell0Ds(IFileReader& csvFileReader,
-                                             const char& separator,
-                                             IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell0Ds(IFileReader& csvFileReader,
+                                               const char& separator,
+                                               vector<Cell0D>& cell0Ds) const
   {
     /// Import Cell0Ds
     {
@@ -31,11 +31,12 @@ namespace Gedim
 
       if (numCell0Ds > 0)
       {
-        Cell0D cell0D;
-        mesh.Cell0DsInitialize(numCell0Ds);
+        cell0Ds.resize(numCell0Ds);
         for (unsigned int v = 0; v < numCell0Ds; v++)
         {
           istringstream converter(cell0DsLines[v + 1]);
+
+          Cell0D& cell0D = cell0Ds[v];
 
           char temp;
           converter >> cell0D.Id;
@@ -54,19 +55,14 @@ namespace Gedim
           if (separator != ' ')
             converter >> temp;
           converter >> cell0D.Z;
-
-          mesh.Cell0DSetId(v, cell0D.Id);
-          mesh.Cell0DSetMarker(v, cell0D.Marker);
-          mesh.Cell0DSetState(v, cell0D.Active);
-          mesh.Cell0DInsertCoordinates(v, Vector3d(cell0D.X, cell0D.Y, cell0D.Z));
         }
       }
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell1Ds(IFileReader& csvFileReader,
-                                             const char& separator,
-                                             IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell1Ds(IFileReader& csvFileReader,
+                                               const char& separator,
+                                               vector<Cell1D>& cell1Ds) const
   {
     /// Import Cell1Ds
     {
@@ -82,11 +78,12 @@ namespace Gedim
 
       if (numCell1Ds > 0)
       {
-        Cell1D cell1D;
-        mesh.Cell1DsInitialize(numCell1Ds);
+        cell1Ds.resize(numCell1Ds);
         for (unsigned int e = 0; e < numCell1Ds; e++)
         {
           istringstream converter(cell1DsLines[e + 1]);
+
+          Cell1D& cell1D = cell1Ds[e];
 
           char temp;
           converter >> cell1D.Id;
@@ -102,21 +99,14 @@ namespace Gedim
           if (separator != ' ')
             converter >> temp;
           converter >> cell1D.End;
-
-          mesh.Cell1DSetId(e, cell1D.Id);
-          mesh.Cell1DSetMarker(e, cell1D.Marker);
-          mesh.Cell1DSetState(e, cell1D.Active);
-          mesh.Cell1DInsertExtremes(e,
-                                    cell1D.Origin,
-                                    cell1D.End);
         }
       }
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell2Ds(IFileReader& csvFileReader,
-                                             const char& separator,
-                                             IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell2Ds(IFileReader& csvFileReader,
+                                               const char& separator,
+                                               vector<Cell2D>& cell2Ds) const
   {
     /// Import Cell2Ds
     {
@@ -132,12 +122,12 @@ namespace Gedim
 
       if (numCell2Ds > 0)
       {
-        Cell2D cell2D;
-
-        mesh.Cell2DsInitialize(numCell2Ds);
+        cell2Ds.resize(numCell2Ds);
         for (unsigned int f = 0; f < numCell2Ds; f++)
         {
           istringstream converter(cell2DsLines[f + 1]);
+
+          Cell2D& cell2D = cell2Ds[f];
 
           char temp;
           converter >> cell2D.Id;
@@ -177,121 +167,85 @@ namespace Gedim
             if (separator != ' ')
               converter >> temp;
           }
-
-          mesh.Cell2DSetId(f, cell2D.Id);
-          mesh.Cell2DSetMarker(f, cell2D.Marker);
-          mesh.Cell2DSetState(f, cell2D.Active);
-          mesh.Cell2DInitializeVertices(f, numCellVertices);
-          for (unsigned int v = 0; v < numCellVertices; v++)
-            mesh.Cell2DInsertVertex(f, v, cell2D.Vertices[v]);
-
-          mesh.Cell2DInitializeEdges(f, numCellEdges);
-          for (unsigned int e = 0; e < numCellEdges; e++)
-            mesh.Cell2DInsertEdge(f, e, cell2D.Edges[e]);
         }
       }
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell3Ds(IFileReader& csvFileReader,
-                                             const char& separator,
-                                             IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::CreateMesh2D(const vector<Cell0D>& cell0Ds,
+                                              const vector<Cell1D>& cell1Ds,
+                                              const vector<Cell2D>& cell2Ds,
+                                              IMeshDAO& mesh)
   {
-    /// Import Cell3Ds
+    unsigned int numCell0Ds = cell0Ds.size();
+    unsigned int numCell1Ds = cell1Ds.size();
+    unsigned int numCell2Ds = cell2Ds.size();
+    Eigen::MatrixXd meshCell0Ds(3, numCell0Ds);
+    Eigen::MatrixXi meshCell1Ds(2, numCell1Ds);
+    vector<Eigen::MatrixXi> meshCell2Ds(numCell2Ds);
+
+    for (unsigned int v = 0; v < numCell0Ds; v++)
     {
-      vector<string> cell3DsLines;
+      const Cell0D& cell0D = cell0Ds[v];
+      meshCell0Ds(0, v) = cell0D.X;
+      meshCell0Ds(1, v) = cell0D.Y;
+      meshCell0Ds(2, v) = cell0D.Z;
+    }
 
-      if (!csvFileReader.Open())
-        throw runtime_error("Error on mesh cell3Ds file");
+    for (unsigned int e = 0; e < numCell1Ds; e++)
+    {
+      const Cell1D& cell1D = cell1Ds[e];
+      meshCell1Ds(0, e) = cell1D.Origin;
+      meshCell1Ds(1, e) = cell1D.End;
+    }
 
-      csvFileReader.GetAllLines(cell3DsLines);
-      csvFileReader.Close();
-
-      unsigned int numCell3Ds = cell3DsLines.size() - 1;
-
-      if (numCell3Ds > 0)
+    for (unsigned int f = 0; f < numCell2Ds; f++)
+    {
+      const Cell2D& cell2D = cell2Ds[f];
+      Output::Assert(cell2D.Vertices.size() == cell2D.Edges.size());
+      const unsigned int numVertices = cell2D.Vertices.size();
+      Eigen::MatrixXi& polygon = meshCell2Ds[f];
+      polygon.resize(2,
+                     numVertices);
+      for (unsigned int v = 0; v < numVertices; v++)
       {
-        Cell3D cell3D;
-
-        mesh.Cell3DsInitialize(numCell3Ds);
-        for (unsigned int c = 0; c < numCell3Ds; c++)
-        {
-          istringstream converter(cell3DsLines[c + 1]);
-
-          char temp;
-          converter >> cell3D.Id;
-          if (separator != ' ')
-            converter >> temp;
-
-          converter >> cell3D.Marker;
-          if (separator != ' ')
-            converter >> temp;
-
-          converter >> cell3D.Active;
-          if (separator != ' ')
-            converter >> temp;
-
-          unsigned int numCellVertices;
-          converter >> numCellVertices;
-          if (separator != ' ')
-            converter >> temp;
-
-          cell3D.Vertices.resize(numCellVertices);
-          for (unsigned int v = 0; v < numCellVertices; v++)
-          {
-            converter >> cell3D.Vertices[v];
-            if (separator != ' ')
-              converter >> temp;
-          }
-
-          unsigned int numCellEdges;
-          converter >> numCellEdges;
-          if (separator != ' ')
-            converter >> temp;
-
-          cell3D.Edges.resize(numCellEdges);
-          for (unsigned int e = 0; e < numCellEdges; e++)
-          {
-            converter >> cell3D.Edges[e];
-            if (separator != ' ')
-              converter >> temp;
-          }
-
-          unsigned int numCellFaces;
-          converter >> numCellFaces;
-          if (separator != ' ')
-            converter >> temp;
-
-          cell3D.Faces.resize(numCellFaces);
-          for (unsigned int f = 0; f < numCellFaces; f++)
-          {
-            converter >> cell3D.Faces[f];
-            if (separator != ' ')
-              converter >> temp;
-          }
-
-          mesh.Cell3DSetId(c, cell3D.Id);
-          mesh.Cell3DSetMarker(c, cell3D.Marker);
-          mesh.Cell3DSetState(c, cell3D.Active);
-          mesh.Cell3DInitializeVertices(c, numCellVertices);
-          for (unsigned int v = 0; v < numCellVertices; v++)
-            mesh.Cell3DInsertVertex(c, v, cell3D.Vertices[v]);
-
-          mesh.Cell3DInitializeEdges(c, numCellEdges);
-          for (unsigned int e = 0; e < numCellEdges; e++)
-            mesh.Cell3DInsertEdge(c, e, cell3D.Edges[e]);
-
-          mesh.Cell3DInitializeFaces(c, numCellFaces);
-          for (unsigned int f = 0; f < numCellFaces; f++)
-            mesh.Cell3DInsertVertex(c, f, cell3D.Faces[f]);
-        }
+        polygon(0, v) = cell2D.Vertices[v];
+        polygon(1, v) = cell2D.Edges[v];
       }
+    }
+
+    mesh.FillMesh2D(meshCell0Ds,
+                    meshCell1Ds,
+                    meshCell2Ds);
+
+    for (unsigned int v = 0; v < numCell0Ds; v++)
+    {
+      const Cell0D& cell0D = cell0Ds[v];
+      mesh.Cell0DSetId(v, cell0D.Id);
+      mesh.Cell0DSetMarker(v, cell0D.Marker);
+      mesh.Cell0DSetState(v, cell0D.Active);
+    }
+
+    for (unsigned int e = 0; e < numCell1Ds; e++)
+    {
+      const Cell1D& cell1D = cell1Ds[e];
+      mesh.Cell1DSetId(e, cell1D.Id);
+      mesh.Cell1DSetMarker(e, cell1D.Marker);
+      mesh.Cell1DSetState(e, cell1D.Active);
+    }
+
+    for (unsigned int f = 0; f < numCell2Ds; f++)
+    {
+      const Cell2D& cell2D = cell2Ds[f];
+      mesh.Cell2DSetId(f, cell2D.Id);
+      mesh.Cell2DSetMarker(f, cell2D.Marker);
+      mesh.Cell2DSetState(f, cell2D.Active);
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell0DProperties(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell0DProperties(IFileReader& csvFileReader,
+                                                        const char& separator,
+                                                        IMeshDAO& mesh) const
   {
     /// Import Cell0DProperties
     {
@@ -343,10 +297,10 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell0DProperty(const unsigned int& propertyIndex,
-                                                    IFileReader& csvFileReader,
-                                                    const char& separator,
-                                                    IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell0DProperty(const unsigned int& propertyIndex,
+                                                      IFileReader& csvFileReader,
+                                                      const char& separator,
+                                                      IMeshDAO& mesh) const
   {
     /// Import Cell0DProperty
     {
@@ -395,9 +349,9 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell1DProperties(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell1DProperties(IFileReader& csvFileReader,
+                                                        const char& separator,
+                                                        IMeshDAO& mesh) const
   {
     /// Import Cell1DProperties
     {
@@ -449,10 +403,10 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell1DProperty(const unsigned int& propertyIndex,
-                                                    IFileReader& csvFileReader,
-                                                    const char& separator,
-                                                    IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell1DProperty(const unsigned int& propertyIndex,
+                                                      IFileReader& csvFileReader,
+                                                      const char& separator,
+                                                      IMeshDAO& mesh) const
   {
     /// Import Cell1DProperty
     {
@@ -501,9 +455,9 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell2DProperties(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell2DProperties(IFileReader& csvFileReader,
+                                                        const char& separator,
+                                                        IMeshDAO& mesh) const
   {
     /// Import Cell2DProperties
     {
@@ -555,10 +509,10 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell2DProperty(const unsigned int& propertyIndex,
-                                                    IFileReader& csvFileReader,
-                                                    const char& separator,
-                                                    IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell2DProperty(const unsigned int& propertyIndex,
+                                                      IFileReader& csvFileReader,
+                                                      const char& separator,
+                                                      IMeshDAO& mesh) const
   {
     /// Import Cell2DProperty
     {
@@ -607,115 +561,9 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell3DProperties(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
-  {
-    /// Import Cell3DProperties
-    {
-      vector<string> cell3DsLines;
-
-      if (!csvFileReader.Open())
-        throw runtime_error("Error on mesh cell3DProperties file");
-
-      csvFileReader.GetAllLines(cell3DsLines);
-      csvFileReader.Close();
-
-      unsigned int numCell3DProperties = cell3DsLines.size() - 1;
-
-      if (numCell3DProperties > 0)
-      {
-        CellProperty cellProperty;
-        mesh.Cell3DInitializeDoubleProperties(numCell3DProperties);
-        for (unsigned int p = 0; p < numCell3DProperties; p++)
-        {
-          istringstream converter(cell3DsLines[p + 1]);
-
-          if (separator == ' ')
-          {
-            char temp;
-            converter >> cellProperty.Id;
-            if (separator != ' ')
-              converter >> temp;
-            converter >> cellProperty.FilePath;
-          }
-          else
-          {
-            string tempStr;
-            converter >> tempStr;
-            vector<string> result = Output::StringSplit(tempStr, separator);
-            Output::Assert(result.size() == 2);
-
-            cellProperty.Id = result[0];
-            cellProperty.FilePath = result[1];
-          }
-
-          unsigned int pIndex = mesh.Cell3DAddDoubleProperty(cellProperty.Id);
-          FileReader propertyFileReader(cellProperty.FilePath);
-          ImportCell3DProperty(pIndex,
-                               propertyFileReader,
-                               separator,
-                               mesh);
-        }
-      }
-    }
-  }
-  // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell3DProperty(const unsigned int& propertyIndex,
-                                                    IFileReader& csvFileReader,
-                                                    const char& separator,
-                                                    IMeshDAO& mesh) const
-  {
-    /// Import Cell3DProperty
-    {
-      vector<string> cell3DsLines;
-
-      if (!csvFileReader.Open())
-        throw runtime_error("Error on mesh cell3DProperty file");
-
-      csvFileReader.GetAllLines(cell3DsLines);
-      csvFileReader.Close();
-
-      unsigned int numCell3DProperty = cell3DsLines.size() - 1;
-
-      if (numCell3DProperty > 0)
-      {
-        CellProperty::Value cellProperty;
-        mesh.Cell3DInitializeDoubleProperties(numCell3DProperty);
-        for (unsigned int p = 0; p < numCell3DProperty; p++)
-        {
-          istringstream converter(cell3DsLines[p + 1]);
-
-          char temp;
-          converter >> cellProperty.CellId;
-          if (separator != ' ')
-            converter >> temp;
-          unsigned int numValues;
-          converter >> numValues;
-          cellProperty.Values.resize(numValues);
-          for (unsigned int v = 0; v < numValues; v++)
-          {
-            converter >> cellProperty.Values[v];
-            if (separator != ' ')
-              converter >> temp;
-          }
-
-          mesh.Cell3DInitializeDoublePropertyValues(cellProperty.CellId,
-                                                    propertyIndex,
-                                                    numValues);
-          for (unsigned int v = 0; v < numValues; v++)
-            mesh.Cell3DInsertDoublePropertyValue(cellProperty.CellId,
-                                                 propertyIndex,
-                                                 v,
-                                                 cellProperty.Values[v]);
-        }
-      }
-    }
-  }
-  // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell0DNeighbours(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell0DNeighbours(IFileReader& csvFileReader,
+                                                        const char& separator,
+                                                        IMeshDAO& mesh) const
   {
     /// Import Cell0DNeighbours
     {
@@ -813,9 +661,9 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell1DNeighbours(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::ImportCell1DNeighbours(IFileReader& csvFileReader,
+                                                        const char& separator,
+                                                        IMeshDAO& mesh) const
   {
     /// Import Cell1DNeighbours
     {
@@ -890,97 +738,32 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshDAOImporterFromCsv::ImportCell2DNeighbours(IFileReader& csvFileReader,
-                                                      const char& separator,
-                                                      IMeshDAO& mesh) const
+  void MeshDAOImporter2DFromCsv::Import(Configuration& configuration,
+                                        IMeshDAO& mesh)
   {
-    /// Import Cell2DNeighbours
-    {
-      vector<string> cell2DNeighboursLines;
+    vector<Cell0D> cell0Ds;
+    vector<Cell1D> cell1Ds;
+    vector<Cell2D> cell2Ds;
 
-      if (!csvFileReader.Open())
-        throw runtime_error("Error on mesh cell2DNeighbours file");
-
-      csvFileReader.GetAllLines(cell2DNeighboursLines);
-      csvFileReader.Close();
-
-      unsigned int numCell2DNeighbours = cell2DNeighboursLines.size() - 1;
-
-      if (numCell2DNeighbours > 0)
-      {
-        Cell2D cell2D;
-        for (unsigned int f = 0; f < numCell2DNeighbours; f++)
-        {
-          istringstream converter(cell2DNeighboursLines[f + 1]);
-
-          unsigned int cell2Did;
-          char temp;
-          converter >> cell2Did;
-          if (separator != ' ')
-            converter >> temp;
-
-          unsigned int numCell3DNeighbours;
-          converter >> numCell3DNeighbours;
-          if (separator != ' ')
-            converter >> temp;
-
-          cell2D.Cell3DNeighbours.resize(numCell3DNeighbours);
-          for (unsigned int n = 0; n < numCell3DNeighbours; n++)
-          {
-            converter >> cell2D.Cell3DNeighbours[n];
-            if (separator != ' ')
-              converter >> temp;
-          }
-
-          mesh.Cell2DInitializeNeighbourCell3Ds(f, numCell3DNeighbours);
-          for (unsigned int n = 0; n < numCell3DNeighbours; n++)
-          {
-            if (!mesh.Cell2DHasNeighbourCell3D(f, n))
-              continue;
-
-            mesh.Cell2DInsertNeighbourCell3D(f, n, cell2D.Cell3DNeighbours[n]);
-          }
-        }
-      }
-    }
-  }
-  // ***************************************************************************
-  void MeshDAOImporterFromCsv::Import(Configuration& configuration,
-                                      IMeshDAO& mesh)
-  {
     ImportCell0Ds(configuration.CsvCell0DsFile,
                   configuration.Separator,
-                  mesh);
+                  cell0Ds);
     ImportCell1Ds(configuration.CsvCell1DsFile,
                   configuration.Separator,
-                  mesh);
+                  cell1Ds);
     ImportCell2Ds(configuration.CsvCell2DsFile,
                   configuration.Separator,
-                  mesh);
-    ImportCell3Ds(configuration.CsvCell3DsFile,
-                  configuration.Separator,
-                  mesh);
+                  cell2Ds);
 
-    unsigned int meshDimension = 0;
-    if (mesh.Cell0DTotalNumber() > 0 &&
-        mesh.Cell1DTotalNumber() > 0 &&
-        mesh.Cell2DTotalNumber() == 0 &&
-        mesh.Cell3DTotalNumber() == 0)
-      meshDimension = 1;
-    else if (mesh.Cell0DTotalNumber() > 0 &&
-             mesh.Cell1DTotalNumber() > 0 &&
-             mesh.Cell2DTotalNumber() > 0 &&
-             mesh.Cell3DTotalNumber() == 0)
-      meshDimension = 2;
-    else if (mesh.Cell0DTotalNumber() > 0 &&
-             mesh.Cell1DTotalNumber() > 0 &&
-             mesh.Cell2DTotalNumber() > 0 &&
-             mesh.Cell3DTotalNumber() > 0)
-      meshDimension = 3;
-    else
-      throw runtime_error("Dimension of imported mesh not recognized");
+    CreateMesh2D(cell0Ds,
+                 cell1Ds,
+                 cell2Ds,
+                 mesh);
 
-    mesh.InitializeDimension(meshDimension);
+    Output::Assert(mesh.Cell0DTotalNumber() > 0 &&
+                   mesh.Cell1DTotalNumber() > 0 &&
+                   mesh.Cell2DTotalNumber() > 0 &&
+                   mesh.Cell3DTotalNumber() == 0);
 
     ImportCell0DProperties(configuration.CsvCell0DPropertiesFile,
                            configuration.Separator,
@@ -994,17 +777,10 @@ namespace Gedim
                            configuration.Separator,
                            mesh);
 
-    ImportCell3DProperties(configuration.CsvCell3DPropertiesFile,
-                           configuration.Separator,
-                           mesh);
-
     ImportCell0DNeighbours(configuration.CsvCell0DNeighboursFile,
                            configuration.Separator,
                            mesh);
     ImportCell1DNeighbours(configuration.CsvCell1DNeighboursFile,
-                           configuration.Separator,
-                           mesh);
-    ImportCell2DNeighbours(configuration.CsvCell2DNeighboursFile,
                            configuration.Separator,
                            mesh);
 

@@ -24,7 +24,7 @@ namespace Gedim
       /// \brief Initialize the Cell0Ds container
       /// \param numberCell0Ds the total number of Cell0Ds
       /// \note No reset of Cell0Ds is performed
-      virtual void Cell0DInitialize(const unsigned int numberCell0Ds) = 0;
+      virtual void Cell0DsInitialize(const unsigned int numberCell0Ds) = 0;
       /// \brief Append Cell0Ds to the Cell0Ds container
       /// \param numberCell0Ds the number of Cell0Ds to append
       /// \return the previous number of Cell0Ds before the append operation
@@ -198,9 +198,9 @@ namespace Gedim
       /// \param propertyIndex the index of Cell0D double property from 0 to Cell0DNumberProperties()
       /// \param propertyIndex the index of Cell0D double property from 0 to Cell0DNumberProperties()
       virtual void Cell0DInsertDoublePropertyValue(const unsigned int& cell0DIndex,
-                                                    const unsigned int& propertyIndex,
-                                                    const unsigned int& propertyValueIndex,
-                                                    const double& propertyValue) = 0;
+                                                   const unsigned int& propertyIndex,
+                                                   const unsigned int& propertyValueIndex,
+                                                   const double& propertyValue) = 0;
 
       /// \return the total number of double properties of Cell0Ds
       virtual unsigned int Cell0DNumberDoubleProperties() const = 0;
@@ -229,7 +229,7 @@ namespace Gedim
       /// \brief Initialize the Cell1Ds container
       /// \param numberCell1Ds the total number of Cell1Ds
       /// \note No reset of Cell1Ds is performed
-      virtual void Cell1DInitialize(const unsigned int numberCell1Ds) = 0;
+      virtual void Cell1DsInitialize(const unsigned int numberCell1Ds) = 0;
       /// \brief Append Cell1Ds to the Cell1Ds container
       /// \param numberCell1Ds the number of Cell1Ds to append
       /// \return the previous number of Cell1Ds before the append operation
@@ -237,13 +237,15 @@ namespace Gedim
       /// \brief Set the Cell1D Origin
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param originCell0DIndex the Cell0D index of Cell1D origin from 0 to Cell0DTotalNumber()
-      virtual void Cell1DInsertOrigin(const unsigned int& cell1DIndex,
-                                      const unsigned int& originCell0DIndex) = 0;
-      /// \brief Set the Cell1D End
-      /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param endCell0DIndex the Cell0D index of Cell1D end from 0 to Cell0DTotalNumber()
-      virtual void Cell1DInsertEnd(const unsigned int& cell1DIndex,
-                                   const unsigned int& endCell0DIndex) = 0;
+      virtual void Cell1DInsertExtremes(const unsigned int& cell1DIndex,
+                                        const unsigned int& originCell0DIndex,
+                                        const unsigned int& endCell0DIndex) = 0;
+      /// \return the Cell1D Index if Cell1D (origin->end) exists, Cell1DTotalNumber() otherwise
+      /// \param originCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
+      /// \param endCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
+      virtual unsigned int ExistsCell1D(const unsigned int& originCell0DIndex,
+                                        const unsigned int& endCell0DIndex) const = 0;
       /// \brief Set the Cell1D Id
       /// \param cell1DIndex the index of Cell0D from 0 to Cell1DTotalNumber()
       /// \param id the id of the Cell1D
@@ -385,9 +387,9 @@ namespace Gedim
       /// \param propertyIndex the index of Cell1D double property from 0 to Cell1DNumberProperties()
       /// \param propertyIndex the index of Cell1D double property from 0 to Cell1DNumberProperties()
       virtual void Cell1DInsertDoublePropertyValue(const unsigned int& cell1DIndex,
-                                                    const unsigned int& propertyIndex,
-                                                    const unsigned int& propertyValueIndex,
-                                                    const double& propertyValue) = 0;
+                                                   const unsigned int& propertyIndex,
+                                                   const unsigned int& propertyValueIndex,
+                                                   const double& propertyValue) = 0;
 
       /// \return the total number of double properties of Cell1Ds
       virtual unsigned int Cell1DNumberDoubleProperties() const = 0;
@@ -416,7 +418,7 @@ namespace Gedim
       /// \brief Initialize the Cell2Ds container
       /// \param numberCell2Ds the total number of Cell2Ds
       /// \note No reset of Cell2Ds is performed
-      virtual void Cell2DInitialize(const unsigned int numberCell2Ds) = 0;
+      virtual void Cell2DsInitialize(const unsigned int numberCell2Ds) = 0;
       /// \brief Append Cell2Ds to the Cell2Ds container
       /// \param numberCell2Ds the number of Cell2Ds to append
       /// \return the previous number of Cell2Ds before the append operation
@@ -580,9 +582,9 @@ namespace Gedim
       /// \param propertyIndex the index of Cell2D double property from 0 to Cell2DNumberProperties()
       /// \param propertyIndex the index of Cell2D double property from 0 to Cell2DNumberProperties()
       virtual void Cell2DInsertDoublePropertyValue(const unsigned int& cell2DIndex,
-                                                    const unsigned int& propertyIndex,
-                                                    const unsigned int& propertyValueIndex,
-                                                    const double& propertyValue) = 0;
+                                                   const unsigned int& propertyIndex,
+                                                   const unsigned int& propertyValueIndex,
+                                                   const double& propertyValue) = 0;
 
       /// \return the total number of double properties of Cell2Ds
       virtual unsigned int Cell2DNumberDoubleProperties() const = 0;
@@ -611,7 +613,7 @@ namespace Gedim
       /// \brief Initialize the Cell3Ds container
       /// \param numberCell3Ds the total number of Cell3Ds
       /// \note No reset of Cell3Ds is performed
-      virtual void Cell3DInitialize(const unsigned int numberCell3Ds) = 0;
+      virtual void Cell3DsInitialize(const unsigned int numberCell3Ds) = 0;
       /// \brief Append Cell3Ds to the Cell3Ds container
       /// \param numberCell3Ds the number of Cell3Ds to append
       /// \return the previous number of Cell3Ds before the append operation
@@ -767,9 +769,9 @@ namespace Gedim
       /// \param propertyIndex the index of Cell3D double property from 0 to Cell3DNumberProperties()
       /// \param propertyIndex the index of Cell3D double property from 0 to Cell3DNumberProperties()
       virtual void Cell3DInsertDoublePropertyValue(const unsigned int& cell3DIndex,
-                                                    const unsigned int& propertyIndex,
-                                                    const unsigned int& propertyValueIndex,
-                                                    const double& propertyValue) = 0;
+                                                   const unsigned int& propertyIndex,
+                                                   const unsigned int& propertyValueIndex,
+                                                   const double& propertyValue) = 0;
 
       /// \return the total number of double properties of Cell3Ds
       virtual unsigned int Cell3DNumberDoubleProperties() const = 0;
@@ -795,6 +797,17 @@ namespace Gedim
                                                const unsigned int& propertyIndex,
                                                const unsigned int& propertyValueIndex) const = 0;
 
+
+      /// \brief Fill a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell1Ds the origin and end as Eigen MatrixXd of cell1Ds, size 2xCell1DTotalNumber()
+      /// \param cell2Ds the vertices and edges indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()x2xCell2DNumberVertices()
+      virtual void FillMesh2D(const Eigen::MatrixXd& cell0Ds,
+                              const Eigen::MatrixXi& cell1Ds,
+                              const vector<Eigen::MatrixXi>& cell2Ds) = 0;
+
+      /// \brief Compact the mesh to save memory
+      virtual void Compress() = 0;
 
       /// \return The mesh converted to string
       virtual string ToString() = 0;
