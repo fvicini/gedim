@@ -2,6 +2,7 @@
 #define __GEOMETRYUTILITIES_H
 
 #include "Eigen"
+#include <iostream>
 
 using namespace std;
 
@@ -47,20 +48,20 @@ namespace Gedim
 
           struct SplitSegment
           {
-              struct SplitSegmentVertex final
+              struct Vertex final
               {
-                  enum Types {
-                    Unknown = -1,
-                    Vertex = 0,
-                    Edge = 1
+                  enum struct Types {
+                    Unknown = 0,
+                    Vertex = 1,
+                    Edge = 2
                   };
 
                   Types Type;
                   unsigned int Index;
               };
 
-              SplitSegmentVertex Origin;
-              SplitSegmentVertex End;
+              Vertex Origin;
+              Vertex End;
           };
 
           unsigned int NumberPolygonVertices;
@@ -70,7 +71,7 @@ namespace Gedim
 
       struct SplitPolygonResult final
       {
-          enum  Types
+          enum struct Types
           {
             Unknown = 0,
             NoAction = 1,
@@ -80,26 +81,26 @@ namespace Gedim
 
           struct NewVertex final
           {
-              enum  Types
+              enum struct Types
               {
                 Unknown = 0,
                 SegmentOrigin = 1,
                 SegmentEnd = 2
               };
 
-              Types Type = Unknown;
+              Types Type = Types::Unknown;
           };
 
           struct NewEdge final
           {
-              enum  Types
+              enum struct Types
               {
                 Unknown = 0,
                 EdgeNew = 1,
                 EdgeUpdate = 2
               };
 
-              Types Type = NewEdge::Unknown;
+              Types Type = Types::Unknown;
               unsigned int OldEdgeId = 0;
               unsigned int OriginId = 0;
               unsigned int EndId = 0;
@@ -128,7 +129,7 @@ namespace Gedim
             CoPlanarIntersecting = 3
           };
 
-          enum IntersectionSegmentTypes
+          enum struct IntersectionSegmentTypes
           {
             Unknown = 0,
             NoIntersection = 1,
@@ -138,7 +139,7 @@ namespace Gedim
 
           struct IntersectionPosition
           {
-              PointSegmentPositionTypes Type;
+              PointSegmentPositionTypes Type = PointSegmentPositionTypes::Unknown;
               double CurvilinearCoordinate = -1.0;
           };
 
@@ -157,8 +158,29 @@ namespace Gedim
           vector<IntersectionPosition> SecondSegmentIntersections; /// intersections of the second segment
       };
 
-      struct PointPolygonPositionResult final {
-          enum PositionTypes
+      struct IntersectionSegmentPlaneResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            SingleIntersection = 1,
+            NoIntersection = 2,
+            MultipleIntersections = 3
+          };
+
+          struct Intersection
+          {
+              PointSegmentPositionTypes Type = PointSegmentPositionTypes::Unknown;
+              double CurvilinearCoordinate = -1.0;
+          };
+
+          Types Type = Types::Unknown; ///< The intersection type
+          Intersection SingleIntersection; ///< The single intersection, available only is Type is SingleIntersection
+      };
+
+      struct PointPolygonPositionResult final
+      {
+          enum struct PositionTypes
           {
             Unknown = 0,
             Outside = 1,
@@ -337,34 +359,42 @@ namespace Gedim
       /// \param firstSegmentEnd first segment end
       /// \param secondSegmentOrigin second segment origin
       /// \param secondSegmentEnd second segment end
-      /// \param result the resulting intersection
+      /// \return the resulting intersection
       /// \note no check is performed
-      void IntersectionSegmentSegment(const Eigen::Vector3d& firstSegmentOrigin,
-                                      const Eigen::Vector3d& firstSegmentEnd,
-                                      const Eigen::Vector3d& secondSegmentOrigin,
-                                      const Eigen::Vector3d& secondSegmentEnd,
-                                      IntersectionSegmentSegmentResult& result) const;
+      IntersectionSegmentSegmentResult IntersectionSegmentSegment(const Eigen::Vector3d& firstSegmentOrigin,
+                                                                  const Eigen::Vector3d& firstSegmentEnd,
+                                                                  const Eigen::Vector3d& secondSegmentOrigin,
+                                                                  const Eigen::Vector3d& secondSegmentEnd) const;
+
+      /// \brief Intersection between a Segment, represented by origin and end and a plane
+      /// represented by the normal and a point
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segement end
+      /// \param planeNormal the plane normal
+      /// \param planeOrigin a plane point
+      /// \return the resulting intersection
+      IntersectionSegmentPlaneResult IntersectionSegmentPlane(const Eigen::Vector3d& segmentOrigin,
+                                                              const Eigen::Vector3d& segmentEnd,
+                                                              const Eigen::Vector3d& planeNormal,
+                                                              const Eigen::Vector3d& planeOrigin) const;
 
       /// \brief Check if point is inside a polygon
       /// \param point the point
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
       /// \param result the resulting position
-      void PointPolygonPosition(const Eigen::Vector3d& point,
-                                const Eigen::MatrixXd& polygonVertices,
-                                PointPolygonPositionResult& result) const;
+      PointPolygonPositionResult PointPolygonPosition(const Eigen::Vector3d& point,
+                                                      const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Split a polygon with n vertices numbered from 0 to n unclockwise given a segment contained inside
       /// \param input the input data
       /// \param result the resulting split
       /// \note only indices are threated in this function, no space points
-      void SplitPolygon(const SplitPolygonInput& input,
-                        SplitPolygonResult& result) const;
+      SplitPolygonResult SplitPolygon(const SplitPolygonInput& input) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
       /// \param normal the resulting normalized normal
-      void PolygonNormal(const Eigen::MatrixXd& polygonVertices,
-                         Eigen::Vector3d& normal) const;
+      Eigen::Vector3d PolygonNormal(const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Compute the rotation matrix and translation vector of a tridimensional Polygon
       /// \param polygonVertices the vertices of the polygon (size 3 x numVertices)
@@ -383,26 +413,32 @@ namespace Gedim
       /// \param rotationMatrix the rotation matrix from 2D to 3D
       /// \param translation the translation vector
       /// \param rotatedPoints the resulting rotated points (size 3 x numPoints) rP = Q * P + t
-      inline void RotatePointsFrom2DTo3D(const Eigen::MatrixXd& points,
-                                         const Eigen::Matrix3d& rotationMatrix,
-                                         const Eigen::Vector3d& translation,
-                                         Eigen::MatrixXd& rotatedPoints) const
+      inline Eigen::MatrixXd RotatePointsFrom2DTo3D(const Eigen::MatrixXd& points,
+                                                    const Eigen::Matrix3d& rotationMatrix,
+                                                    const Eigen::Vector3d& translation) const
       {
-        rotatedPoints = (rotationMatrix * points).colwise() + translation;
+        return (rotationMatrix * points).colwise() + translation;
       }
       /// \brief Rotate Points P From 3D To 2D using rotation matrix Q and translation t: Q * (P - t)
       /// \param points the points (size 3 x numPoints)
       /// \param rotationMatrix the rotation matrix from 3D to 2D
       /// \param translation the translation vector
       /// \param rotatedPoints the resulting rotated points (size 3 x numPoints) rP = Q * (P - t)
-      inline void RotatePointsFrom3DTo2D(const Eigen::MatrixXd& points,
-                                         const Eigen::Matrix3d& rotationMatrix,
-                                         const Eigen::Vector3d& translation,
-                                         Eigen::MatrixXd& rotatedPoints) const
+      inline Eigen::MatrixXd RotatePointsFrom3DTo2D(const Eigen::MatrixXd& points,
+                                                    const Eigen::Matrix3d& rotationMatrix,
+                                                    const Eigen::Vector3d& translation) const
       {
-        rotatedPoints = rotationMatrix * (points.colwise() - translation);
+        Eigen::MatrixXd rotatedPoints = rotationMatrix * (points.colwise() - translation);
         rotatedPoints.row(2).setZero();
+        return rotatedPoints;
       }
+
+      ///
+      /// \brief Compute the Convex Hull of 2D points
+      /// \param points the points, size 3 x numPoints
+      /// \return the convex hull indices, size numConvexHullPoints, numConvexHullPoints <= numPoints
+      /// \note works in 2D, use the Gift wrapping algorithm (see https://en.wikipedia.org/wiki/Gift_wrapping_algorithm)
+      vector<unsigned int> ConvexHull(const Eigen::MatrixXd& points);
   };
 }
 
