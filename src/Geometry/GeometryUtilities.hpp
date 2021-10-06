@@ -354,6 +354,18 @@ namespace Gedim
       /// \param result the point position on the line
       PointSegmentPositionTypes PointSegmentPosition(const double& curvilinearCoordinate) const;
 
+      /// \brief Project point on a segment line
+      /// \param point the point
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
+      /// \return the projected point
+      inline Eigen::Vector3d PointSegmentProjection(const Eigen::Vector3d& point,
+                                                    const Eigen::Vector3d& segmentOrigin,
+                                                    const Eigen::Vector3d& segmentEnd) const
+      {
+        return PointCurvilinearCoordinate(point, segmentOrigin, segmentEnd) * (segmentEnd - segmentOrigin) + segmentOrigin;
+      }
+
       /// \brief Compute the intersection between the two segments
       /// \param firstSegmentOrigin first segment origin
       /// \param firstSegmentEnd first segment end
@@ -397,7 +409,7 @@ namespace Gedim
       Eigen::Vector3d PolygonNormal(const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Compute the rotation matrix and translation vector of a tridimensional Polygon
-      /// \param polygonVertices the vertices of the polygon (size 3 x numVertices)
+      /// \param polygonVertices the vertices of the polygon unclockwise (size 3 x numVertices)
       /// \param normal the normalized normal of the plane which contains the polygon
       /// \param rotationMatrix the resulting rotation matrix Q which rotates 2D points to 3D points
       /// \param translation the resulting translation vector t which corresponds to the first vertex of the polygon
@@ -407,6 +419,13 @@ namespace Gedim
                            const Eigen::Vector3d& normal,
                            Eigen::Matrix3d& rotationMatrix,
                            Eigen::Vector3d& translation) const;
+
+      /// \brief Compute the rotation matrix of a plane
+      /// \param normal the normalized normal of the plane which contains the polygon
+      /// \retrun the resulting rotation matrix Q which rotates 2D points to 3D points
+      /// \note to rotate some point P from 2D to 3D use Q * P
+      /// \note to rotate some point P from 3D to 2D use Q^T * P
+      Eigen::Matrix3d PlaneRotation(const Eigen::Vector3d& planeNormal) const;
 
       /// \brief Rotate Points P From 2D To 3D using rotation matrix Q and translation t: Q * P + t
       /// \param points the points (size 3 x numPoints)
@@ -436,7 +455,7 @@ namespace Gedim
       ///
       /// \brief Compute the Convex Hull of 2D points
       /// \param points the points, size 3 x numPoints
-      /// \return the convex hull indices, size numConvexHullPoints, numConvexHullPoints <= numPoints
+      /// \return the convex hull indices unclockwise, size numConvexHullPoints, numConvexHullPoints <= numPoints
       /// \note works in 2D, use the Gift wrapping algorithm (see https://en.wikipedia.org/wiki/Gift_wrapping_algorithm)
       vector<unsigned int> ConvexHull(const Eigen::MatrixXd& points);
   };

@@ -1144,15 +1144,14 @@ namespace Gedim
     normal.setZero();
     unsigned int numVertices =  polygonVertices.cols();
 
-    for(unsigned int i = 0; i < numVertices; i++)
+    for (unsigned int i = 0; i < numVertices; i++)
     {
       Vector3d edge = polygonVertices.col((i + 1) % numVertices) - polygonVertices.col(i);
       Vector3d edgePrevious = polygonVertices.col((i - 1) % numVertices) - polygonVertices.col(i);
       normal.noalias() += edge.cross(edgePrevious);
     }
 
-    normal.normalize();
-    return normal;
+    return normal.normalized();
   }
   // ***************************************************************************
   void GeometryUtilities::PolygonRotation(const MatrixXd& polygonVertices,
@@ -1160,6 +1159,8 @@ namespace Gedim
                                           Matrix3d& rotationMatrix,
                                           Vector3d& translation) const
   {
+    Output::Assert(Compare1DValues(normal.norm(), 1.0) == CompareTypes::Coincident);
+
     unsigned int numVertices = polygonVertices.cols();
     MatrixXd Z(3, numVertices);
     MatrixXd W(3, numVertices);
@@ -1194,6 +1195,25 @@ namespace Gedim
     translation = polygonVertices.col(0);
   }
   // ***************************************************************************
+  Matrix3d GeometryUtilities::PlaneRotation(const Eigen::Vector3d& planeNormal) const
+  {
+    Matrix3d Q;
+    Q.setIdentity();
+
+    Output::Assert(Compare1DValues(planeNormal.norm(), 1.0) == CompareTypes::Coincident);
+
+    // if planeNormal is already oriented as z-axis the return the identity
+    const double n_xy = sqrt(planeNormal.x() * planeNormal.x() + planeNormal.y() * planeNormal.y());
+    if (IsValue1DZero(n_xy))
+      return Q;
+
+    Q.col(0)<< -planeNormal.y() / n_xy, planeNormal.x() / n_xy, 0.0;
+    Q.col(1)<< -planeNormal.x() * planeNormal.z() / n_xy, -planeNormal.y() * planeNormal.z() / n_xy, n_xy;
+    Q.col(2)<< planeNormal;
+
+    return Q;
+  }
+  // ***************************************************************************
   vector<unsigned int> GeometryUtilities::ConvexHull(const Eigen::MatrixXd& points)
   {
     // pseudocode
@@ -1206,8 +1226,8 @@ namespace Gedim
     //     endpoint := S[0]      // initial endpoint for a candidate edge on the hull
     //     for j from 0 to |S| do
     //         // endpoint == pointOnHull is a rare case and can happen only when j == 1 and a better endpoint has not yet been set for the loop
-    //         if (endpoint == pointOnHull) or (S[j] is on left of line from P[i] to endpoint) then
-    //             endpoint := S[j]   // found greater left turn, update endpoint
+    //         if (endpoint == pointOnHull) or (S[j] is on right of line from P[i] to endpoint) then
+    //             endpoint := S[j]   // found greater right turn, update endpoint
     //     i := i + 1
     //     pointOnHull = endpoint
     // until endpoint = P[0]      // wrapped around to first hull point
@@ -1232,11 +1252,12 @@ namespace Gedim
         if ((endpoint == pointOnHull) ||
             PointSegmentPosition(points.col(j),
                                  points.col(pointOnHull),
-                                 points.col(endpoint)) == GeometryUtilities::PointSegmentPositionTypes::LeftTheSegment)
+                                 points.col(endpoint)) == GeometryUtilities::PointSegmentPositionTypes::RightTheSegment)
           endpoint = j;
       }
+      pointOnHull = endpoint;
     }
-    while (pointOnHull == convexHull.front());
+    while (pointOnHull != convexHull.front());
 
     return vector<unsigned int>(convexHull.begin(), convexHull.end());
   }
