@@ -3,6 +3,7 @@
 
 #include "Eigen"
 #include <iostream>
+#include "IOUtilities.hpp"
 
 using namespace std;
 
@@ -140,7 +141,7 @@ namespace Gedim
           struct IntersectionPosition
           {
               PointSegmentPositionTypes Type = PointSegmentPositionTypes::Unknown;
-              double CurvilinearCoordinate = -1.0;
+              double CurvilinearCoordinate = 0.0;
           };
 
           IntersectionLineTypes IntersectionLinesType = IntersectionLineTypes::Unknown;
@@ -171,11 +172,39 @@ namespace Gedim
           struct Intersection
           {
               PointSegmentPositionTypes Type = PointSegmentPositionTypes::Unknown;
-              double CurvilinearCoordinate = -1.0;
+              double CurvilinearCoordinate = 0.0;
           };
 
           Types Type = Types::Unknown; ///< The intersection type
           Intersection SingleIntersection; ///< The single intersection, available only is Type is SingleIntersection
+      };
+
+      struct IntersectionPolyhedronPlaneResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            None = 1, ///< No intersection found
+            OnVertex = 2, ///< On polyhedron vertex
+            OnEdge = 3, ///< On polyhedron edge
+            OnFace = 4, ///< On polyhedron face
+            NewPolygon = 5 ///< New polygon intersection
+          };
+
+          struct EdgeIntersection final
+          {
+              IntersectionSegmentPlaneResult::Intersection Intersection;
+              unsigned int EdgeId = 0;
+          };
+
+          struct VertexIntersection final
+          {
+              unsigned int VertexId = 0;
+          };
+
+          Types Type = Types::Unknown; ///< The intersection type
+          map<unsigned int, VertexIntersection> VertexIntersections = {}; ///< Vertex intersections
+          map<unsigned int, EdgeIntersection> EdgeIntersections = {}; ///< Edge intersections
       };
 
       struct PointPolygonPositionResult final
@@ -191,6 +220,13 @@ namespace Gedim
 
           unsigned int BorderIndex = 0; ///< index of vertex/edge of border
           PositionTypes PositionType = PositionTypes::Unknown;
+      };
+
+      struct Polyhedron final
+      {
+          Eigen::MatrixXd Vertices; ///< vertices, size 3 x numVertices
+          Eigen::MatrixXi Edges; ///< edges, size 2 x numEdges
+          std::vector<Eigen::MatrixXi> Faces; ///< faces vertices and edges˝, size numFaces x 2 x numFaceVertices
       };
 
     private:
@@ -358,12 +394,12 @@ namespace Gedim
       /// \param point the point
       /// \param segmentOrigin the segment origin
       /// \param segmentEnd the segment end
-      /// \return the projected point
-      inline Eigen::Vector3d PointSegmentProjection(const Eigen::Vector3d& point,
-                                                    const Eigen::Vector3d& segmentOrigin,
-                                                    const Eigen::Vector3d& segmentEnd) const
+      /// \return the projected point curvilinear coordinate
+      inline double PointSegmentProjection(const Eigen::Vector3d& point,
+                                           const Eigen::Vector3d& segmentOrigin,
+                                           const Eigen::Vector3d& segmentEnd) const
       {
-        return PointCurvilinearCoordinate(point, segmentOrigin, segmentEnd) * (segmentEnd - segmentOrigin) + segmentOrigin;
+        return PointCurvilinearCoordinate(point, segmentOrigin, segmentEnd);
       }
 
       /// \brief Compute the intersection between the two segments
@@ -382,13 +418,26 @@ namespace Gedim
       /// represented by the normal and a point
       /// \param segmentOrigin the segment origin
       /// \param segmentEnd the segement end
-      /// \param planeNormal the plane normal
+      /// \param planeNormal the plane normal normalized
       /// \param planeOrigin a plane point
       /// \return the resulting intersection
       IntersectionSegmentPlaneResult IntersectionSegmentPlane(const Eigen::Vector3d& segmentOrigin,
                                                               const Eigen::Vector3d& segmentEnd,
                                                               const Eigen::Vector3d& planeNormal,
                                                               const Eigen::Vector3d& planeOrigin) const;
+
+      /// \brief Intersection between a Polyhedron and a Plane
+      /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
+      /// \param polyhedronEdges the polyhedron edges, size 2 x numEdges
+      /// \param polyhedronFaces the polyhedron face vertices and edges, size numFaces x 2 x numVertices
+      /// \param planeNormal the plane normal normalized
+      /// \param planeOrigin the plane origin
+      /// \return the intersection result
+      IntersectionPolyhedronPlaneResult IntersectionPolyhedronPlane(const Eigen::MatrixXd& polyhedronVertices,
+                                                                    const Eigen::MatrixXi& polyhedronEdges,
+                                                                    const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                    const Eigen::Vector3d& planeNormal,
+                                                                    const Eigen::Vector3d& planeOrigin) const;
 
       /// \brief Check if point is inside a polygon
       /// \param point the point
@@ -420,6 +469,12 @@ namespace Gedim
                            Eigen::Matrix3d& rotationMatrix,
                            Eigen::Vector3d& translation) const;
 
+      /// \brief Check if Polygon is Convex
+      /// \param polygonVertices the polygon vertices, size 3 x numVertices
+      /// \return true if polygon is convex, false otherwise
+      /// \note works only in 2D-plane
+      bool PolygonIsConvex(const Eigen::MatrixXd& polygonVertices) const;
+
       /// \brief Compute the rotation matrix of a plane
       /// \param normal the normalized normal of the plane which contains the polygon
       /// \retrun the resulting rotation matrix Q which rotates 2D points to 3D points
@@ -434,8 +489,9 @@ namespace Gedim
       /// \param rotatedPoints the resulting rotated points (size 3 x numPoints) rP = Q * P + t
       inline Eigen::MatrixXd RotatePointsFrom2DTo3D(const Eigen::MatrixXd& points,
                                                     const Eigen::Matrix3d& rotationMatrix,
-                                                    const Eigen::Vector3d& translation) const
+                                                    const Eigen::Vector3d& translation = Eigen::Vector3d::Zero()) const
       {
+        Gedim::Output::Assert(points.row(2).isZero(_configuration.Tolerance));
         return (rotationMatrix * points).colwise() + translation;
       }
       /// \brief Rotate Points P From 3D To 2D using rotation matrix Q and translation t: Q * (P - t)
@@ -445,19 +501,40 @@ namespace Gedim
       /// \param rotatedPoints the resulting rotated points (size 3 x numPoints) rP = Q * (P - t)
       inline Eigen::MatrixXd RotatePointsFrom3DTo2D(const Eigen::MatrixXd& points,
                                                     const Eigen::Matrix3d& rotationMatrix,
-                                                    const Eigen::Vector3d& translation) const
+                                                    const Eigen::Vector3d& translation = Eigen::Vector3d::Zero()) const
       {
         Eigen::MatrixXd rotatedPoints = rotationMatrix * (points.colwise() - translation);
         rotatedPoints.row(2).setZero();
         return rotatedPoints;
       }
 
-      ///
       /// \brief Compute the Convex Hull of 2D points
       /// \param points the points, size 3 x numPoints
       /// \return the convex hull indices unclockwise, size numConvexHullPoints, numConvexHullPoints <= numPoints
       /// \note works in 2D, use the Gift wrapping algorithm (see https://en.wikipedia.org/wiki/Gift_wrapping_algorithm)
       vector<unsigned int> ConvexHull(const Eigen::MatrixXd& points);
+
+      /// \brief Create a Tetrahedron with origin and dimension
+      /// \param origin the origin
+      /// \param lengthVector the length vector
+      /// \param heightVector the heigth vector
+      /// \param widthVector the width vector
+      /// \return the tetrahedron created
+      Polyhedron CreateTetrahedronWithOrigin(const Eigen::Vector3d& origin,
+                                             const Eigen::Vector3d& lengthVector,
+                                             const Eigen::Vector3d& heightVector,
+                                             const Eigen::Vector3d& widthVector);
+
+      /// \brief Create a Tetrahedron with the four vertices
+      /// \param v1 the first vertex
+      /// \param v2 the second vertex
+      /// \param v3 the third vertex
+      /// \param v4 the fourth vertex
+      /// \return the tetrahedron created
+      Polyhedron CreateTetrahedronWithVertices(const Eigen::Vector3d& v1,
+                                               const Eigen::Vector3d& v2,
+                                               const Eigen::Vector3d& v3,
+                                               const Eigen::Vector3d& v4);
   };
 }
 
