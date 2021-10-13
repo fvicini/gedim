@@ -18,7 +18,7 @@ list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/UnionMeshSegment.hpp)
 list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtilities.hpp)
 list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/ConformerMeshSegment.hpp)
 list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/ConformerMeshPolygon.hpp)
-list(APPEND src_sources ${CMAKE_CURRENT_SOURCE_DIR}/MeshFromCsvUtilities.hpp)
+list(APPEND src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshFromCsvUtilities.hpp)
 
 list(APPEND src_include ${CMAKE_CURRENT_SOURCE_DIR})
 
