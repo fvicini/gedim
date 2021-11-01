@@ -85,7 +85,7 @@ namespace Gedim
     return true;
   }
   // ***************************************************************************
-  vector<unsigned int> GeometryUtilities::PolygonTriangulation(const Eigen::MatrixXd& polygonVertices) const
+  vector<unsigned int> GeometryUtilities::PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const
   {
     Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
 
@@ -109,6 +109,117 @@ namespace Gedim
     Output::Assert(triangleList.size() % 3 == 0);
 
     return vector<unsigned int>(triangleList.begin(), triangleList.end());
+  }
+  // ***************************************************************************
+  vector<unsigned int> GeometryUtilities::PolygonTriangulationByInternalPoint(const Eigen::MatrixXd& polygonVertices,
+                                                                              const Eigen::Vector3d& point) const
+  {
+    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+    Output::Assert(PointPolygonPosition(point, polygonVertices).Type == PointPolygonPositionResult::Types::Inside);
+
+    const unsigned int numPolygonVertices = polygonVertices.cols();
+    vector<unsigned int> triangles(3 * numPolygonVertices);
+
+    for (unsigned int v = 0; v < numPolygonVertices; v++)
+    {
+      triangles[3 * v] = numPolygonVertices;
+      triangles[3 * v + 1] = v;
+      triangles[3 * v + 2] = (v + 1) % numPolygonVertices;
+    }
+
+    Output::Assert(triangles.size() % 3 == 0);
+
+    return triangles;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PolygonCirclePositionTypes GeometryUtilities::PolygonCirclePosition(const Eigen::MatrixXd& polygonVertices,
+                                                                                         const Eigen::Vector3d& circleCenter,
+                                                                                         const double& circleRadius,
+                                                                                         const vector<PointCirclePositionResult>& vertexPositions,
+                                                                                         const IntersectionPolygonCircleResult& polygonCircleIntersections) const
+  {
+    // check circle center position respect the polygon
+    GeometryUtilities::PointPolygonPositionResult centerPosition = PointPolygonPosition(circleCenter,
+                                                                                        polygonVertices);
+    Output::Assert(centerPosition.Type != Gedim::GeometryUtilities::PointPolygonPositionResult::Types::Unknown);
+
+    const unsigned int numVertices = polygonVertices.cols();
+    const unsigned int numIntersections = polygonCircleIntersections.Intersections.size();
+
+    // compute polygon vertices position respect the circle
+    bool oneVertexOutsideCircle = false;
+    for (unsigned int v = 0; v < numVertices; v++)
+    {
+      if (vertexPositions[v] == PointCirclePositionResult::Outside)
+        oneVertexOutsideCircle = true;
+    }
+
+    switch (centerPosition.Type)
+    {
+      case Gedim::GeometryUtilities::PointPolygonPositionResult::Types::Outside:
+      {
+        // the circle is outside the polygon
+        if (oneVertexOutsideCircle &&
+            numIntersections == 0) // vertices are far from the circle, no intersection found
+          return PolygonCirclePositionTypes::PolygonOutsideCircleNoIntersection;
+        else if (!oneVertexOutsideCircle &&
+                 numIntersections == 0) // all vertices are inside the circle and there are no intersections then the polygon is inside the circle
+          return PolygonCirclePositionTypes::PolygonInsideCircleNoIntersection;
+        else if (oneVertexOutsideCircle &&
+                 numIntersections == 1) // at least one vertex is outside the circle and only one intersection found, the circle is outside and touches the polygon in one vertex
+        {
+          if (polygonCircleIntersections.Intersections[0].IndexType == IntersectionPolygonCircleResult::Intersection::IndexTypes::Vertex)
+            return PolygonCirclePositionTypes::PolygonOutsideCircleOneIntersectionOnVertex;
+          else if (polygonCircleIntersections.Intersections[0].IndexType == IntersectionPolygonCircleResult::Intersection::IndexTypes::Edge &&
+                   polygonCircleIntersections.Intersections[0].Type == IntersectionPolygonCircleResult::Intersection::Types::Tangent)
+            return PolygonCirclePositionTypes::PolygonOutsideCircleOneIntersectionTangentOnEdge;
+        }
+        else if (!oneVertexOutsideCircle &&
+                 numIntersections == 1) // all vertices are inside the circle and one intersection found
+          return PolygonCirclePositionTypes::PolygonInsideCircleOneVertexIntersection;
+        else if (numIntersections > 1)
+          return PolygonCirclePositionTypes::CirclePolygonMultipleIntersections;
+      }
+      break;
+      case Gedim::GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge:
+      case Gedim::GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex:
+      case Gedim::GeometryUtilities::PointPolygonPositionResult::Types::Inside:
+      {
+        // the circle center is inside the polygon
+        if (oneVertexOutsideCircle &&
+            numIntersections == 0) // if at least one vertex is ouside the circle and there are no intersections than the circle is inside the polygon
+          return PolygonCirclePositionTypes::CircleInsidePolygonNoIntersection;
+        else if (!oneVertexOutsideCircle &&
+                 numIntersections == 0) // if at least a vertex is not outside the circle and there are no intersections then the polygon is inside the circle
+          return PolygonCirclePositionTypes::PolygonInsideCircleNoIntersection;
+        else if (numIntersections == 1) // only one intersection found, the circle touch the polygon tangent in one edge
+          return PolygonCirclePositionTypes::CircleInsidePolygonOneIntersectionTangentOnEdge;
+        else if (numIntersections > 1)
+        {
+          // check if the circle intersects only the vertices (a sort of circumscribed circle)
+          bool onlyVerticesIntersections = true;
+          for (unsigned int i = 0; i < numIntersections; i++)
+          {
+            if (polygonCircleIntersections.Intersections[i].IndexType !=
+                IntersectionPolygonCircleResult::Intersection::IndexTypes::Vertex)
+            {
+              onlyVerticesIntersections = false;
+              break;
+            }
+          }
+
+          if (onlyVerticesIntersections)
+            return PolygonCirclePositionTypes::PolygonInsideCircleIntersectionOnlyOnVertices;
+
+          return PolygonCirclePositionTypes::CirclePolygonMultipleIntersections;
+        }
+      }
+      break;
+      default:
+      break;
+    }
+
+    throw runtime_error("PolygonCirclePosition failed");
   }
   // ***************************************************************************
 }

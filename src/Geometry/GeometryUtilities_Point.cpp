@@ -54,7 +54,7 @@ namespace Gedim
     if (Compare1DValues(curvilinearCoordinate, 1.0) == CompareTypes::SecondBeforeFirst)
       return PointSegmentPositionTypes::OnSegmentLineAfterEnd;
 
-    return PointSegmentPositionTypes::Unknown;
+    throw runtime_error("PointSegmentPosition failed");
   }
   // ***************************************************************************
   GeometryUtilities::PointPolygonPositionResult GeometryUtilities::PointPolygonPosition(const Vector3d& point,
@@ -74,35 +74,66 @@ namespace Gedim
 
       if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::RightTheSegment)
       {
-        result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::Outside;
+        result.Type = GeometryUtilities::PointPolygonPositionResult::Types::Outside;
         return result;
       }
       else if (resultSegment != GeometryUtilities::PointSegmentPositionTypes::LeftTheSegment)
       {
         if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::InsideSegment)
         {
-          result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderEdge;
+          result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge;
           result.BorderIndex = v;
         }
         else if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::OnSegmentOrigin)
         {
-          result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderVertex;
+          result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
           result.BorderIndex = v;
         }
         else if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::OnSegmentEnd)
         {
-          result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderVertex;
+          result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
           result.BorderIndex = (v + 1) % numVertices;
         }
         else
-          result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::Outside;
+          result.Type = GeometryUtilities::PointPolygonPositionResult::Types::Outside;
 
         return result;
       }
     }
 
-    result.PositionType = GeometryUtilities::PointPolygonPositionResult::PositionTypes::Inside;
+    result.Type = GeometryUtilities::PointPolygonPositionResult::Types::Inside;
     return result;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PointCirclePositionResult GeometryUtilities::PointCirclePosition(const Eigen::Vector3d& point,
+                                                                                      const Eigen::Vector3d& circleCenter,
+                                                                                      const double& circleRadius) const
+  {
+    CompareTypes comparison = Compare1DValues(circleRadius, PointDistance(circleCenter,
+                                                                          point));
+    if (comparison == CompareTypes::FirstBeforeSecond)
+      return PointCirclePositionResult::Outside;
+    else if (comparison == CompareTypes::Coincident)
+      return PointCirclePositionResult::OnBorder;
+    else
+      return PointCirclePositionResult::Inside;
+  }
+  // ***************************************************************************
+  vector<GeometryUtilities::PointCirclePositionResult> GeometryUtilities::PointCirclePositions(const Eigen::MatrixXd& points,
+                                                                                               const Eigen::Vector3d& circleCenter,
+                                                                                               const double& circleRadius) const
+  {
+    const unsigned int numVertices = points.cols();
+    vector<PointCirclePositionResult> positions(numVertices);
+
+    for (unsigned int v = 0; v < numVertices; v++)
+    {
+      positions[v] = PointCirclePosition(points.col(v),
+                                         circleCenter,
+                                         circleRadius);
+    }
+
+    return positions;
   }
   // ***************************************************************************
 }

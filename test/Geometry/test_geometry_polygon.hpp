@@ -185,7 +185,11 @@ namespace GedimUnitTesting {
         polygonVertices.col(1)<< 1.0, 0.0, 0.0;
         polygonVertices.col(2)<< 0.0, 1.0, 0.0;
 
-        ASSERT_EQ(geometryUtility.PolygonTriangulation(polygonVertices), vector<unsigned int>({ 0, 1, 2 }));
+        Eigen::Vector3d internalPoint(0.25, 0.25, 0.0);
+
+        ASSERT_EQ(geometryUtility.PolygonTriangulationByFirstVertex(polygonVertices), vector<unsigned int>({ 0, 1, 2 }));
+        ASSERT_EQ(geometryUtility.PolygonTriangulationByInternalPoint(polygonVertices,
+                                                                      internalPoint), vector<unsigned int>({ 3, 0, 1, 3, 1, 2, 3, 2, 0 }));
       }
 
       // check square triangulation
@@ -196,8 +200,306 @@ namespace GedimUnitTesting {
         polygonVertices.col(2)<< 1.0, 1.0, 0.0;
         polygonVertices.col(3)<< 0.0, 1.0, 0.0;
 
-        ASSERT_EQ(geometryUtility.PolygonTriangulation(polygonVertices), vector<unsigned int>({ 0, 1, 2, 0, 2, 3 }));
+        Eigen::Vector3d internalPoint(0.25, 0.25, 0.0);
+
+        ASSERT_EQ(geometryUtility.PolygonTriangulationByFirstVertex(polygonVertices), vector<unsigned int>({ 0, 1, 2, 0, 2, 3 }));
+        ASSERT_EQ(geometryUtility.PolygonTriangulationByInternalPoint(polygonVertices,
+                                                                      internalPoint), vector<unsigned int>({ 4, 0, 1, 4, 1, 2, 4, 2, 3, 4, 3, 0 }));
       }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolygonCirclePosition)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check circle outside and no intersection
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonOutsideCircleNoIntersection);
+      }
+
+      // check Polygon Inside Circle with center outside no intersections
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.0, 3.0, 0.0);
+        double circleRadius = 10.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonInsideCircleNoIntersection);
+      }
+
+      // Polygon Inside Circle with center outside one intersection
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(sqrt(2.0), sqrt(2.0), 0.0);
+        double circleRadius = 2.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonInsideCircleOneVertexIntersection);
+      }
+
+      // check circle inside polygon no intersection
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.25, 0.25, 0.0);
+        double circleRadius = 0.125;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::CircleInsidePolygonNoIntersection);
+      }
+
+      // check Polygon Inside Circle with center inside no intersection
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.25, 0.25, 0.0);
+        double circleRadius = 10.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonInsideCircleNoIntersection);
+      }
+
+      // check Polygon inside Circle intersects only vertices
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.5, 0.5, 0.0);
+        double circleRadius = sqrt(2) / 2;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonInsideCircleIntersectionOnlyOnVertices);
+      }
+
+      // check Circle Outside Polygon one intersection
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.0, 2.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonOutsideCircleOneIntersectionOnVertex);
+      }
+
+      // check Circle outside Polygon tangent to edge
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.5, -1.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::PolygonOutsideCircleOneIntersectionTangentOnEdge);
+      }
+
+      // check Circle inside Polygon tangent to edge
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.5, 0.125, 0.0);
+        double circleRadius = 0.125;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::CircleInsidePolygonOneIntersectionTangentOnEdge);
+      }
+
+      // check Circle Outside Polygon Intersects With Multiple SubPolygons
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.5, 0.55, 0.0);
+        double circleRadius = 0.5;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::CirclePolygonMultipleIntersections);
+      }
+
+      // check Circle Inside Polygon Intersects With Multiple SubPolygons
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        Eigen::Vector3d circleCenter(0.5, 0.5, 0.0);
+        double circleRadius = 0.5;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::CirclePolygonMultipleIntersections);
+      }
+
+      // check generic intersections with quadrilateral
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 1.0, 3.0, 0.0;
+        polygonVertices.col(1)<< 3.0, 3.0 - 2.0 / sqrt(3.0), 0.0;
+        polygonVertices.col(2)<< 4.0 + 1.0 / 10.0, 3.0, 0.0;
+        polygonVertices.col(3)<< 3.0, 4.0, 0.0;
+        Eigen::Vector3d circleCenter(3.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::IntersectionPolygonCircleResult polygonCircleIntersections = geometryUtility.IntersectionPolygonCircle(polygonVertices,
+                                                                                                                                         circleCenter,
+                                                                                                                                         circleRadius);
+
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> vertexPositions = geometryUtility.PointCirclePositions(polygonVertices,
+                                                                                                                           circleCenter,
+                                                                                                                           circleRadius);
+        Gedim::GeometryUtilities::PolygonCirclePositionTypes position = geometryUtility.PolygonCirclePosition(polygonVertices,
+                                                                                                              circleCenter,
+                                                                                                              circleRadius,
+                                                                                                              vertexPositions,
+                                                                                                              polygonCircleIntersections);
+        ASSERT_EQ(position, Gedim::GeometryUtilities::PolygonCirclePositionTypes::CirclePolygonMultipleIntersections);}
     }
     catch (const exception& exception)
     {

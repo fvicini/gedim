@@ -39,6 +39,44 @@ namespace Gedim
         RightTheSegment = 7
       };
 
+      enum struct PolygonCirclePositionTypes {
+        Unknown = 0,
+        PolygonOutsideCircleNoIntersection = 1,
+        PolygonOutsideCircleOneIntersectionOnVertex = 2,
+        PolygonOutsideCircleOneIntersectionTangentOnEdge = 3,
+        CircleInsidePolygonNoIntersection = 4,
+        CircleInsidePolygonOneIntersectionTangentOnEdge = 5,
+        PolygonInsideCircleNoIntersection = 6,
+        PolygonInsideCircleOneVertexIntersection = 7,
+        PolygonInsideCircleIntersectionOnlyOnVertices = 8,
+        CirclePolygonMultipleIntersections = 9
+      };
+
+      struct IntersectionPolygonCircleResult final
+      {
+          struct Intersection final
+          {
+              enum struct Types {
+                Unknown = 0,
+                Secant = 1,
+                Tangent = 2
+              };
+
+              enum struct IndexTypes {
+                Unknown = 0,
+                Vertex = 1,
+                Edge = 2
+              };
+
+              Types Type = Types::Unknown;
+              IndexTypes IndexType = IndexTypes::Unknown;
+              unsigned int Index;
+              double CurvilinearCoordinate; ///< Valid only in IndexType Edge
+          };
+
+          vector<Intersection> Intersections = {}; ///< ordered by edge order
+      };
+
       struct SplitPolygonInput final
       {
           struct AlignedEdge
@@ -70,7 +108,7 @@ namespace Gedim
           SplitSegment Segment;
       };
 
-      struct SplitPolygonResult final
+      struct SplitPolygonWithSegmentResult final
       {
           enum struct Types
           {
@@ -120,6 +158,67 @@ namespace Gedim
           vector<NewPolygon> NewPolygons = {};
       };
 
+      struct SplitPolygonWithCircleResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            NoAction = 1,
+            PolygonUpdate = 2,
+            PolygonCreation = 3
+          };
+
+          struct NewVertex final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                PolygonVertex = 1,
+                CircleIntersection = 2,
+                Both = 3
+              };
+
+              Types Type = Types::Unknown;
+              unsigned int PolygonIndex; ///< Index in polygon vertices
+              unsigned int IntersectionIndex; ///< Index in circle intersections
+          };
+
+          struct NewEdge final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                Segment = 1,
+                Arc = 2
+              };
+
+              Types Type = Types::Unknown;
+              unsigned int PolygonIndex; ///< Index in polygon or in circle intersections
+          };
+
+          struct NewPolygon final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                InsideOnlyCircle = 1,
+                InsideOnlyPolygon = 2,
+                InsideCircleAndPolygon = 3
+              };
+
+              Types Type = Types::Unknown;
+              vector<unsigned int> Vertices = {};
+              vector<unsigned int> Edges = {};
+          };
+
+          Types Type = Types::Unknown;
+          vector<unsigned int> PolygonVerticesNewVerticesPosition = {};
+          vector<unsigned int> CircleIntersectionsNewVerticesPosition = {};
+          vector<NewVertex> NewVertices = {};
+          vector<NewVertex> NewEdges = {};
+          vector<NewPolygon> NewPolygons = {};
+      };
+
       struct IntersectionSegmentSegmentResult final
       {
           enum struct IntersectionLineTypes
@@ -157,6 +256,27 @@ namespace Gedim
           /// \brief intersections of the second segment,
           /// \note if multiple intersections are found, than the origin and the end coordinate are stored
           vector<IntersectionPosition> SecondSegmentIntersections; /// intersections of the second segment
+      };
+
+      struct IntersectionSegmentCircleResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            NoIntersection = 1,
+            TangentIntersection = 2,
+            TwoIntersections = 3
+          };
+
+          struct IntersectionPosition
+          {
+              PointSegmentPositionTypes Type = PointSegmentPositionTypes::Unknown;
+              double CurvilinearCoordinate = 0.0;
+          };
+
+          Types Type = Types::Unknown;
+          /// \brief intersections of the segment,
+          vector<IntersectionPosition> SegmentIntersections = {};
       };
 
       struct IntersectionSegmentPlaneResult final
@@ -243,9 +363,18 @@ namespace Gedim
           Eigen::MatrixXd IntersectionCoordinates; ///< The resulting intersection coordinates
       };
 
+      enum struct PointCirclePositionResult
+      {
+        Unknown = 0,
+        Outside = 1,
+        OnBorder = 2,
+        Inside = 3
+      };
+
+
       struct PointPolygonPositionResult final
       {
-          enum struct PositionTypes
+          enum struct Types
           {
             Unknown = 0,
             Outside = 1,
@@ -255,7 +384,7 @@ namespace Gedim
           };
 
           unsigned int BorderIndex = 0; ///< index of vertex/edge of border
-          PositionTypes PositionType = PositionTypes::Unknown;
+          Types Type = Types::Unknown;
       };
 
       struct Polyhedron final
@@ -458,6 +587,18 @@ namespace Gedim
                                                                   const Eigen::Vector3d& secondSegmentOrigin,
                                                                   const Eigen::Vector3d& secondSegmentEnd) const;
 
+      /// \brief Compute the intersection between the a segment and a circle
+      /// \param segmentOrigin first segment origin
+      /// \param segmentEnd first segment end
+      /// \param circleCenter circle center
+      /// \param circleRadius circle radius
+      /// \return the resulting intersection
+      /// \note tested only in 2D
+      IntersectionSegmentCircleResult IntersectionSegmentCircle(const Eigen::Vector3d& segmentOrigin,
+                                                                const Eigen::Vector3d& segmentEnd,
+                                                                const Eigen::Vector3d& circleCenter,
+                                                                const double& circleRadius) const;
+
       /// \brief Intersection between a Segment, represented by origin and end and a plane
       /// represented by the normal and a point
       /// \param segmentOrigin the segment origin
@@ -493,17 +634,83 @@ namespace Gedim
       PointPolygonPositionResult PointPolygonPosition(const Eigen::Vector3d& point,
                                                       const Eigen::MatrixXd& polygonVertices) const;
 
-      /// \brief Convex Polygon simple Triangulation
+      /// \brief Check if point is inside a circle
+      /// \param point the point
+      /// \param circleCenter the circle center
+      /// \param circleRadius the circle radius
+      /// \param result the resulting position
+      /// \note tested only in 2D
+      PointCirclePositionResult PointCirclePosition(const Eigen::Vector3d& point,
+                                                    const Eigen::Vector3d& circleCenter,
+                                                    const double& circleRadius) const;
+
+      /// \brief Check if points are inside a circle
+      /// \param points the matrix of points (size 3 x numVertices)
+      /// \param circleCenter the circle center
+      /// \param circleRadius the circle radius
+      /// \param result the resulting positions
+      /// \note tested only in 2D
+      vector<PointCirclePositionResult> PointCirclePositions(const Eigen::MatrixXd& points,
+                                                             const Eigen::Vector3d& circleCenter,
+                                                             const double& circleRadius) const;
+
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \param circleCenter the circle center
+      /// \param circleRadius the circle radius
+      /// \param vertexPositions the polygon vertices positions respect the circle
+      /// \param polygonCircleIntersections the polygon center intersections
+      /// \return the Polygon Circle reciprocal position
+      /// \note tested only in 2D
+      PolygonCirclePositionTypes PolygonCirclePosition(const Eigen::MatrixXd& polygonVertices,
+                                                       const Eigen::Vector3d& circleCenter,
+                                                       const double& circleRadius,
+                                                       const vector<PointCirclePositionResult>& vertexPositions,
+                                                       const IntersectionPolygonCircleResult& polygonCircleIntersections) const;
+
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \param circleCenter the circle center
+      /// \param circleRadius the circle radius
+      /// \return the Polygon Circle reciprocal intersections
+      /// \note tested only in 2D
+      IntersectionPolygonCircleResult IntersectionPolygonCircle(const Eigen::MatrixXd& polygonVertices,
+                                                                const Eigen::Vector3d& circleCenter,
+                                                                const double& circleRadius) const;
+
+      /// \brief Convex Polygon simple Triangulation from the first vertex
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
       /// \return the sub-division triangulation, size 1 x 3 * numTriangles
       /// \note works only for convex polygon
-      vector<unsigned int> PolygonTriangulation(const Eigen::MatrixXd& polygonVertices) const;
+      vector<unsigned int> PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Convex Polygon simple Triangulation from the first vertex
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param point internal polygon point
+      /// \return the sub-division triangulation, size 1 x 3 * numPolygonVertices, the point index is numPolygonVertices
+      vector<unsigned int> PolygonTriangulationByInternalPoint(const Eigen::MatrixXd& polygonVertices,
+                                                               const Eigen::Vector3d& point) const;
 
       /// \brief Split a polygon with n vertices numbered from 0 to n unclockwise given a segment contained inside
       /// \param input the input data
       /// \param result the resulting split
       /// \note only indices are threated in this function, no space points
-      SplitPolygonResult SplitPolygon(const SplitPolygonInput& input) const;
+      SplitPolygonWithSegmentResult SplitPolygonWithSegment(const SplitPolygonInput& input) const;
+
+      /// \brief Split a polygon with n vertices numbered from 0 to n unclockwise given a cirle
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \param circleCenter the circle center
+      /// \param circleRadius the circle radius
+      /// \param vertexPositions the polygon vertices positions respect the circle
+      /// \param polygonCircleIntersections the polygon center intersections
+      /// \param polygonCirclePosition the polygon position respect the circle
+      /// \note tested only in 2D
+      /// \return the split result
+      /// \note only indices are threated in this function, no space points
+      SplitPolygonWithCircleResult SplitPolygonWithCircle(const Eigen::MatrixXd& polygonVertices,
+                                                          const Eigen::Vector3d& circleCenter,
+                                                          const double& circleRadius,
+                                                          const vector<PointCirclePositionResult>& vertexPositions,
+                                                          const IntersectionPolygonCircleResult& polygonCircleIntersections,
+                                                          const PolygonCirclePositionTypes& polygonCirclePosition) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)

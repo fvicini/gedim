@@ -293,7 +293,7 @@ namespace GedimUnitTesting {
 
         Gedim::GeometryUtilities::PointPolygonPositionResult result = geometryUtility.PointPolygonPosition(point,
                                                                                                            polygonVertices);
-        ASSERT_EQ(result.PositionType, Gedim::GeometryUtilities::PointPolygonPositionResult::PositionTypes::Outside);
+        ASSERT_EQ(result.Type, Gedim::GeometryUtilities::PointPolygonPositionResult::Types::Outside);
       }
 
       // check border
@@ -306,13 +306,13 @@ namespace GedimUnitTesting {
         // border edge
         Gedim::GeometryUtilities::PointPolygonPositionResult resultBorderEdge= geometryUtility.PointPolygonPosition(Eigen::Vector3d(0.5, 0.5, 0.0),
                                                                                                                     polygonVertices);
-        ASSERT_EQ(resultBorderEdge.PositionType, Gedim::GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderEdge);
+        ASSERT_EQ(resultBorderEdge.Type, Gedim::GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge);
         ASSERT_EQ(resultBorderEdge.BorderIndex, 1);
 
         // border vertex
         Gedim::GeometryUtilities::PointPolygonPositionResult resultBorderVertex = geometryUtility.PointPolygonPosition(Eigen::Vector3d(1.0, 0.0, 0.0),
                                                                                                                        polygonVertices);
-        ASSERT_EQ(resultBorderVertex.PositionType, Gedim::GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderVertex);
+        ASSERT_EQ(resultBorderVertex.Type, Gedim::GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex);
         ASSERT_EQ(resultBorderVertex.BorderIndex, 1);
       }
 
@@ -326,7 +326,7 @@ namespace GedimUnitTesting {
 
         Gedim::GeometryUtilities::PointPolygonPositionResult result = geometryUtility.PointPolygonPosition(point,
                                                                                                            polygonVertices);
-        ASSERT_EQ(result.PositionType, Gedim::GeometryUtilities::PointPolygonPositionResult::PositionTypes::Inside);
+        ASSERT_EQ(result.Type, Gedim::GeometryUtilities::PointPolygonPositionResult::Types::Inside);
       }
 
       // check on vertex
@@ -339,7 +339,77 @@ namespace GedimUnitTesting {
 
         Gedim::GeometryUtilities::PointPolygonPositionResult result = geometryUtility.PointPolygonPosition(point,
                                                                                                            polygonVertices);
-        ASSERT_EQ(result.PositionType, Gedim::GeometryUtilities::PointPolygonPositionResult::PositionTypes::BorderVertex);
+        ASSERT_EQ(result.Type, Gedim::GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPointCirclePosition)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check point outside
+      {
+        Eigen::Vector3d point(6.0, 4.0, 0.0);
+        Eigen::Vector3d circleCenter(0.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::PointCirclePositionResult result = geometryUtility.PointCirclePosition(point,
+                                                                                                         circleCenter,
+                                                                                                         circleRadius);
+        ASSERT_EQ(result, Gedim::GeometryUtilities::PointCirclePositionResult::Outside);
+      }
+
+      // check point on border
+      {
+        Eigen::Vector3d point(0.0, 4.0, 0.0);
+        Eigen::Vector3d circleCenter(0.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::PointCirclePositionResult result = geometryUtility.PointCirclePosition(point,
+                                                                                                         circleCenter,
+                                                                                                         circleRadius);
+        ASSERT_EQ(result, Gedim::GeometryUtilities::PointCirclePositionResult::OnBorder);
+      }
+
+      // check point inside
+      {
+        Eigen::Vector3d point(0.1, 2.5, 0.0);
+        Eigen::Vector3d circleCenter(0.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        Gedim::GeometryUtilities::PointCirclePositionResult result = geometryUtility.PointCirclePosition(point,
+                                                                                                         circleCenter,
+                                                                                                         circleRadius);
+        ASSERT_EQ(result, Gedim::GeometryUtilities::PointCirclePositionResult::Inside);
+      }
+
+      // check generic points
+      {
+        Eigen::MatrixXd points(3, 4);
+        points.col(0)<< 1.0, 3.0, 0.0;
+        points.col(1)<< 3.0, 3.0 - 2.0 / sqrt(3.0), 0.0;
+        points.col(2)<< 4.0 + 1.0 / 10.0, 3.0, 0.0;
+        points.col(3)<< 3.0, 4.0, 0.0;
+        Eigen::Vector3d circleCenter(3.0, 3.0, 0.0);
+        double circleRadius = 1.0;
+
+        vector<Gedim::GeometryUtilities::PointCirclePositionResult> result = geometryUtility.PointCirclePositions(points,
+                                                                                                                  circleCenter,
+                                                                                                                  circleRadius);
+        ASSERT_EQ(result.size(), 4);
+        ASSERT_EQ(result[0], Gedim::GeometryUtilities::PointCirclePositionResult::Outside);
+        ASSERT_EQ(result[1], Gedim::GeometryUtilities::PointCirclePositionResult::Outside);
+        ASSERT_EQ(result[2], Gedim::GeometryUtilities::PointCirclePositionResult::Outside);
+        ASSERT_EQ(result[3], Gedim::GeometryUtilities::PointCirclePositionResult::OnBorder);
       }
     }
     catch (const exception& exception)
