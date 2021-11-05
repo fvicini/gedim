@@ -241,6 +241,10 @@ namespace Gedim
       result.SingleIntersection.CurvilinearCoordinate = planeNormal.dot(planeOrigin - segmentOrigin) /
                                                         planeNormal.dot(t);
       result.SingleIntersection.Type = PointSegmentPosition(result.SingleIntersection.CurvilinearCoordinate);
+      if (result.SingleIntersection.Type == PointSegmentPositionTypes::OnSegmentOrigin)
+        result.SingleIntersection.CurvilinearCoordinate = 0.0;
+      else if (result.SingleIntersection.Type == PointSegmentPositionTypes::OnSegmentEnd)
+        result.SingleIntersection.CurvilinearCoordinate = 1.0;
     }
 
     return result;
