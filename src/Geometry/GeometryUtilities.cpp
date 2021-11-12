@@ -16,7 +16,7 @@ namespace Gedim
   }
 
   Eigen::VectorXd GeometryUtilities::PointDistances(const Eigen::MatrixXd& points,
-                                                   const Eigen::Vector3d& point) const
+                                                    const Eigen::Vector3d& point) const
   {
     return (points.colwise() - point).colwise().norm();
   }
@@ -127,6 +127,16 @@ namespace Gedim
     while (pointOnHull != convexHull.front());
 
     return vector<unsigned int>(convexHull.begin(), convexHull.end());
+  }
+  // ***************************************************************************
+  MatrixXd GeometryUtilities::ExtractPoints(const Eigen::MatrixXd& points,
+                                            const vector<unsigned int>& filter) const
+  {
+    Eigen::MatrixXd extraction(3, filter.size());
+    for (unsigned int c = 0; c < filter.size(); c++)
+      extraction.col(c) = points.col(filter[c]);
+
+    return extraction;
   }
   // ***************************************************************************
 }

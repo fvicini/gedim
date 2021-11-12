@@ -21,14 +21,24 @@ namespace Gedim
       const GeometryUtilitiesConfig& _configuration;
 
     public:
-      enum struct CompareTypes {
+      enum struct CompareTypes
+      {
         Unknown = 0,
         FirstBeforeSecond = 1,
         Coincident = 2,
         SecondBeforeFirst = 3
       };
 
-      enum struct PointSegmentPositionTypes {
+      enum struct PolygonTypes
+      {
+        Unknown = 0,
+        Triangle = 1,
+        Quadrilateral = 2,
+        Generic = 3
+      };
+
+      enum struct PointSegmentPositionTypes
+      {
         Unknown = 0,
         OnSegmentLineBeforeOrigin = 1,
         OnSegmentOrigin = 2,
@@ -39,7 +49,8 @@ namespace Gedim
         RightTheSegment = 7
       };
 
-      enum struct PolygonCirclePositionTypes {
+      enum struct PolygonCirclePositionTypes
+      {
         Unknown = 0,
         PolygonOutsideCircleNoIntersection = 1,
         PolygonOutsideCircleOneIntersectionOnVertex = 2,
@@ -192,8 +203,17 @@ namespace Gedim
                 Arc = 2
               };
 
+              enum struct ArcTypes
+              {
+                Unknown = 0,
+                InsidePolygon = 1,
+                OutsidePolygon = 2
+              };
+
               Types Type = Types::Unknown;
-              unsigned int PolygonIndex; ///< Index in polygon or in circle intersections
+              ArcTypes ArcType = ArcTypes::Unknown; ///< Valid only if Type is Arc
+              vector<unsigned int> VertexIndices; ///< Index of vertices in NewVertices
+              unsigned int PolygonIndex; ///< Index of Edge in polygon intersections
           };
 
           struct NewPolygon final
@@ -215,7 +235,7 @@ namespace Gedim
           vector<unsigned int> PolygonVerticesNewVerticesPosition = {};
           vector<unsigned int> CircleIntersectionsNewVerticesPosition = {};
           vector<NewVertex> NewVertices = {};
-          vector<NewVertex> NewEdges = {};
+          vector<NewEdge> NewEdges = {};
           vector<NewPolygon> NewPolygons = {};
       };
 
@@ -775,6 +795,8 @@ namespace Gedim
       /// \note works only in 2D-plane
       bool PolygonIsConvex(const Eigen::MatrixXd& polygonVertices) const;
 
+      PolygonTypes PolygonType(const Eigen::MatrixXd& polygonVertices) const;
+
       /// \brief Compute the rotation matrix of a plane from 2D to 3D
       /// \param planeNormal the normalized normal of the plane
       /// \return the resulting rotation matrix Q which rotates 2D points to 3D points
@@ -825,6 +847,26 @@ namespace Gedim
       /// \return the convex hull indices unclockwise, size numConvexHullPoints, numConvexHullPoints <= numPoints
       /// \note works in 2D, use the Gift wrapping algorithm (see https://en.wikipedia.org/wiki/Gift_wrapping_algorithm)
       vector<unsigned int> ConvexHull(const Eigen::MatrixXd& points) const;
+
+      /// \brief Check if a set of points are aligned to a line identified by a segment
+      /// \param segmentOrigin segment origin of the line
+      /// \param segmentEnd segment end of the line
+      /// \param points the points, size 3 x numPoints
+      /// \return true if the i-th point is aligned, size 1 x numPoints
+      vector<bool> PointsAreAligned(const Eigen::Vector3d& segmentOrigin,
+                                    const Eigen::Vector3d& segmentEnd,
+                                    const Eigen::MatrixXd& points) const;
+
+      /// \brief Extract the circumscribed unaligned points (minimum 2) in a set of points
+      /// \param points the points, size 3 x numPoints
+      /// \return the unaligned points indices unclockwise, size numUnalignedPoints, 2 <= numUnalignedPoints <= numPoints
+      vector<unsigned int> UnalignedPoints(const Eigen::MatrixXd& points) const;
+
+      /// \param points the points, size 3 x numPoints
+      /// \param filter indices unclockwise, size numFilterPoints, numFilterPoints <= numPoints
+      /// \return the points coordinates filtered, size 3 x numFilterPoints
+      Eigen::MatrixXd ExtractPoints(const Eigen::MatrixXd& points,
+                                    const vector<unsigned int>& filter) const;
 
       /// \brief Create a Tetrahedron with origin and dimension
       /// \param origin the origin
