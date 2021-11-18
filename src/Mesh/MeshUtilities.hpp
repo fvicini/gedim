@@ -2,6 +2,7 @@
 #define __MeshUtilities_H
 
 #include "IMeshDAO.hpp"
+#include "GeometryUtilities.hpp"
 
 using namespace std;
 
@@ -28,9 +29,29 @@ namespace Gedim
       ~MeshUtilities();
 
       /// \brief Extract Active Cells from mesh
-      /// \note the data are duplied from mesh to extractedMesh
+      /// \note the resulting mesh has no inactive elements
       void ExtractActiveMesh(IMeshDAO& mesh,
                              ExtractActiveMeshData& extractionData) const;
+
+      /// \brief Fill Mesh 1D From segment Coordinates
+      /// \param segmentOrigin the segment origin
+      /// \param segmentTangent the segment tangent vector
+      /// \param coordinates relative coordinates between [0.0, 1.0]
+      /// \param mesh the resulting mesh
+      void FillMesh1D(const GeometryUtilities& geometryUtilities,
+                      const Eigen::Vector3d& segmentOrigin,
+                      const Eigen::Vector3d& segmentTangent,
+                      const vector<double>& coordinates,
+                      IMeshDAO& mesh) const;
+
+      /// \brief Fill a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell1Ds the origin and end as Eigen MatrixXd of cell1Ds, size 2xCell1DTotalNumber()
+      /// \param cell2Ds the vertices and edges indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()x2xCell2DNumberVertices()
+      void FillMesh2D(const Eigen::MatrixXd& cell0Ds,
+                      const Eigen::MatrixXi& cell1Ds,
+                      const vector<Eigen::MatrixXi>& cell2Ds,
+                      IMeshDAO& mesh) const;
   };
 
 }

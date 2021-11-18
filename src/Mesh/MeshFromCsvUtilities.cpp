@@ -2,6 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include "FileTextReader.hpp"
+#include "MeshUtilities.hpp"
+
+using namespace Eigen;
 
 namespace Gedim
 {
@@ -56,9 +59,12 @@ namespace Gedim
       }
     }
 
-    mesh.FillMesh2D(meshCell0Ds,
-                    meshCell1Ds,
-                    meshCell2Ds);
+    MeshUtilities meshUtilities;
+
+    meshUtilities.FillMesh2D(meshCell0Ds,
+                             meshCell1Ds,
+                             meshCell2Ds,
+                             mesh);
 
     for (unsigned int v = 0; v < numCell0Ds; v++)
     {
