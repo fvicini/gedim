@@ -452,7 +452,7 @@ namespace Gedim
     unsigned int e = mesh2D.Cell1DAppend(splitResult.NewEdges.size());
     unsigned int c = mesh2D.Cell2DAppend(splitResult.NewPolygons.size());
 
-    // if (cell2DMesh2DId == 15)
+    // if (cell2DMesh2DId == 59)
     // {
     //   cerr<< "Cell "<< cell2DMesh2DId<< endl;
     //   cerr<< "Num Original Vertices "<< mesh2D.Cell2DNumberVertices(cell2DMesh2DId)<< endl;
@@ -703,12 +703,35 @@ namespace Gedim
 
     Output::Assert(cell2DMesh2DsToUpdate.size() == 1);
 
-    unsigned int cell1DMesh2DToUpdate = mesh1D.Segments[cell1DMesh1DIds.front()].Edge2DIds.back();
+    const Gedim::ConformerMeshSegment::ConformMesh::ConformMeshSegment& originSegment = mesh1D.Segments[cell1DMesh1DIds.front()];
+    const Gedim::ConformerMeshSegment::ConformMesh::ConformMeshSegment& endSegment = mesh1D.Segments[cell1DMesh1DIds.back()];
+    const unsigned int originSegmentMesh2DCell0D = mesh1D.Points.at(originSegment.Points[0]).Vertex2DIds.back();
+    const unsigned int endSegmentMesh2DCell0D = mesh1D.Points.at(endSegment.Points[1]).Vertex2DIds.back();
+
+    unsigned int cell1DMesh2DToUpdate = originSegment.Edge2DIds.back();
 
     Output::Assert(!mesh2D.Cell1DHasUpdatedCell1Ds(cell1DMesh2DToUpdate));
 
-    const unsigned int numberNewCell0DMesh2D = cell1DMesh1DIds.size() - 1;
-    const unsigned int numberNewCell1DMesh2D = cell1DMesh1DIds.size();
+    // check order of edge and segment
+    bool edgeListDirection = true;
+    vector<unsigned int> cell1DMesh1DIdsRedirected;
+    if (originSegmentMesh2DCell0D == mesh2D.Cell1DOrigin(cell1DMesh2DToUpdate) &&
+        endSegmentMesh2DCell0D == mesh2D.Cell1DEnd(cell1DMesh2DToUpdate))
+    {
+      edgeListDirection = true;
+      cell1DMesh1DIdsRedirected = vector<unsigned int>(cell1DMesh1DIds.begin(), cell1DMesh1DIds.end());
+    }
+    else if (originSegmentMesh2DCell0D == mesh2D.Cell1DEnd(cell1DMesh2DToUpdate) &&
+             endSegmentMesh2DCell0D == mesh2D.Cell1DOrigin(cell1DMesh2DToUpdate))
+    {
+      edgeListDirection = false;
+      cell1DMesh1DIdsRedirected = vector<unsigned int>(cell1DMesh1DIds.rbegin(), cell1DMesh1DIds.rend());
+    }
+    else
+      throw runtime_error("Segment origin/end and edge origin/end are not correct");
+
+    const unsigned int numberNewCell0DMesh2D = cell1DMesh1DIdsRedirected.size() - 1;
+    const unsigned int numberNewCell1DMesh2D = cell1DMesh1DIdsRedirected.size();
     const unsigned int numberNewCell2DMesh2D = 1;
 
     vector<unsigned int> newCell0DMesh2Ds(numberNewCell0DMesh2D + 2);
@@ -722,7 +745,7 @@ namespace Gedim
     unsigned int v = mesh2D.Cell0DAppend(numberNewCell0DMesh2D);
 
     unsigned int counter = 0;
-    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
     {
       if (counter == 0)
       {
@@ -735,7 +758,7 @@ namespace Gedim
         throw runtime_error("Something goes wrong with update of " + to_string(cell1DMesh2DToUpdate) + " cell1DMesh2D in cell1DMesh1D " +to_string(cell1DMesh1DId));
 
       // insert only Cell1DMesh1D origin
-      const double& originCurvilinearCoordinate = segment.Points[0];
+      const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
 
       // add new Cell0Ds on Mesh2D
       const Vector3d newCell0DCoordinates = segmentOrigin + originCurvilinearCoordinate * segmentTangent;
@@ -758,7 +781,7 @@ namespace Gedim
     unsigned int c = mesh2D.Cell2DAppend(numberNewCell2DMesh2D);
 
     counter  = 0;
-    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
     {
       ConformerMeshSegment::ConformMesh::ConformMeshSegment& segment = mesh1D.Segments[cell1DMesh1DId];
       if (segment.Edge2DIds.back() != cell1DMesh2DToUpdate)
@@ -771,8 +794,8 @@ namespace Gedim
       mesh2D.Cell1DSetState(e, true);
 
       // update conform mesh 1D
-      const double& originCurvilinearCoordinate = segment.Points[0];
-      const double& endCurvilinearCoordinate = segment.Points[1];
+      const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
+      const double& endCurvilinearCoordinate = edgeListDirection ? segment.Points[1] : segment.Points[0];
       ConformerMeshSegment::ConformMesh::ConformMeshPoint& origin = mesh1D.Points[originCurvilinearCoordinate];
       ConformerMeshSegment::ConformMesh::ConformMeshPoint& end = mesh1D.Points[endCurvilinearCoordinate];
 
@@ -848,16 +871,19 @@ namespace Gedim
       }
 
       // update conform mesh 1D
-      for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+      for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
       {
         ConformerMeshSegment::ConformMesh::ConformMeshSegment& segment = mesh1D.Segments[cell1DMesh1DId];
-        const double& originCurvilinearCoordinate = segment.Points[0];
+        const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
         ConformerMeshSegment::ConformMesh::ConformMeshPoint& origin = mesh1D.Points[originCurvilinearCoordinate];
 
         segment.Cell2DIds.push_back(c);
         origin.Cell2DIds.push_back(c);
       }
-      mesh1D.Points[mesh1D.Segments[cell1DMesh1DIds.back()].Points[1]].Cell2DIds.push_back(c);
+      if (edgeListDirection)
+        mesh1D.Points[mesh1D.Segments[cell1DMesh1DIdsRedirected.back()].Points[1]].Cell2DIds.push_back(c);
+      else
+        mesh1D.Points[mesh1D.Segments[cell1DMesh1DIdsRedirected.back()].Points[0]].Cell2DIds.push_back(c);
 
       newCell2DMesh2Ds[counter] = c;
 
@@ -883,16 +909,58 @@ namespace Gedim
     mesh2D.Cell2DUpdatedCell2Ds(cell2DMesh2DId,
                                 cell2DMesh2DsToUpdate);
 
-    unsigned int cell1DMesh2DToUpdate = mesh1D.Segments[cell1DMesh1DIds.front()].Edge2DIds.front();
+    const Gedim::ConformerMeshSegment::ConformMesh::ConformMeshSegment& originSegment = mesh1D.Segments[cell1DMesh1DIds.front()];
+    const Gedim::ConformerMeshSegment::ConformMesh::ConformMeshSegment& endSegment = mesh1D.Segments[cell1DMesh1DIds.back()];
+    const unsigned int originSegmentMesh2DCell0D = mesh1D.Points.at(originSegment.Points[0]).Vertex2DIds.back();
+    const unsigned int endSegmentMesh2DCell0D = mesh1D.Points.at(endSegment.Points[1]).Vertex2DIds.back();
+
+    unsigned int cell1DMesh2DToUpdate = originSegment.Edge2DIds.front();
+
+    // if (cell2DMesh2DId == 59)
+    // {
+    //   cerr<< "cell1DMesh2DToUpdate "<< cell1DMesh2DToUpdate<< " ";
+    //   cerr<< "from "<< mesh2D.Cell1DOrigin(cell1DMesh2DToUpdate)<< " ";
+    //   cerr<< "to "<< mesh2D.Cell1DEnd(cell1DMesh2DToUpdate)<< endl;
+    //   cerr<< "cell1DMesh1DIds "<< cell1DMesh1DIds<< endl;
+    // }
 
     Output::Assert(!mesh2D.Cell1DHasUpdatedCell1Ds(cell1DMesh2DToUpdate));
 
-    const unsigned int numberNewCell0DMesh2D = cell1DMesh1DIds.size() - 1;
-    const unsigned int numberNewCell1DMesh2D = cell1DMesh1DIds.size();
+    // check order of edge and segment
+    bool edgeListDirection = true;
+    vector<unsigned int> cell1DMesh1DIdsRedirected;
+    if (originSegmentMesh2DCell0D == mesh2D.Cell1DOrigin(cell1DMesh2DToUpdate) &&
+        endSegmentMesh2DCell0D == mesh2D.Cell1DEnd(cell1DMesh2DToUpdate))
+    {
+      edgeListDirection = true;
+      cell1DMesh1DIdsRedirected = vector<unsigned int>(cell1DMesh1DIds.begin(), cell1DMesh1DIds.end());
+    }
+    else if (originSegmentMesh2DCell0D == mesh2D.Cell1DEnd(cell1DMesh2DToUpdate) &&
+             endSegmentMesh2DCell0D == mesh2D.Cell1DOrigin(cell1DMesh2DToUpdate))
+    {
+      edgeListDirection = false;
+      cell1DMesh1DIdsRedirected = vector<unsigned int>(cell1DMesh1DIds.rbegin(), cell1DMesh1DIds.rend());
+    }
+    else
+      throw runtime_error("Segment origin/end and edge origin/end are not correct");
+
+    const unsigned int numberNewCell0DMesh2D = cell1DMesh1DIdsRedirected.size() - 1;
+    const unsigned int numberNewCell1DMesh2D = cell1DMesh1DIdsRedirected.size();
     const unsigned int numberNewCell2DMesh2D = cell2DMesh2DsToUpdate.size();
 
-    // cerr<< "Insert "<< numberNewCell1DMesh2D<< " middle edges in old cell2D "<< cell2DMesh2DId<< " updated with "<< cell2DMesh2DsToUpdate<< " new cell2Ds"<< endl;
-
+    // if (cell2DMesh2DId == 59)
+    // {
+    //   cerr<< "Insert "<< numberNewCell1DMesh2D<< " middle edges in old cell2D "<< cell2DMesh2DId<< " updated with "<< cell2DMesh2DsToUpdate<< " new cell2Ds"<< endl;
+    //   for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
+    //   {
+    //     cerr<< "Segment "<< cell1DMesh1DId<< " ";
+    //     cerr<< "Points "<< mesh1D.Segments[cell1DMesh1DId].Points<< " ";
+    //     cerr<< "Ids "<< mesh1D.Points.at(mesh1D.Segments[cell1DMesh1DId].Points[0]).Vertex2DIds<< " ";
+    //     cerr<< "- "<< mesh1D.Points.at(mesh1D.Segments[cell1DMesh1DId].Points[1]).Vertex2DIds<< " ";
+    //     cerr<< "Edge2DIds "<< mesh1D.Segments[cell1DMesh1DId].Edge2DIds<< " ";
+    //     cerr<< "Cell2DIds "<< mesh1D.Segments[cell1DMesh1DId].Cell2DIds<< endl;
+    //   }
+    // }
     vector<unsigned int> newCell0DMesh2Ds(numberNewCell0DMesh2D + 2);
     vector<unsigned int> newCell1DMesh2Ds(numberNewCell1DMesh2D);
     vector<unsigned int> newCell2DMesh2Ds(numberNewCell2DMesh2D);
@@ -904,7 +972,7 @@ namespace Gedim
     unsigned int v = mesh2D.Cell0DAppend(numberNewCell0DMesh2D);
 
     unsigned int counter = 0;
-    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
     {
       if (counter == 0)
       {
@@ -917,7 +985,7 @@ namespace Gedim
         throw runtime_error("Something goes wrong with update of " + to_string(cell1DMesh2DToUpdate) + " cell1DMesh2D in cell1DMesh1D " +to_string(cell1DMesh1DId));
 
       // insert only Cell1DMesh1D origin
-      const double& originCurvilinearCoordinate = segment.Points[0];
+      const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
 
       // add new Cell0Ds on Mesh2D
       const Vector3d newCell0DCoordinates = segmentOrigin + originCurvilinearCoordinate * segmentTangent;
@@ -935,12 +1003,17 @@ namespace Gedim
       v++;
     }
 
+    // if (cell2DMesh2DId == 59)
+    // {
+    //   cerr<< "newCell0DMesh2Ds "<< newCell0DMesh2Ds<< endl;
+    // }
+
     // Insert new Cell1Ds and Cell2D in Mesh2D
     unsigned int e = mesh2D.Cell1DAppend(numberNewCell1DMesh2D);
     unsigned int c = mesh2D.Cell2DAppend(numberNewCell2DMesh2D);
 
     counter  = 0;
-    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+    for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
     {
       ConformerMeshSegment::ConformMesh::ConformMeshSegment& segment = mesh1D.Segments[cell1DMesh1DId];
       if (segment.Edge2DIds.front() != cell1DMesh2DToUpdate)
@@ -953,8 +1026,8 @@ namespace Gedim
       mesh2D.Cell1DSetState(e, true);
 
       // update conform mesh 1D
-      const double& originCurvilinearCoordinate = segment.Points[0];
-      const double& endCurvilinearCoordinate = segment.Points[1];
+      const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
+      const double& endCurvilinearCoordinate = edgeListDirection ? segment.Points[1] : segment.Points[0];
       ConformerMeshSegment::ConformMesh::ConformMeshPoint& origin = mesh1D.Points[originCurvilinearCoordinate];
       ConformerMeshSegment::ConformMesh::ConformMeshPoint& end = mesh1D.Points[endCurvilinearCoordinate];
 
@@ -999,10 +1072,13 @@ namespace Gedim
                                         newCell2DVertices,
                                         newCell2DEdges);
 
-      // cerr<< "Update Cell2D "<< cell2DMesh2DToUpdate<< " with new Cell2D "<< c<< " with "<<
-      //        newCell2DVertices<< " vertices and "<<
-      //        newCell2DEdges<< " edges"<<
-      //        endl;
+      // if (cell2DMesh2DId == 59)
+      // {
+      //   cerr<< "Update Cell2D "<< cell2DMesh2DToUpdate<< " with new Cell2D "<< c<< " with "<<
+      //          newCell2DVertices<< " vertices and "<<
+      //          newCell2DEdges<< " edges"<<
+      //          endl;
+      // }
 
       mesh2D.Cell2DAddVertices(c, newCell2DVertices);
       mesh2D.Cell2DAddEdges(c, newCell2DEdges);
@@ -1030,16 +1106,19 @@ namespace Gedim
       }
 
       // update conform mesh 1D
-      for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIds)
+      for (const unsigned int& cell1DMesh1DId : cell1DMesh1DIdsRedirected)
       {
         ConformerMeshSegment::ConformMesh::ConformMeshSegment& segment = mesh1D.Segments[cell1DMesh1DId];
-        const double& originCurvilinearCoordinate = segment.Points[0];
+        const double& originCurvilinearCoordinate = edgeListDirection ? segment.Points[0] : segment.Points[1];
         ConformerMeshSegment::ConformMesh::ConformMeshPoint& origin = mesh1D.Points[originCurvilinearCoordinate];
 
         segment.Cell2DIds.push_back(c);
         origin.Cell2DIds.push_back(c);
       }
-      mesh1D.Points[mesh1D.Segments[cell1DMesh1DIds.back()].Points[1]].Cell2DIds.push_back(c);
+      if (edgeListDirection)
+        mesh1D.Points[mesh1D.Segments[cell1DMesh1DIdsRedirected.back()].Points[1]].Cell2DIds.push_back(c);
+      else
+        mesh1D.Points[mesh1D.Segments[cell1DMesh1DIdsRedirected.back()].Points[0]].Cell2DIds.push_back(c);
 
       newCell2DMesh2Ds[counter] = c;
 
