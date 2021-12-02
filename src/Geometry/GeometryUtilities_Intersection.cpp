@@ -505,15 +505,15 @@ namespace Gedim
     double b = 2.0 * f.dot(d) ;
     double c = f.dot(f) - circleRadius*circleRadius;
 
-    Output::Assert(IsValue1DPositive(a));
+    Output::Assert(IsValue2DPositive(a));
 
     double discriminant = b * b - 4.0 * a * c;
-    if (IsValue1DNegative(discriminant))
+    if (IsValue2DNegative(discriminant))
     {
       // no intersection found
       result.Type = GeometryUtilities::IntersectionSegmentCircleResult::Types::NoIntersection;
     }
-    else if (IsValue1DZero(discriminant))
+    else if (IsValue2DZero(discriminant))
     {
       // one intersection found
       double intersection = -b / (2.0 * a);
