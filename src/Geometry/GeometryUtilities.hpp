@@ -582,6 +582,7 @@ namespace Gedim
       /// \return true if the points are 2D (z == 0)
       inline bool PointsAre2D(const Eigen::MatrixXd& points) const
       {
+        Output::Assert(points.rows() == 3 && points.cols() > 0);
         return points.row(2).isZero(_configuration.Tolerance);
       }
 
@@ -626,10 +627,29 @@ namespace Gedim
 
       /// \param segmentOrigin the segment origin
       /// \param segmentEnd the segment end
+      /// \return the segment length
+      inline double SegmentLength(const Eigen::Vector3d& segmentOrigin,
+                                  const Eigen::Vector3d& segmentEnd) const
+      { return (segmentEnd - segmentOrigin).norm(); }
+
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
       /// \return the segment tangent
       inline Eigen::Vector3d SegmentTangent(const Eigen::Vector3d& segmentOrigin,
                                             const Eigen::Vector3d& segmentEnd) const
       { return segmentEnd - segmentOrigin; }
+
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
+      /// \return the segment normal normalized, rotation of the normalized tangent (x,y,0) with 90° clockwise (y, -x,0)
+      /// \note the segment shall be 2D
+      inline Eigen::Vector3d SegmentNormal(const Eigen::Vector3d& segmentOrigin,
+                                           const Eigen::Vector3d& segmentEnd) const
+      {
+        Output::Assert(PointsAre2D(segmentOrigin) && PointsAre2D(segmentEnd));
+        Eigen::Vector3d tangent = SegmentTangent(segmentOrigin, segmentEnd).normalized();
+        return Eigen::Vector3d(tangent.y(), -tangent.x(), 0.0);
+      }
 
       /// \brief Compute the intersection between the two segments
       /// \param firstSegmentOrigin first segment origin
@@ -753,6 +773,14 @@ namespace Gedim
       /// \warning works only for convex polygons
       double PolygonArea(const Eigen::MatrixXd& polygonVertices) const;
 
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param polygonTriangulation the polygon sub-division triangulation, size 1 x 3 * numTriangles
+      /// \return the polygon area
+      /// \note the polygon shall be 2D
+      /// \note works for convex and concave polygons
+      double PolygonArea(const Eigen::MatrixXd& polygonVertices,
+                         const vector<unsigned int>& polygonTriangulation) const;
+
       /// \brief Split a polygon with n vertices numbered from 0 to n unclockwise given a segment contained inside
       /// \param input the input data
       /// \param result the resulting split
@@ -778,8 +806,42 @@ namespace Gedim
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
-      /// \param normal the resulting normalized normal
+      /// \return the resulting normalized normal
       Eigen::Vector3d PolygonNormal(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Compute the Polygon edge lengths
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \return the resulting edge lengths, size 1 x numVertices
+      Eigen::VectorXd PolygonEdgeLengths(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Compute the Polygon edge tangents
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \return the resulting edge tangents, size 3 x numVertices
+      Eigen::MatrixXd PolygonEdgeTangents(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Compute the Polygon edge normals outgoing the polygon
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \return the resulting edge normals outgoing the polygon, size 3 x numVertices
+      Eigen::MatrixXd PolygonEdgeNormals(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Compute the Polygon barycenter as a mean of all vertices
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      inline Eigen::Vector3d PolygonBarycenter(const Eigen::MatrixXd& polygonVertices) const
+      {
+        Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+        return polygonVertices.rowwise().mean();
+      }
+
+      /// \brief Compute the Polygon centroid as described in https://en.wikipedia.org/wiki/Centroid
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \param polygonArea the area of the polygon
+      /// \note the polygon shall be 2D
+      Eigen::Vector3d PolygonCentroid(const Eigen::MatrixXd& polygonVertices,
+                                      const double& polygonArea) const;
+
+      /// \brief Compute the Polygon diameter defined as the maximum distance between the vertices
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      double PolygonDiameter(const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Compute the translation vector of a tridimensional Polygon
       /// \param polygonVertices the vertices of the polygon unclockwise (size 3 x numVertices)
