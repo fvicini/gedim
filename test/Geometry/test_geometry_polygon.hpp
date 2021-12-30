@@ -525,6 +525,26 @@ namespace GedimUnitTesting {
         ASSERT_DOUBLE_EQ(rotationMatrix(1, 1), -4.0824829046386296e-01);
         ASSERT_DOUBLE_EQ(rotationMatrix(2, 2), -5.7735026918962562e-01);
       }
+
+      // check rotation matrix of other polygon 3D
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.row(0)<< 1.5000000000000000e+01, 1.3233571008692644e+01, 1.3233571008692644e+01;
+        polygonVertices.row(1)<< -6.8459285983811213e+00, -6.8459285999262507e+00, -6.8459285983811213e+00;
+        polygonVertices.row(2)<< 1.4511755944846838e+00, 1.4512024789683875e+00, 1.4511755944846838e+00;
+
+        Eigen::Vector3d normal = geometryUtility.PolygonNormal(polygonVertices);
+        Eigen::Vector3d translation = geometryUtility.PolygonTranslation(polygonVertices);
+        Eigen::Matrix3d rotationMatrix = geometryUtility.PolygonRotationMatrix(polygonVertices,
+                                                                               normal,
+                                                                               translation);
+        ASSERT_DOUBLE_EQ(translation[0], polygonVertices(0, 0));
+        ASSERT_DOUBLE_EQ(translation[1], polygonVertices(1, 0));
+        ASSERT_DOUBLE_EQ(translation[2], polygonVertices(2, 0));
+        ASSERT_DOUBLE_EQ(rotationMatrix(0, 0), -9.9999999988418076e-01);
+        ASSERT_DOUBLE_EQ(rotationMatrix(1, 1), 5.7472904151432524e-05);
+        ASSERT_DOUBLE_EQ(rotationMatrix(2, 2), -5.7472904158088990e-05);
+      }
     }
     catch (const exception& exception)
     {

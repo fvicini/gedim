@@ -145,9 +145,9 @@ namespace Gedim
       double normVectorI = VimV0.norm();
       double cosTheta = VimV0.dot(V1mV0) / (normVectorOne * normVectorI);
 
-      if (Compare1DValues(cosTheta, 1.0) == CompareTypes::SecondBeforeFirst)
+      if (Compare1DValues(cosTheta, 1.0) == CompareTypes::Coincident)
         W.col(i - 1) << normVectorI, 0.0, 0.0;
-      else if (Compare1DValues(cosTheta, -1.0) == CompareTypes::FirstBeforeSecond)
+      else if (Compare1DValues(cosTheta, -1.0) == CompareTypes::Coincident)
         W.col(i - 1) << -normVectorI, 0.0, 0.0;
       else if (Compare1DValues(cosTheta, 0.0) == CompareTypes::Coincident)
         W.col(i - 1) << 0.0, normVectorI, 0.0;
