@@ -226,7 +226,6 @@ namespace Gedim
                                                                               const Eigen::Vector3d& point) const
   {
     Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
-    Output::Assert(PointPolygonPosition(point, polygonVertices).Type == PointPolygonPositionResult::Types::Inside);
 
     const unsigned int numPolygonVertices = polygonVertices.cols();
     vector<unsigned int> triangles(3 * numPolygonVertices);
@@ -241,6 +240,818 @@ namespace Gedim
     Output::Assert(triangles.size() % 3 == 0);
 
     return triangles;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PolygonDivisionByAngleQuadrantResult GeometryUtilities::PolygonOutsideCircleDivisionByAngleQuadrant(const Eigen::MatrixXd& polygonVertices,
+                                                                                                                         const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                                                         const Eigen::Vector3d& circleCenter,
+                                                                                                                         const double& circleRadius,
+                                                                                                                         const unsigned int& curvedEdgeIndex) const
+  {
+    PolygonDivisionByAngleQuadrantResult result;
+
+    list<Vector3d> newCoordinates;
+
+    // insert polygon and circle center in output
+    const unsigned int& numPolygonVertices = polygonVertices.cols();
+
+    for (unsigned int p = 0; p < numPolygonVertices; p++)
+      newCoordinates.push_back(polygonVertices.col(p));
+
+    const unsigned int curvedEdgeOriginIndex = curvedEdgeIndex;
+    const unsigned int curvedEdgeEndIndex = (curvedEdgeIndex + 1) % numPolygonVertices;
+    const Vector3d& curvedEdgeOrigin = polygonVertices.col(curvedEdgeOriginIndex);
+    const Vector3d& curvedEdgeEnd = polygonVertices.col(curvedEdgeEndIndex);
+
+    // check if the polygon is contained in the circular arc
+    int curvedEdgeOriginEdgeIntersectionIndex = -1;
+    int curvedEdgeEndEdgeIntersectionIndex = -1;
+    Eigen::Vector3d curvedEdgeOriginEdgeIntersection;
+    Eigen::Vector3d curvedEdgeEndEdgeIntersection;
+
+    // Intersect with curved edge origin
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
+    {
+      if (e == curvedEdgeIndex)
+        continue;
+
+      const unsigned int edgeOriginIndex = e;
+      const unsigned int edgeEndIndex = (e + 1) % numPolygonVertices;
+
+      if (edgeEndIndex == curvedEdgeIndex)
+        continue;
+
+      const Vector3d& edgeOrigin = polygonVertices.col(edgeOriginIndex);
+      const Vector3d& edgeEnd = polygonVertices.col(edgeEndIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(e);
+
+      IntersectionSegmentSegmentResult resultOrigin = IntersectionSegmentSegment(circleCenter,
+                                                                                 curvedEdgeOrigin,
+                                                                                 edgeOrigin,
+                                                                                 edgeEnd);
+      if (resultOrigin.IntersectionLinesType !=
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::CoPlanarIntersecting)
+        continue;
+
+      if (resultOrigin.IntersectionSegmentsType !=
+          IntersectionSegmentSegmentResult::IntersectionSegmentTypes::NoIntersection)
+        continue;
+
+      if (resultOrigin.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::OnSegmentOrigin &&
+          resultOrigin.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::InsideSegment)
+        continue;
+
+      curvedEdgeOriginEdgeIntersectionIndex = e;
+      curvedEdgeOriginEdgeIntersection = edgeOrigin +
+                                         resultOrigin.SecondSegmentIntersections[0].CurvilinearCoordinate *
+                                         edgeTangent;
+    }
+
+    // Intersect with curved edge end
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
+    {
+      if (e == curvedEdgeIndex)
+        continue;
+
+      const unsigned int edgeOriginIndex = e;
+      const unsigned int edgeEndIndex = (e + 1) % numPolygonVertices;
+
+      if (edgeOriginIndex == curvedEdgeIndex)
+        continue;
+
+      const Vector3d& edgeOrigin = polygonVertices.col(edgeOriginIndex);
+      const Vector3d& edgeEnd = polygonVertices.col(edgeEndIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(e);
+
+      IntersectionSegmentSegmentResult resultEnd = IntersectionSegmentSegment(circleCenter,
+                                                                              curvedEdgeEnd,
+                                                                              edgeOrigin,
+                                                                              edgeEnd);
+      if (resultEnd.IntersectionLinesType !=
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::CoPlanarIntersecting)
+        continue;
+
+      if (resultEnd.IntersectionSegmentsType !=
+          IntersectionSegmentSegmentResult::IntersectionSegmentTypes::NoIntersection)
+        continue;
+
+      if (resultEnd.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::OnSegmentEnd &&
+          resultEnd.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::InsideSegment)
+        continue;
+
+      curvedEdgeEndEdgeIntersectionIndex = e;
+      curvedEdgeEndEdgeIntersection = edgeOrigin +
+                                      resultEnd.SecondSegmentIntersections[0].CurvilinearCoordinate *
+                                      edgeTangent;
+    }
+
+    unsigned int numSubPolygons = 1;
+    int curvedEdgeOriginVertexIntersectionIndex = -1;
+    int curvedEdgeEndVertexIntersectionIndex = -1;
+
+    if (curvedEdgeOriginEdgeIntersectionIndex != -1)
+    {
+      curvedEdgeOriginVertexIntersectionIndex = newCoordinates.size();
+      newCoordinates.push_back(curvedEdgeOriginEdgeIntersection);
+      numSubPolygons++;
+    }
+
+    if (curvedEdgeEndEdgeIntersectionIndex != -1)
+    {
+      curvedEdgeEndVertexIntersectionIndex = newCoordinates.size();
+      newCoordinates.push_back(curvedEdgeEndEdgeIntersection);
+      numSubPolygons++;
+    }
+
+    vector<list<unsigned int>> subPolygons(numSubPolygons);
+    result.SubPolygonTypes.resize(numSubPolygons);
+    unsigned int subPolygonCounter = 0;
+
+    // create origin subpolygon
+    if (curvedEdgeOriginVertexIntersectionIndex != -1)
+    {
+      result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::ExternalOrigin;
+
+      list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+      subPolygon.push_back(curvedEdgeOriginIndex);
+      subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
+      unsigned int vertexIndex = (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices;
+      while (vertexIndex < curvedEdgeOriginIndex)
+      {
+        subPolygon.push_back(vertexIndex);
+        vertexIndex = (vertexIndex + 1) % numPolygonVertices;
+      }
+      subPolygonCounter++;
+    }
+
+    // create end subpolygon
+    if (curvedEdgeEndVertexIntersectionIndex != -1)
+    {
+      result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::ExternalEnd;
+
+      list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+      subPolygon.push_back(curvedEdgeEndIndex);
+      unsigned int vertexIndex = (curvedEdgeEndIndex + 1) % numPolygonVertices;
+      while (vertexIndex <= curvedEdgeEndEdgeIntersectionIndex)
+      {
+        subPolygon.push_back(vertexIndex);
+        vertexIndex = (vertexIndex + 1) % numPolygonVertices;
+      }
+      subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
+
+      subPolygonCounter++;
+    }
+
+    // create central subPolygon
+    result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::Internal;
+
+    list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+    subPolygon.push_back(curvedEdgeOriginIndex);
+    subPolygon.push_back(curvedEdgeEndIndex);
+    if (curvedEdgeEndVertexIntersectionIndex != -1)
+      subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
+    const unsigned int middleVerticesStart = (curvedEdgeEndVertexIntersectionIndex != -1) ?  (curvedEdgeEndEdgeIntersectionIndex + 1) % numPolygonVertices :
+                                                                                             (curvedEdgeEndIndex + 1) % numPolygonVertices;
+    const unsigned int middleVerticesEnd = (curvedEdgeOriginVertexIntersectionIndex != -1) ?  (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices :
+                                                                                              curvedEdgeOriginIndex;
+
+    unsigned int middleVertexIndex = middleVerticesStart;
+    while (middleVertexIndex != middleVerticesEnd)
+    {
+      subPolygon.push_back(middleVertexIndex);
+      middleVertexIndex = (middleVertexIndex + 1) % numPolygonVertices;
+    }
+
+    if (curvedEdgeOriginVertexIntersectionIndex != -1)
+      subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
+
+    // convert output
+    result.Points.setZero(3, newCoordinates.size());
+    unsigned int counter = 0;
+    for (const Vector3d& point : newCoordinates)
+      result.Points.col(counter++)<< point;
+
+    result.SubPolygons.resize(subPolygons.size());
+    for (unsigned int s = 0; s < subPolygons.size(); s++)
+      result.SubPolygons[s] = vector<unsigned int>(subPolygons[s].begin(),
+                                                   subPolygons[s].end());
+
+    return result;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PolygonDivisionByAngleQuadrantResult GeometryUtilities::PolygonInsideCircleDivisionByAngleQuadrant(const Eigen::MatrixXd& polygonVertices,
+                                                                                                                        const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                                                        const Eigen::Vector3d& circleCenter,
+                                                                                                                        const double& circleRadius,
+                                                                                                                        const unsigned int& curvedEdgeIndex) const
+  {
+    PolygonDivisionByAngleQuadrantResult result;
+
+    list<Vector3d> newCoordinates;
+
+    // insert polygon and circle center in output
+    const unsigned int& numPolygonVertices = polygonVertices.cols();
+
+    for (unsigned int p = 0; p < numPolygonVertices; p++)
+      newCoordinates.push_back(polygonVertices.col(p));
+
+    const unsigned int curvedEdgeOriginIndex = curvedEdgeIndex;
+    const unsigned int curvedEdgeEndIndex = (curvedEdgeIndex + 1) % numPolygonVertices;
+    const Vector3d& curvedEdgeOrigin = polygonVertices.col(curvedEdgeOriginIndex);
+    const Vector3d& curvedEdgeEnd = polygonVertices.col(curvedEdgeEndIndex);
+
+    // check if the polygon is contained in the circular arc
+    int curvedEdgeOriginEdgeIntersectionIndex = -1;
+    int curvedEdgeEndEdgeIntersectionIndex = -1;
+    Eigen::Vector3d curvedEdgeOriginEdgeIntersection;
+    Eigen::Vector3d curvedEdgeEndEdgeIntersection;
+
+    // Intersect with curved edge origin
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
+    {
+      if (e == curvedEdgeIndex)
+        continue;
+
+      const unsigned int edgeOriginIndex = e;
+      const unsigned int edgeEndIndex = (e + 1) % numPolygonVertices;
+
+      if (edgeEndIndex == curvedEdgeIndex)
+        continue;
+
+      const Vector3d& edgeOrigin = polygonVertices.col(edgeOriginIndex);
+      const Vector3d& edgeEnd = polygonVertices.col(edgeEndIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(e);
+
+      IntersectionSegmentSegmentResult resultOrigin = IntersectionSegmentSegment(circleCenter,
+                                                                                 curvedEdgeOrigin,
+                                                                                 edgeOrigin,
+                                                                                 edgeEnd);
+      if (resultOrigin.IntersectionLinesType !=
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::CoPlanarIntersecting)
+        continue;
+
+      if (resultOrigin.IntersectionSegmentsType !=
+          IntersectionSegmentSegmentResult::IntersectionSegmentTypes::SingleIntersection)
+        continue;
+
+      if (resultOrigin.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::OnSegmentOrigin &&
+          resultOrigin.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::InsideSegment)
+        continue;
+
+      curvedEdgeOriginEdgeIntersectionIndex = e;
+      curvedEdgeOriginEdgeIntersection = edgeOrigin +
+                                         resultOrigin.SecondSegmentIntersections[0].CurvilinearCoordinate *
+                                         edgeTangent;
+    }
+
+    // Intersect with curved edge end
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
+    {
+      if (e == curvedEdgeIndex)
+        continue;
+
+      const unsigned int edgeOriginIndex = e;
+      const unsigned int edgeEndIndex = (e + 1) % numPolygonVertices;
+
+      if (edgeOriginIndex == curvedEdgeIndex)
+        continue;
+
+      const Vector3d& edgeOrigin = polygonVertices.col(edgeOriginIndex);
+      const Vector3d& edgeEnd = polygonVertices.col(edgeEndIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(e);
+
+      IntersectionSegmentSegmentResult resultEnd = IntersectionSegmentSegment(circleCenter,
+                                                                              curvedEdgeEnd,
+                                                                              edgeOrigin,
+                                                                              edgeEnd);
+      if (resultEnd.IntersectionLinesType !=
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::CoPlanarIntersecting)
+        continue;
+
+      if (resultEnd.IntersectionSegmentsType !=
+          IntersectionSegmentSegmentResult::IntersectionSegmentTypes::SingleIntersection)
+        continue;
+
+      if (resultEnd.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::OnSegmentEnd &&
+          resultEnd.SecondSegmentIntersections[0].Type !=
+          PointSegmentPositionTypes::InsideSegment)
+        continue;
+
+      curvedEdgeEndEdgeIntersectionIndex = e;
+      curvedEdgeEndEdgeIntersection = edgeOrigin +
+                                      resultEnd.SecondSegmentIntersections[0].CurvilinearCoordinate *
+                                      edgeTangent;
+    }
+
+    unsigned int numSubPolygons = 1;
+    int curvedEdgeOriginVertexIntersectionIndex = -1;
+    int curvedEdgeEndVertexIntersectionIndex = -1;
+
+    if (curvedEdgeOriginEdgeIntersectionIndex != -1)
+    {
+      curvedEdgeOriginVertexIntersectionIndex = newCoordinates.size();
+      newCoordinates.push_back(curvedEdgeOriginEdgeIntersection);
+      numSubPolygons++;
+    }
+
+    if (curvedEdgeEndEdgeIntersectionIndex != -1)
+    {
+      curvedEdgeEndVertexIntersectionIndex = newCoordinates.size();
+      newCoordinates.push_back(curvedEdgeEndEdgeIntersection);
+      numSubPolygons++;
+    }
+
+    vector<list<unsigned int>> subPolygons(numSubPolygons);
+    result.SubPolygonTypes.resize(numSubPolygons);
+    unsigned int subPolygonCounter = 0;
+
+    // create origin subpolygon
+    if (curvedEdgeOriginVertexIntersectionIndex != -1)
+    {
+      result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::ExternalOrigin;
+
+      list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+      subPolygon.push_back(curvedEdgeOriginIndex);
+      subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
+      unsigned int vertexIndex = (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices;
+      while (vertexIndex < curvedEdgeOriginIndex)
+      {
+        subPolygon.push_back(vertexIndex);
+        vertexIndex = (vertexIndex + 1) % numPolygonVertices;
+      }
+      subPolygonCounter++;
+    }
+
+    // create end subpolygon
+    if (curvedEdgeEndVertexIntersectionIndex != -1)
+    {
+      result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::ExternalEnd;
+
+      list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+      subPolygon.push_back(curvedEdgeEndIndex);
+      unsigned int vertexIndex = (curvedEdgeEndIndex + 1) % numPolygonVertices;
+      while (vertexIndex <= curvedEdgeEndEdgeIntersectionIndex)
+      {
+        subPolygon.push_back(vertexIndex);
+        vertexIndex = (vertexIndex + 1) % numPolygonVertices;
+      }
+      subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
+
+      subPolygonCounter++;
+    }
+
+    // create central subPolygon
+    result.SubPolygonTypes[subPolygonCounter] = PolygonDivisionByAngleQuadrantResult::Types::Internal;
+
+    list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
+    subPolygon.push_back(curvedEdgeOriginIndex);
+    subPolygon.push_back(curvedEdgeEndIndex);
+    if (curvedEdgeEndVertexIntersectionIndex != -1)
+      subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
+    const unsigned int middleVerticesStart = (curvedEdgeEndVertexIntersectionIndex != -1) ?  (curvedEdgeEndEdgeIntersectionIndex + 1) % numPolygonVertices :
+                                                                                             (curvedEdgeEndIndex + 1) % numPolygonVertices;
+    const unsigned int middleVerticesEnd = (curvedEdgeOriginVertexIntersectionIndex != -1) ?  (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices :
+                                                                                              curvedEdgeOriginIndex;
+
+    unsigned int middleVertexIndex = middleVerticesStart;
+    while (middleVertexIndex != middleVerticesEnd)
+    {
+      subPolygon.push_back(middleVertexIndex);
+      middleVertexIndex = (middleVertexIndex + 1) % numPolygonVertices;
+    }
+
+    if (curvedEdgeOriginVertexIntersectionIndex != -1)
+      subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
+
+    // convert output
+    result.Points.setZero(3, newCoordinates.size());
+    unsigned int counter = 0;
+    for (const Vector3d& point : newCoordinates)
+      result.Points.col(counter++)<< point;
+
+    result.SubPolygons.resize(subPolygons.size());
+    for (unsigned int s = 0; s < subPolygons.size(); s++)
+      result.SubPolygons[s] = vector<unsigned int>(subPolygons[s].begin(),
+                                                   subPolygons[s].end());
+
+    return result;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PolygonDivisionByCircleResult GeometryUtilities::PolygonDivisionByCircle(const Eigen::MatrixXd& polygonVertices,
+                                                                                              const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                              const Eigen::Vector3d& circleCenter,
+                                                                                              const double& circleRadius,
+                                                                                              const unsigned int& curvedEdgeIndex) const
+  {
+    PolygonDivisionByCircleResult result;
+
+    list<Vector3d> newCoordinates;
+
+    // insert polygon and circle center in output
+    const unsigned int& numPolygonVertices = polygonVertices.cols();
+    const unsigned int cirlceCenterIndex = numPolygonVertices;
+
+    for (unsigned int p = 0; p < numPolygonVertices; p++)
+      newCoordinates.push_back(polygonVertices.col(p));
+    newCoordinates.push_back(circleCenter);
+
+    const unsigned int curvedEdgeOriginIndex = curvedEdgeIndex;
+    const unsigned int curvedEdgeEndIndex = (curvedEdgeIndex + 1) % numPolygonVertices;
+    const Vector3d& curvedEdgeOrigin = polygonVertices.col(curvedEdgeOriginIndex);
+    const Vector3d& curvedEdgeEnd = polygonVertices.col(curvedEdgeEndIndex);
+
+    // intersects all the lines from circleCenter to each vertex not belonging to curved edge
+    unsigned int edgeNumber = curvedEdgeEndIndex;
+    unsigned int lastCheck = (curvedEdgeIndex == 0) ?  numPolygonVertices - 1 : curvedEdgeIndex - 1;
+    vector<int> newVerticesIndicesPerEdge(numPolygonVertices, -1);
+    newVerticesIndicesPerEdge[curvedEdgeIndex] = curvedEdgeIndex;
+
+    while (edgeNumber != lastCheck)
+    {
+      const unsigned int originEdgeIndex = edgeNumber;
+      const unsigned int endEdgeIndex = (edgeNumber + 1) % numPolygonVertices;
+
+      const Eigen::Vector3d& edgeOrigin = polygonVertices.col(originEdgeIndex);
+      const Eigen::Vector3d& edgeEnd = polygonVertices.col(endEdgeIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(edgeNumber);
+
+      // check if the edge is aligned to the angle quadrant
+      if (PointIsAligned(edgeOrigin,
+                         edgeEnd,
+                         circleCenter))
+      {
+        edgeNumber++;
+        if (edgeNumber == numPolygonVertices)
+          edgeNumber = 0;
+
+        continue;
+      }
+
+      // check if the next edge is aligned to the angle quadrant
+      const unsigned int nextEdgeEndIndex = (endEdgeIndex + 1) % numPolygonVertices;
+
+      if (PointIsAligned(edgeEnd,
+                         polygonVertices.col(nextEdgeEndIndex),
+                         circleCenter))
+      {
+        edgeNumber++;
+        if (edgeNumber == numPolygonVertices)
+          edgeNumber = 0;
+
+        continue;
+      }
+
+      // intersecting the line with the circle
+      const Eigen::Vector3d endEdgeCenterTangent = SegmentTangent(edgeEnd,
+                                                                  circleCenter);
+
+      const IntersectionSegmentCircleResult intersection = IntersectionSegmentCircle(edgeEnd,
+                                                                                     circleCenter,
+                                                                                     circleCenter,
+                                                                                     circleRadius);
+
+      Output::Assert(intersection.Type == IntersectionSegmentCircleResult::Types::TwoIntersections);
+
+      double intersectionCoordinate = -1.0;
+      for (unsigned int i = 0; i < 2; i++)
+      {
+        if (intersection.SegmentIntersections[i].Type != PointSegmentPositionTypes::InsideSegment)
+          continue;
+
+        intersectionCoordinate = intersection.SegmentIntersections[i].CurvilinearCoordinate;
+        break;
+      }
+
+      Output::Assert(IsValue1DPositive(intersectionCoordinate));
+
+      const Eigen::Vector3d intersectionPoint = edgeEnd + intersectionCoordinate * endEdgeCenterTangent;
+      newVerticesIndicesPerEdge[edgeNumber] = newCoordinates.size();
+      newCoordinates.push_back(intersectionPoint);
+
+      edgeNumber++;
+      if (edgeNumber == numPolygonVertices)
+        edgeNumber = 0;
+    }
+
+    // convert newCoordinates
+    result.Points.setZero(3, newCoordinates.size());
+    unsigned int counter = 0;
+    for (const Vector3d& point : newCoordinates)
+      result.Points.col(counter++)<< point;
+
+    // create sub-polygons
+    list<list<unsigned int>> subPolygonsIndices;
+    subPolygonsIndices.push_back(list<unsigned int>());
+
+    edgeNumber = curvedEdgeEndIndex;
+    while (edgeNumber != curvedEdgeIndex)
+    {
+      list<unsigned int>& subPolygonIndices = subPolygonsIndices.back();
+
+      const unsigned int originEdgeIndex = edgeNumber;
+      const unsigned int endEdgeIndex = (edgeNumber + 1) % numPolygonVertices;
+
+      subPolygonIndices.push_back(originEdgeIndex);
+
+      if (endEdgeIndex == curvedEdgeIndex)
+      {
+        subPolygonIndices.push_back(endEdgeIndex);
+        break;
+      }
+
+      if (newVerticesIndicesPerEdge[edgeNumber] != -1)
+      {
+        subPolygonIndices.push_back(endEdgeIndex);
+        subPolygonIndices.push_back(newVerticesIndicesPerEdge[edgeNumber]);
+        subPolygonsIndices.push_back(list<unsigned int> { (unsigned int)newVerticesIndicesPerEdge[edgeNumber] });
+      }
+
+      edgeNumber++;
+      if (edgeNumber == numPolygonVertices)
+        edgeNumber = 0;
+    }
+
+    // convert sub-polygons
+    result.SubPolygons.resize(subPolygonsIndices.size());
+    unsigned int subPolygonsCounter = 0;
+    for (const list<unsigned int>& subPolygonIndices : subPolygonsIndices)
+      result.SubPolygons[subPolygonsCounter++] = vector<unsigned int>(subPolygonIndices.begin(), subPolygonIndices.end());
+
+    // create sub triangles
+    result.SubTriangles.resize(result.SubPolygons.size(),
+                               vector<unsigned int> { cirlceCenterIndex,
+                                                      (unsigned int)newCoordinates.size(),
+                                                      (unsigned int)newCoordinates.size() });
+
+    // if more then one sub-polygon
+    if (result.SubPolygons.size() > 1)
+    {
+      // first sub triangle
+      const vector<unsigned int>& subPolygon = result.SubPolygons[0];
+      vector<unsigned int>& subTriangle = result.SubTriangles[0];
+
+      if (subPolygon.size() == 3)
+      {
+        subTriangle[1] = subPolygon[0];
+        subTriangle[2] = subPolygon[1];
+      }
+      else
+      {
+        subTriangle[1] = subPolygon[1];
+        subTriangle[2] = subPolygon[subPolygon.size() - 2];
+      }
+
+      // internal sub triangles
+      for (unsigned int sp = 1; sp < result.SubPolygons.size() - 1; sp++)
+      {
+        const vector<unsigned int>& subPolygon = result.SubPolygons[sp];
+        vector<unsigned int>& subTriangle = result.SubTriangles[sp];
+
+        if (subPolygon.size() == 3 &&
+            sp == 0 &&
+            result.SubPolygons.size() > 1) // first subPolygon
+        {
+          subTriangle[1] = subPolygon[0];
+          subTriangle[2] = subPolygon[1];
+        }
+        else if (subPolygon.size() == 3) // last subPolygon
+        {
+          subTriangle[1] = subPolygon[1];
+          subTriangle[2] = subPolygon[2];
+        }
+        else
+        {
+          subTriangle[1] = subPolygon[1];
+          subTriangle[2] = subPolygon[subPolygon.size() - 2];
+        }
+      }
+
+      // last sub triangle
+      const vector<unsigned int>& lastSubPolygon = result.SubPolygons[result.SubPolygons.size() - 1];
+      vector<unsigned int>& lastSubTriangle = result.SubTriangles[result.SubPolygons.size() - 1];
+      if (lastSubPolygon.size() == 3)
+      {
+        lastSubTriangle[1] = lastSubPolygon[1];
+        lastSubTriangle[2] = lastSubPolygon[2];
+      }
+      else
+      {
+        lastSubTriangle[1] = lastSubPolygon[1];
+        lastSubTriangle[2] = lastSubPolygon[lastSubPolygon.size() - 2];
+      }
+    }
+    else
+    {
+      // just one sub-triangle
+      const vector<unsigned int>& subPolygon = result.SubPolygons[0];
+      vector<unsigned int>& subTriangle = result.SubTriangles[0];
+
+      if (subPolygon.size() == 3)
+      {
+        // check which point index is aligned
+        if (PointIsAligned(circleCenter,
+                           curvedEdgeEnd,
+                           polygonVertices.col(subPolygon[1])))
+        {
+          subTriangle[1] = subPolygon[1];
+          subTriangle[2] = subPolygon[2];
+        }
+        else
+        {
+          subTriangle[1] = subPolygon[0];
+          subTriangle[2] = subPolygon[1];
+        }
+      }
+      else
+      {
+        subTriangle[1] = subPolygon[1];
+        subTriangle[2] = subPolygon[subPolygon.size() - 2];
+      }
+    }
+
+    // Internal triangles
+    result.InternalTriangles.resize(result.SubPolygons.size(),
+                                    vector<unsigned int> { cirlceCenterIndex,
+                                                           (unsigned int)newCoordinates.size(),
+                                                           (unsigned int)newCoordinates.size() });
+
+    for (unsigned int sp = 0; sp < result.SubPolygons.size(); sp++)
+    {
+      const vector<unsigned int>& subPolygon = result.SubPolygons[sp];
+      vector<unsigned int>& internalTriangle = result.InternalTriangles[sp];
+
+      internalTriangle[1] = subPolygon[0];
+      internalTriangle[2] = subPolygon[subPolygon.size() - 1];
+    }
+
+    return result;
+  }
+  // ***************************************************************************
+  GeometryUtilities::CircleDivisionByPolygonResult GeometryUtilities::CircleDivisionByPolygon(const Eigen::MatrixXd& polygonVertices,
+                                                                                              const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                              const Eigen::Vector3d& circleCenter,
+                                                                                              const double& circleRadius,
+                                                                                              const unsigned int& curvedEdgeIndex) const
+  {
+    CircleDivisionByPolygonResult result;
+
+    list<Vector3d> newCoordinates;
+
+    // insert polygon and circle center in output
+    const unsigned int& numPolygonVertices = polygonVertices.cols();
+    const unsigned int cirlceCenterIndex = numPolygonVertices;
+
+    for (unsigned int p = 0; p < numPolygonVertices; p++)
+      newCoordinates.push_back(polygonVertices.col(p));
+    newCoordinates.push_back(circleCenter);
+
+    const unsigned int curvedEdgeOriginIndex = curvedEdgeIndex;
+    const unsigned int curvedEdgeEndIndex = (curvedEdgeIndex + 1) % numPolygonVertices;
+    const Vector3d& curvedEdgeOrigin = polygonVertices.col(curvedEdgeOriginIndex);
+    const Vector3d& curvedEdgeEnd = polygonVertices.col(curvedEdgeEndIndex);
+
+    // intersects all the lines from circleCenter to each vertex not belonging to curved edge
+    unsigned int edgeNumber = curvedEdgeEndIndex;
+    unsigned int triangleVertexNumber = curvedEdgeEndIndex;
+    const unsigned int lastCheck = (curvedEdgeIndex == 0) ?  numPolygonVertices - 1 : curvedEdgeIndex - 1;
+
+    list<vector<unsigned int>> subTriangles;
+    list<vector<unsigned int>> internalTriangles;
+    list<list<unsigned int>> subPolygons;
+
+    while (edgeNumber != lastCheck)
+    {
+      const unsigned int originEdgeIndex = edgeNumber;
+      const unsigned int endEdgeIndex = (edgeNumber + 1) % numPolygonVertices;
+
+      const Eigen::Vector3d& edgeOrigin = polygonVertices.col(originEdgeIndex);
+      const Eigen::Vector3d& edgeEnd = polygonVertices.col(endEdgeIndex);
+      const Eigen::Vector3d& edgeTangent = polygonEdgeTangents.col(edgeNumber);
+
+      // check if the edge is aligned to the angle quadrant
+      if (PointIsAligned(edgeOrigin,
+                         edgeEnd,
+                         circleCenter))
+      {
+        edgeNumber++;
+        if (edgeNumber == numPolygonVertices)
+          edgeNumber = 0;
+
+        continue;
+      }
+
+      // check if the next edge is aligned to the angle quadrant
+      const unsigned int nextEdgeEndIndex = (endEdgeIndex + 1) % numPolygonVertices;
+
+      if (PointIsAligned(edgeEnd,
+                         polygonVertices.col(nextEdgeEndIndex),
+                         circleCenter))
+        break;
+
+      // intersecting the line with the circle
+      const Eigen::Vector3d endEdgeCenterTangent = SegmentTangent(edgeEnd,
+                                                                  circleCenter);
+
+      const IntersectionSegmentCircleResult intersection = IntersectionSegmentCircle(edgeEnd,
+                                                                                     circleCenter,
+                                                                                     circleCenter,
+                                                                                     circleRadius);
+
+      Output::Assert(intersection.Type == IntersectionSegmentCircleResult::Types::TwoIntersections);
+
+      double intersectionCoordinate = 0.0;
+      for (unsigned int i = 0; i < 2; i++)
+      {
+        if (intersection.SegmentIntersections[i].Type != PointSegmentPositionTypes::OnSegmentLineBeforeOrigin)
+          continue;
+
+        intersectionCoordinate = intersection.SegmentIntersections[i].CurvilinearCoordinate;
+        break;
+      }
+
+      Output::Assert(IsValue1DNegative(intersectionCoordinate));
+
+      // create new coordinate
+      const Eigen::Vector3d intersectionPoint = edgeEnd + intersectionCoordinate * endEdgeCenterTangent;
+      newCoordinates.push_back(intersectionPoint);
+
+      // create new sub-triangle
+      subTriangles.push_back(vector<unsigned int>({ cirlceCenterIndex, 0, 0 }));
+      internalTriangles.push_back(vector<unsigned int>({ cirlceCenterIndex, 0, 0 }));
+      subPolygons.push_back(list<unsigned int>());
+
+      vector<unsigned int>& subTriangle = subTriangles.back();
+      vector<unsigned int>& internalTriangle = internalTriangles.back();
+      list<unsigned int>& subPolygon = subPolygons.back();
+
+      subTriangle[1] = newCoordinates.size() - 1;
+      subTriangle[2] = triangleVertexNumber;
+
+      internalTriangle[1] = endEdgeIndex;
+      internalTriangle[2] = originEdgeIndex;
+
+      subPolygon.push_back(triangleVertexNumber);
+      if (originEdgeIndex != triangleVertexNumber)
+        subPolygon.push_back(originEdgeIndex);
+      subPolygon.push_back(endEdgeIndex);
+      subPolygon.push_back(newCoordinates.size() - 1);
+
+      triangleVertexNumber = newCoordinates.size() - 1;
+
+      edgeNumber++;
+      if (edgeNumber == numPolygonVertices)
+        edgeNumber = 0;
+    }
+
+    // insert last sub-triangle
+    subTriangles.push_back(vector<unsigned int>({ cirlceCenterIndex, 0, 0 }));
+    internalTriangles.push_back(vector<unsigned int>({ cirlceCenterIndex, 0, 0 }));
+    subPolygons.push_back(list<unsigned int>());
+
+    vector<unsigned int>& subTriangle = subTriangles.back();
+    vector<unsigned int>& internalTriangle = internalTriangles.back();
+    list<unsigned int>& subPolygon = subPolygons.back();
+
+    subTriangle[1] = curvedEdgeOriginIndex;
+    subTriangle[2] = triangleVertexNumber;
+
+    internalTriangle[1] = (edgeNumber + 1) % numPolygonVertices;
+    internalTriangle[2] = edgeNumber;
+
+    subPolygon.push_back(triangleVertexNumber);
+    subPolygon.push_back(edgeNumber);
+    if ((edgeNumber + 1) % numPolygonVertices != curvedEdgeOriginIndex)
+      subPolygon.push_back((edgeNumber + 1) % numPolygonVertices);
+    subPolygon.push_back(curvedEdgeOriginIndex);
+
+    // convert newCoordinates
+    result.Points.setZero(3, newCoordinates.size());
+    unsigned int counter = 0;
+    for (const Vector3d& point : newCoordinates)
+      result.Points.col(counter++)<< point;
+
+    // convert sub-triangles
+    result.SubTriangles = vector<vector<unsigned int>>(subTriangles.begin(),
+                                                       subTriangles.end());
+
+    // convert sub-triangles
+    result.InternalTriangles = vector<vector<unsigned int>>(internalTriangles.begin(),
+                                                            internalTriangles.end());
+
+    // convert sub-polygons
+    result.SubPolygons.resize(subPolygons.size());
+    unsigned int sp = 0;
+    for (list<unsigned int> subPolygon : subPolygons)
+      result.SubPolygons[sp++] = vector<unsigned int>(subPolygon.begin(), subPolygon.end());
+
+    return result;
   }
   // ***************************************************************************
   double GeometryUtilities::PolygonArea(const Eigen::MatrixXd& polygonVertices) const

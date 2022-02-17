@@ -737,6 +737,637 @@ namespace GedimUnitTesting {
     }
   }
 
+  TEST(TestGeometryUtilities, TestCircleDivisionByPolygon)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check triangle sub-division
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+
+        Eigen::Matrix3d polygonEdgeTangents;
+        polygonEdgeTangents.col(0)<<  1.0, 0.0, 0.0;
+        polygonEdgeTangents.col(1)<<  -1.0, 1.0, 0.0;
+        polygonEdgeTangents.col(2)<<  0.0, -1.0, 0.0;
+
+        const Eigen::Vector3d circleCenter(-0.5, -0.5, 0.0);
+        const double circleRadius = sqrt(10.0) / 2.0;
+        const unsigned int curvedEdgeIndex = 1;
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult result =
+            geometryUtility.CircleDivisionByPolygon(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 3)<< polygonVertices;
+        expectedResult.Points.col(3)<< circleCenter;
+        expectedResult.Points.col(4)<< Eigen::Vector3d(6.1803398874989490e-01, 6.1803398874989490e-01, 0.0);
+
+        expectedResult.SubTriangles = { {3, 4, 2}, {3, 1, 4} };
+        expectedResult.InternalTriangles = { {3, 0, 2}, {3, 1, 0} };
+        expectedResult.SubPolygons = { {2, 0, 4}, {4, 0, 1} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check trapezioid sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(1)<< -1.0 / 3.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, -1.0 / 3.0, 0.0;
+        polygonVertices.col(3)<< 1.0, 0.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.row(0)<< -3.3333333333333331e-01,  3.3333333333333331e-01,  1.0000000000000000e+00, -1.0000000000000000e+00;
+        polygonEdgeTangents.row(1)<< -1.0000000000000000e+00, -3.3333333333333331e-01,  3.3333333333333331e-01,  1.0000000000000000e+00;
+        polygonEdgeTangents.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(-0.5, -0.5, 0.0);
+        const double circleRadius = sqrt(10.0) / 2.0;
+        const unsigned int curvedEdgeIndex = 3;
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult result =
+            geometryUtility.CircleDivisionByPolygon(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.Points.col(4)<< circleCenter;
+
+        expectedResult.SubTriangles = { {4, 3, 0} };
+        expectedResult.InternalTriangles = { {4, 2, 1} };
+        expectedResult.SubPolygons = { {0, 1, 2, 3} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check pentagon sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 5);
+        polygonVertices.col(0)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(1)<< -2.0 / 9.0, -1.0 / 9.0, 0.0;
+        polygonVertices.col(2)<< -1.0 / 9.0, -2.0 / 9.0, 0.0;
+        polygonVertices.col(3)<< 0.0, -1.0 / 3.0, 0.0;
+        polygonVertices.col(4)<< 1.0, 0.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 5);
+        polygonEdgeTangents.row(0)<< -2.2222222222222221e-01,  1.1111111111111110e-01,  1.1111111111111110e-01, 1.0000000000000000e+00, -1.0000000000000000e+00;
+        polygonEdgeTangents.row(1)<< -1.1111111111111112e+00, -1.1111111111111110e-01, -1.1111111111111110e-01, 3.3333333333333331e-01,  1.0000000000000000e+00;
+        polygonEdgeTangents.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00, 0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(-0.5, -0.5, 0.0);
+        const double circleRadius = sqrt(10.0) / 2.0;
+        const unsigned int curvedEdgeIndex = 4;
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult result =
+            geometryUtility.CircleDivisionByPolygon(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult expectedResult;
+        expectedResult.Points.setZero(3, 8);
+        expectedResult.Points.block(0, 0, 3, 5)<< polygonVertices;
+        expectedResult.Points.col(5)<< circleCenter;
+        expectedResult.Points.col(6)<< Eigen::Vector3d(4.1901827761725985e-01, 7.8662558866416377e-01, 0.0);
+        expectedResult.Points.col(7)<< Eigen::Vector3d(7.8662558866416377e-01, 4.1901827761725985e-01, 0.0);
+
+        expectedResult.SubTriangles = { {5, 6, 0}, {5, 7, 6}, {5, 4, 7} };
+        expectedResult.InternalTriangles = { {5, 1, 0}, {5, 2, 1}, {5, 3, 2} };
+        expectedResult.SubPolygons = { {0, 1, 6}, {6, 1, 2, 7}, {7, 2, 3, 4} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check exagon sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 6);
+        polygonVertices.col(0)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(1)<< -1.0 / 3.0, 0.0, 0.0;
+        polygonVertices.col(2)<< -2.0 / 9.0, -1.0 / 9.0, 0.0;
+        polygonVertices.col(3)<< -1.0 / 9.0, -2.0 / 9.0, 0.0;
+        polygonVertices.col(4)<< 0.0, -1.0 / 3.0, 0.0;
+        polygonVertices.col(5)<< 1.0, 0.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 6);
+        polygonEdgeTangents.row(0)<< -3.3333333333333331e-01,  1.1111111111111110e-01,  1.1111111111111110e-01,  1.1111111111111110e-01, 1.0000000000000000e+00, -1.0000000000000000e+00;
+        polygonEdgeTangents.row(1)<< -1.0000000000000000e+00, -1.1111111111111110e-01, -1.1111111111111110e-01, -1.1111111111111110e-01, 3.3333333333333331e-01,  1.0000000000000000e+00;
+        polygonEdgeTangents.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00, 0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(-0.5, -0.5, 0.0);
+        const double circleRadius = sqrt(10.0) / 2.0;
+        const unsigned int curvedEdgeIndex = 5;
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult result =
+            geometryUtility.CircleDivisionByPolygon(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::CircleDivisionByPolygonResult expectedResult;
+        expectedResult.Points.setZero(3, 9);
+        expectedResult.Points.block(0, 0, 3, 6)<< polygonVertices;
+        expectedResult.Points.col(6)<< circleCenter;
+        expectedResult.Points.col(7)<< Eigen::Vector3d(4.1901827761725985e-01, 7.8662558866416377e-01, 0.0);
+        expectedResult.Points.col(8)<< Eigen::Vector3d(7.8662558866416377e-01, 4.1901827761725985e-01, 0.0);
+
+        expectedResult.SubTriangles = { {6, 7, 0}, {6, 8, 7}, {6, 5, 8} };
+        expectedResult.InternalTriangles = { {6, 2, 1}, {6, 3, 2}, {6, 4, 3} };
+        expectedResult.SubPolygons = { {0, 1, 2, 7}, {7, 2, 3, 8}, {8, 3, 4, 5} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolygonDivisionByCircle)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check triangle sub-division
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+
+        Eigen::Matrix3d polygonEdgeTangents;
+        polygonEdgeTangents.col(0)<<  1.0, 0.0, 0.0;
+        polygonEdgeTangents.col(1)<<  -1.0, 1.0, 0.0;
+        polygonEdgeTangents.col(2)<<  0.0, -1.0, 0.0;
+
+        const Eigen::Vector3d circleCenter(0.5, -0.5, 0.0);
+        const double circleRadius = sqrt(2.0) / 2.0;
+        const unsigned int curvedEdgeIndex = 0;
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult result =
+            geometryUtility.PolygonDivisionByCircle(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 3)<< polygonVertices;
+        expectedResult.Points.col(3)<< circleCenter;
+        expectedResult.Points.col(4)<< Eigen::Vector3d(2.7639320225002101e-01,
+                                                       1.7082039324993703e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.SubTriangles = { {3, 1, 2}, {3, 2, 0} };
+        expectedResult.InternalTriangles = { {3, 1, 4}, {3, 4, 0} };
+        expectedResult.SubPolygons = { {1, 2, 4}, {4, 2, 0} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check trapezioid sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.1, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(3)<< 0.0, 0.1, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.col(0)<<   9.0000000000000002e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<   0.0000000000000000e+00, -9.0000000000000002e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<<   1.0000000000000001e-01, -1.0000000000000001e-01, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 0.1;
+        const unsigned int curvedEdgeIndex = 3;
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult result =
+            geometryUtility.PolygonDivisionByCircle(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.Points.col(4)<< circleCenter;
+
+        expectedResult.SubTriangles = { {4, 1, 2} };
+        expectedResult.InternalTriangles = { {4, 0, 3} };
+        expectedResult.SubPolygons = { {0, 1, 2, 3} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check exagon sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 6);
+        polygonVertices.col(0)<< 0.1, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 2.0 / 3.0, 1.0 / 3.0, 0.0;
+        polygonVertices.col(3)<< 1.0 / 3.0, 2.0 / 3.0, 0.0;
+        polygonVertices.col(4)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(5)<< 0.0, 0.1, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 6);
+        polygonEdgeTangents.col(0)<<   9.0000000000000002e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  -3.3333333333333337e-01,  3.3333333333333331e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<  -3.3333333333333331e-01,  3.3333333333333331e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<<  -3.3333333333333331e-01,  3.3333333333333337e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(4)<<   0.0000000000000000e+00, -9.0000000000000002e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(5)<<   1.0000000000000001e-01, -1.0000000000000001e-01, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 0.1;
+        const unsigned int curvedEdgeIndex = 5;
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult result =
+            geometryUtility.PolygonDivisionByCircle(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult expectedResult;
+        expectedResult.Points.setZero(3, 9);
+        expectedResult.Points.block(0, 0, 3, 6)<< polygonVertices;
+        expectedResult.Points.col(6)<< circleCenter;
+        expectedResult.Points.col(7)<< Eigen::Vector3d(8.9442719099991908e-02,
+                                                       4.4721359549995954e-02,
+                                                       0.0);
+        expectedResult.Points.col(8)<< Eigen::Vector3d(4.4721359549995954e-02,
+                                                       8.9442719099991908e-02,
+                                                       0.0);
+
+        expectedResult.SubTriangles = { {6, 1, 2}, {6, 2, 3}, {6, 3, 4} };
+        expectedResult.InternalTriangles = { {6, 0, 7}, {6, 7, 8}, {6, 8, 5} };
+        expectedResult.SubPolygons = { {0, 1, 2, 7}, {7, 2, 3, 8}, {8, 3, 4, 5} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+
+      // check single aligned triangle
+      {
+        Eigen::MatrixXd polygonVertices(3, 3);
+        polygonVertices.row(0)<< 0.0000000000000000e+00, 1.6808892342696363e-03, 0.0000000000000000e+00;
+        polygonVertices.row(1)<< 1.0000000000000001e-01, 9.9985872058917000e-02, 1.0166676129318664e-01;
+        polygonVertices.row(2)<< 0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 3);
+        polygonEdgeTangents.col(0)<<  1.6808892342696363e-03, -1.6808892342696363e-03,  0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<< -1.4127941083005857e-05,  1.6808892342696363e-03, -1.6667612931866305e-03;
+        polygonEdgeTangents.col(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 0.1;
+        const unsigned int curvedEdgeIndex = 0;
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult result =
+            geometryUtility.PolygonDivisionByCircle(polygonVertices,
+                                                    polygonEdgeTangents,
+                                                    circleCenter,
+                                                    circleRadius,
+                                                    curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByCircleResult expectedResult;
+        expectedResult.Points.setZero(3, 4);
+        expectedResult.Points.block(0, 0, 3, 3)<< polygonVertices;
+        expectedResult.Points.col(3)<< circleCenter;
+
+        expectedResult.SubTriangles = { {3, 1, 2} };
+        expectedResult.InternalTriangles = { {3, 1, 0} };
+        expectedResult.SubPolygons = { {1, 2, 0} };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubTriangles, expectedResult.SubTriangles);
+        ASSERT_EQ(result.InternalTriangles, expectedResult.InternalTriangles);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolygonDivisionByAngleQuadrant)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      geometryUtilityConfig.Tolerance = 1.0e-12;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check square sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.row(0)<<  6.3425787364898834e-01,  8.6113631159405246e-01,  1.0000000000000000e+00,  7.7312156205493587e-01 ;
+        polygonVertices.row(1)<< -7.7312156205493587e-01, -1.0000000000000000e+00, -8.6113631159405246e-01, -6.3425787364898834e-01;
+        polygonVertices.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.row(0)<<  2.2687843794506413e-01,  1.3886368840594754e-01, -2.2687843794506413e-01, -1.3886368840594754e-01 ;
+        polygonEdgeTangents.row(1)<< -2.2687843794506413e-01,  1.3886368840594754e-01,  2.2687843794506413e-01, -1.3886368840594754e-01;
+        polygonEdgeTangents.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 1.0;
+        const unsigned int curvedEdgeIndex = 3;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 4);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.SubPolygons = { {3, 0, 1, 2} };
+        expectedResult.SubPolygonTypes =
+        {
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal
+        };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+
+      // check triangle no sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.1, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(3)<< 0.0, 0.1, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.col(0)<<   9.0000000000000002e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<   0.0000000000000000e+00, -9.0000000000000002e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<<   1.0000000000000001e-01, -1.0000000000000001e-01, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 0.01;
+        const unsigned int curvedEdgeIndex = 3;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 4);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.SubPolygons = { {3, 0, 1, 2} };
+        expectedResult.SubPolygonTypes =
+        { Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+
+      // check triangle sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 6);
+        polygonVertices.col(0)<< 0.1, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+        polygonVertices.col(3)<< 0.0, 0.1, 0.0;
+        polygonVertices.col(4)<< 2.3542486889354099e-02, 7.6457513110645914e-02, 0.0;
+        polygonVertices.col(5)<< 7.6457513110645914e-02, 2.3542486889354099e-02, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 6);
+        polygonEdgeTangents.col(0)<<  9.0000000000000002e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<< -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<  0.0000000000000000e+00, -9.0000000000000002e-01, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<<  2.3542486889354099e-02, -2.3542486889354092e-02, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(4)<<  5.2915026221291815e-02, -5.2915026221291815e-02, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(5)<<  2.3542486889354092e-02, -2.3542486889354099e-02, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, 0.0, 0.0);
+        const double circleRadius = 0.08;
+        const unsigned int curvedEdgeIndex = 4;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 8);
+        expectedResult.Points.block(0, 0, 3, 6)<< polygonVertices;
+        expectedResult.Points.col(6)<< Eigen::Vector3d(2.3542486889354097e-01,
+                                                       7.6457513110645903e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.Points.col(7)<< Eigen::Vector3d(7.6457513110645903e-01,
+                                                       2.3542486889354097e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.SubPolygons = { {4, 6, 2, 3}, {5, 0, 1, 7}, {4, 5, 7, 6} };
+        expectedResult.SubPolygonTypes =
+        { Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalOrigin,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalEnd,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal
+        };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+
+      // check triangle other sub-division
+      {
+        Eigen::MatrixXd polygonVertices(3, 5);
+        polygonVertices.col(0)<< -1.0, 0.0, 0.0;
+        polygonVertices.col(1)<< -1.7320508075687857e-02, 0.0, 0.0;
+        polygonVertices.col(2)<< 1.7320508075687746e-02, 0.0, 0.0;
+        polygonVertices.col(3)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(4)<< 0.0, 1.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 5);
+        polygonEdgeTangents.col(0)<<  9.8267949192431214e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  3.4641016151375603e-02,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<  9.8267949192431225e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<< -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(4)<< -1.0000000000000000e+00, -1.0000000000000000e+00, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, -0.01, 0.0);
+        const double circleRadius = 0.02;
+        const unsigned int curvedEdgeIndex = 1;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 7);
+        expectedResult.Points.block(0, 0, 3, 5)<< polygonVertices;
+        expectedResult.Points.col(5)<< Eigen::Vector3d(-6.4031434217770455e-01,
+                                                       3.5968565782229545e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.Points.col(6)<< Eigen::Vector3d(6.4031434217770300e-01,
+                                                       3.5968565782229700e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.SubPolygons = { {1, 5, 0}, {2, 3, 6}, {1, 2, 6, 4, 5} };
+        expectedResult.SubPolygonTypes =
+        { Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalOrigin,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalEnd,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal
+        };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+
+      // check triangle sub-division with only origin
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< -1.0, 0.0, 0.0;
+        polygonVertices.col(1)<< -1.7320508075687857e-02, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 0.01, 0.0;
+        polygonVertices.col(3)<< 0.0, 1.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.col(0)<<  9.8267949192431214e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  1.7320508075687857e-02,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<<  0.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<< -1.0000000000000000e+00, -1.0000000000000000e+00, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, -0.01, 0.0);
+        const double circleRadius = 0.02;
+        const unsigned int curvedEdgeIndex = 1;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.Points.col(4)<< Eigen::Vector3d(-6.4031434217770455e-01,
+                                                       3.5968565782229545e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.SubPolygons = { {1, 4, 0}, {1, 2, 3, 4} };
+        expectedResult.SubPolygonTypes =
+        { Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalOrigin,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal,
+        };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+
+      // check triangle sub-division with only end
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.0, 0.01, 0.0;
+        polygonVertices.col(1)<< 1.7320508075687746e-02, 0.0, 0.0;
+        polygonVertices.col(2)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(3)<< 0.0, 1.0, 0.0;
+
+        Eigen::MatrixXd polygonEdgeTangents(3, 4);
+        polygonEdgeTangents.col(0)<<  1.7320508075687746e-02,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(1)<<  9.8267949192431225e-01,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(2)<< -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        polygonEdgeTangents.col(3)<<  0.0000000000000000e+00, -1.0000000000000000e+00, 0.0000000000000000e+00;
+
+        const Eigen::Vector3d circleCenter(0.0, -0.01, 0.0);
+        const double circleRadius = 0.02;
+        const unsigned int curvedEdgeIndex = 0;
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult result =
+            geometryUtility.PolygonOutsideCircleDivisionByAngleQuadrant(polygonVertices,
+                                                                        polygonEdgeTangents,
+                                                                        circleCenter,
+                                                                        circleRadius,
+                                                                        curvedEdgeIndex);
+
+        Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult expectedResult;
+        expectedResult.Points.setZero(3, 5);
+        expectedResult.Points.block(0, 0, 3, 4)<< polygonVertices;
+        expectedResult.Points.col(4)<< Eigen::Vector3d(6.4031434217770300e-01,
+                                                       3.5968565782229700e-01,
+                                                       0.0000000000000000e+00);
+        expectedResult.SubPolygons = { {1, 2, 4}, {0, 1, 4, 3} };
+        expectedResult.SubPolygonTypes =
+        {
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::ExternalEnd,
+          Gedim::GeometryUtilities::PolygonDivisionByAngleQuadrantResult::Types::Internal
+        };
+
+        ASSERT_EQ(result.Points, expectedResult.Points);
+        ASSERT_EQ(result.SubPolygons, expectedResult.SubPolygons);
+        ASSERT_EQ(result.SubPolygonTypes, expectedResult.SubPolygonTypes);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
   TEST(TestGeometryUtilities, TestPolygonCirclePosition)
   {
     try

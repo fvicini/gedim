@@ -88,6 +88,37 @@ namespace Gedim
           vector<Intersection> Intersections = {}; ///< ordered by edge order
       };
 
+      struct PolygonDivisionByAngleQuadrantResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            ExternalOrigin = 1,
+            Internal = 2,
+            ExternalEnd = 3
+          };
+
+          Eigen::MatrixXd Points; ///< Coordinates of generated points
+          vector<vector<unsigned int>> SubPolygons; ///< Subpolygon formed
+          vector<Types> SubPolygonTypes; ///< SubPolygon types
+      };
+
+      struct PolygonDivisionByCircleResult final
+      {
+          Eigen::MatrixXd Points; ///< Coordinates of generated points
+          vector<vector<unsigned int>> SubTriangles; ///< Triangle formed with sub-polygons and circle Center
+          vector<vector<unsigned int>> InternalTriangles; ///< Triangle formed with circle Center and new points
+          vector<vector<unsigned int>> SubPolygons; ///< Subpolygon formed
+      };
+
+      struct CircleDivisionByPolygonResult final
+      {
+          Eigen::MatrixXd Points; ///< Coordinates of generated points
+          vector<vector<unsigned int>> SubTriangles; ///< Triangle formed with sub-polygons and circle Center
+          vector<vector<unsigned int>> InternalTriangles; ///< Triangle formed with circle Center and new points
+          vector<vector<unsigned int>> SubPolygons; ///< Subpolygon formed
+      };
+
       struct SplitPolygonInput final
       {
           struct AlignedEdge
@@ -439,6 +470,18 @@ namespace Gedim
                              _configuration.Tolerance);
       }
 
+      /// \brief Check if two 1D values are equal according to tolerance
+      /// \param first the first value
+      /// \param second the second value
+      /// \return the result
+      inline bool Are1DValuesEqual(const double& first,
+                                   const double& second) const
+      {
+        return CompareValues(first,
+                             second,
+                             _configuration.Tolerance) == CompareTypes::Coincident;
+      }
+
       /// \param value the value
       /// \return true if value is positive
       inline bool IsValue1DPositive(const double& value) const
@@ -651,6 +694,31 @@ namespace Gedim
         return Eigen::Vector3d(tangent.y(), -tangent.x(), 0.0);
       }
 
+      /// \brief Compute the segment slope m of line y = m * x + q
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
+      /// \return the segment slope
+      /// \note the segment shall be 2D
+      inline double SegmentSlope(const Eigen::Vector3d& segmentOrigin,
+                                 const Eigen::Vector3d& segmentEnd) const
+      {
+        Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        return (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
+      }
+
+      /// \brief Compute the segment intercept q of line y = m * x + q
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
+      /// \return the segment intercept
+      /// \note the segment shall be 2D
+      inline double SegmentIntercept(const Eigen::Vector3d& segmentOrigin,
+                                     const Eigen::Vector3d& segmentEnd) const
+      {
+        Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        return segmentOrigin.y() -
+            segmentOrigin.x() * (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
+      }
+
       /// \brief Compute the intersection between the two segments
       /// \param firstSegmentOrigin first segment origin
       /// \param firstSegmentEnd first segment end
@@ -760,12 +828,63 @@ namespace Gedim
       /// \note works only for convex polygon
       vector<unsigned int> PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const;
 
-      /// \brief Convex Polygon simple Triangulation from the first vertex
+      /// \brief Convex Polygon simple Triangulation from an internal point
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
       /// \param point internal polygon point
       /// \return the sub-division triangulation, size 1 x 3 * numPolygonVertices, the point index is numPolygonVertices
       vector<unsigned int> PolygonTriangulationByInternalPoint(const Eigen::MatrixXd& polygonVertices,
                                                                const Eigen::Vector3d& point) const;
+
+      /// \brief Convex Polygon sub division by angle quadrant which intersects a polygon in a curved edge
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param circleCenter the circle center from which the curved edge derives
+      /// \param circleRadius the radius of the circle from which the curved edge derives
+      /// \param curvedEdgeIndex curved edge index, from 0 to numPolygonVertices
+      /// \return the sub-division polygons result
+      PolygonDivisionByAngleQuadrantResult PolygonOutsideCircleDivisionByAngleQuadrant(const Eigen::MatrixXd& polygonVertices,
+                                                                                       const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                       const Eigen::Vector3d& circleCenter,
+                                                                                       const double& circleRadius,
+                                                                                       const unsigned int& curvedEdgeIndex) const;
+
+      /// \brief Convex Polygon sub division by angle quadrant which intersects a polygon in a curved edge
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param circleCenter the circle center from which the curved edge derives
+      /// \param circleRadius the radius of the circle from which the curved edge derives
+      /// \param curvedEdgeIndex curved edge index, from 0 to numPolygonVertices
+      /// \return the sub-division polygons result
+      PolygonDivisionByAngleQuadrantResult PolygonInsideCircleDivisionByAngleQuadrant(const Eigen::MatrixXd& polygonVertices,
+                                                                                      const Eigen::MatrixXd& polygonEdgeTangents,
+                                                                                      const Eigen::Vector3d& circleCenter,
+                                                                                      const double& circleRadius,
+                                                                                      const unsigned int& curvedEdgeIndex) const;
+
+      /// \brief Convex Polygon sub division from a circle which intersects a polygon in a curved edge
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param circleCenter the circle center from which the curved edge derives
+      /// \param circleRadius the radius of the circle from which the curved edge derives
+      /// \param curvedEdgeIndex curved edge index, from 0 to numPolygonVertices
+      /// \return the sub-division polygons result
+      /// \note the polygon should be inside the angle quadrant formed by the curved edge
+      /// \note otherwise use PolygonDivisionByAngleQuadrant function to split the polygon
+      PolygonDivisionByCircleResult PolygonDivisionByCircle(const Eigen::MatrixXd& polygonVertices,
+                                                            const Eigen::MatrixXd& polygonEdgeTangents,
+                                                            const Eigen::Vector3d& circleCenter,
+                                                            const double& circleRadius,
+                                                            const unsigned int& curvedEdgeIndex) const;
+
+      /// \brief Circle division from Convex Polygon sub division which intersects a polygon in a curved edge
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \param circleCenter the circle center from which the curved edge derives
+      /// \param circleRadius the radius of the circle from which the curved edge derives
+      /// \param curvedEdgeIndex curved edge index, from 0 to numPolygonVertices
+      /// \return the sub-division circle result
+      /// \note the polygon should be inside the angle quadrant formed by the curved edge
+      CircleDivisionByPolygonResult CircleDivisionByPolygon(const Eigen::MatrixXd& polygonVertices,
+                                                            const Eigen::MatrixXd& polygonEdgeTangents,
+                                                            const Eigen::Vector3d& circleCenter,
+                                                            const double& circleRadius,
+                                                            const unsigned int& curvedEdgeIndex) const;
 
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
       /// \return the polygon area
@@ -795,6 +914,17 @@ namespace Gedim
                                                           const vector<PointCirclePositionResult>& vertexPositions,
                                                           const IntersectionPolygonCircleResult& polygonCircleIntersections,
                                                           const PolygonCirclePositionTypes& polygonCirclePosition) const;
+
+      /// \brief Build the subpolygon coordinates from split result
+      /// \param splitResult the split result
+      /// \param subPolygonIndex the subpolygon index, from 0 to SplitPolygonWithCircleResult::NewPolygons.size()
+      /// \param polygonVertices the original polygon vertices
+      /// \param polygonCircleIntersections the polygon circle intersection
+      /// \return the resulting subpolygon coordinates
+      Eigen::MatrixXd SplitPolygonWithCircleBuildSubPolygon(const SplitPolygonWithCircleResult& splitResult,
+                                                            const unsigned int& subPolygonIndex,
+                                                            const Eigen::MatrixXd& polygonVertices,
+                                                            const Gedim::GeometryUtilities::IntersectionPolygonCircleResult& polygonCircleIntersections) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
@@ -940,6 +1070,16 @@ namespace Gedim
                                     const Eigen::Vector3d& segmentEnd,
                                     const Eigen::MatrixXd& points) const;
 
+      /// \brief Check if a point is aligned to a line identified by a segment
+      /// \param segmentOrigin segment origin of the line
+      /// \param segmentEnd segment end of the line
+      /// \param point the point
+      /// \return true if the point is aligned
+      inline bool PointIsAligned(const Eigen::Vector3d& segmentOrigin,
+                                 const Eigen::Vector3d& segmentEnd,
+                                 const Eigen::Vector3d& point) const
+      { return PointsAreAligned(segmentOrigin, segmentEnd, point)[0]; }
+
       /// \brief Extract the circumscribed unaligned points (minimum 2) in a set of points
       /// \param points the points, size 3 x numPoints
       /// \return the unaligned points indices unclockwise, size numUnalignedPoints, 2 <= numUnalignedPoints <= numPoints
@@ -956,6 +1096,14 @@ namespace Gedim
       /// \return the triangles coordinates, size 1 x numTriangles
       vector<Eigen::Matrix3d> ExtractTriangulationPoints(const Eigen::MatrixXd& points,
                                                          const vector<unsigned int>& pointsTriangulation) const;
+
+      /// \param points the points, size 3 x numPoints
+      /// \param externalPoint the external point coordinates
+      /// \param pointsTriangulation the polygon sub-division triangulation, size 1 x 3 * numTriangles
+      /// \return the triangles coordinates, size 1 x numTriangles
+      vector<Eigen::Matrix3d> ExtractTriangulationPointsByExternalPoint(const Eigen::MatrixXd& points,
+                                                                        const Eigen::Vector3d& externalPoint,
+                                                                        const vector<unsigned int>& pointsTriangulation) const;
 
       /// \brief Create a Tetrahedron with origin and dimension
       /// \param origin the origin
