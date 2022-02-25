@@ -380,7 +380,7 @@ namespace Gedim
       subPolygon.push_back(curvedEdgeOriginIndex);
       subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
       unsigned int vertexIndex = (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices;
-      while (vertexIndex < curvedEdgeOriginIndex)
+			while (vertexIndex != curvedEdgeOriginIndex)
       {
         subPolygon.push_back(vertexIndex);
         vertexIndex = (vertexIndex + 1) % numPolygonVertices;
@@ -396,11 +396,12 @@ namespace Gedim
       list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
       subPolygon.push_back(curvedEdgeEndIndex);
       unsigned int vertexIndex = (curvedEdgeEndIndex + 1) % numPolygonVertices;
-      while (vertexIndex <= curvedEdgeEndEdgeIntersectionIndex)
+			while (vertexIndex != curvedEdgeEndEdgeIntersectionIndex)
       {
         subPolygon.push_back(vertexIndex);
         vertexIndex = (vertexIndex + 1) % numPolygonVertices;
       }
+			subPolygon.push_back(curvedEdgeEndEdgeIntersectionIndex);
       subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
 
       subPolygonCounter++;
@@ -479,7 +480,7 @@ namespace Gedim
       const unsigned int edgeOriginIndex = e;
       const unsigned int edgeEndIndex = (e + 1) % numPolygonVertices;
 
-      if (edgeEndIndex == curvedEdgeIndex)
+			if (edgeEndIndex == curvedEdgeIndex)
         continue;
 
       const Vector3d& edgeOrigin = polygonVertices.col(edgeOriginIndex);
@@ -581,7 +582,7 @@ namespace Gedim
       subPolygon.push_back(curvedEdgeOriginIndex);
       subPolygon.push_back(curvedEdgeOriginVertexIntersectionIndex);
       unsigned int vertexIndex = (curvedEdgeOriginEdgeIntersectionIndex + 1) % numPolygonVertices;
-      while (vertexIndex < curvedEdgeOriginIndex)
+			while (vertexIndex != curvedEdgeOriginIndex)
       {
         subPolygon.push_back(vertexIndex);
         vertexIndex = (vertexIndex + 1) % numPolygonVertices;
@@ -597,11 +598,12 @@ namespace Gedim
       list<unsigned int>& subPolygon = subPolygons[subPolygonCounter];
       subPolygon.push_back(curvedEdgeEndIndex);
       unsigned int vertexIndex = (curvedEdgeEndIndex + 1) % numPolygonVertices;
-      while (vertexIndex <= curvedEdgeEndEdgeIntersectionIndex)
+			while (vertexIndex != curvedEdgeEndEdgeIntersectionIndex)
       {
         subPolygon.push_back(vertexIndex);
         vertexIndex = (vertexIndex + 1) % numPolygonVertices;
       }
+			subPolygon.push_back(curvedEdgeEndEdgeIntersectionIndex);
       subPolygon.push_back(curvedEdgeEndVertexIntersectionIndex);
 
       subPolygonCounter++;
