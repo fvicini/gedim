@@ -463,7 +463,7 @@ namespace Gedim
 			/// \param second the second value
 			/// \return the relative difference between the two values according the first
 			inline double RelativeDifference(const double& first,
-																			 const double& second)
+																			 const double& second) const
 			{
 				double relativeValue = (first == 0.0) ? 1.0 : abs(first);
 				return abs(second - first) /  relativeValue;
