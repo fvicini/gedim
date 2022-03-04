@@ -1050,6 +1050,124 @@ namespace GedimUnitTesting
       FAIL();
     }
   }
+
+  TEST(TestConformMesh, TestConformMesh2DOnlyOnEdges)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      geometryUtilitiesConfig.Tolerance = 1e-12;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      // conform of simple 2 points mesh only on edges
+      {
+        // Create mesh fracture one and corresponding intersection meshes
+        GedimUnitTesting::MeshMatrices_2D_2Cells_Mock mockMeshOne;
+        Gedim::MeshMatricesDAO fractureMeshOne(mockMeshOne.Mesh);
+
+        Eigen::Vector3d segmentOneOrigin(0.0, 1.0, 0.0);
+        Eigen::Vector3d segmentOneEnd(   1.0, 0.0, 0.0);
+
+        Gedim::IntersectorMesh2DSegment intersectorMeshSegmentOne(fractureMeshOne,
+                                                                  geometryUtilities);
+
+        Gedim::IntersectorMesh2DSegment::IntersectionMesh intersectionMeshOne;
+        intersectorMeshSegmentOne.CreateIntersectionMesh(segmentOneOrigin,
+                                                         segmentOneEnd,
+                                                         intersectionMeshOne);
+
+        // Create mesh fracture two and corresponding intersection meshes
+        GedimUnitTesting::MeshMatrices_2D_4Cells_Mock mockMeshTwo;
+        Gedim::MeshMatricesDAO fractureMeshTwo(mockMeshTwo.Mesh);
+
+        Eigen::Vector3d segmentTwoOrigin(1.0, 0.0, 0.0);
+        Eigen::Vector3d segmentTwoEnd(   0.0, 1.0, 0.0);
+
+        Gedim::IntersectorMesh2DSegment intersectorMeshSegmentTwo(fractureMeshTwo,
+                                                                  geometryUtilities);
+
+        Gedim::IntersectorMesh2DSegment::IntersectionMesh intersectionMeshTwo;
+        intersectorMeshSegmentTwo.CreateIntersectionMesh(segmentTwoOrigin,
+                                                         segmentTwoEnd,
+                                                         intersectionMeshTwo);
+
+        // Create mesh union
+        vector<double> curvilinearCoordinatesMeshOne;
+        vector<double> curvilinearCoordinatesMeshTwo;
+        Gedim::IntersectorMesh2DSegment::ToCurvilinearCoordinates(intersectionMeshOne, curvilinearCoordinatesMeshOne);
+        Gedim::IntersectorMesh2DSegment::ToCurvilinearCoordinates(intersectionMeshTwo, curvilinearCoordinatesMeshTwo);
+        Gedim::UnionMeshSegment unionMeshSegment(geometryUtilities);
+
+        Gedim::UnionMeshSegment::UnionMesh unionMesh;
+        unionMeshSegment.CreateUnionMesh(curvilinearCoordinatesMeshOne,
+                                         curvilinearCoordinatesMeshTwo,
+                                         unionMesh);
+
+        // Create first conform mesh
+        Gedim::ConformerMeshSegment conformMeshSegmentOne(geometryUtilities);
+
+        Gedim::ConformerMeshSegment::ConformMesh conformMeshOne;
+        ASSERT_NO_THROW(conformMeshSegmentOne.CreateConformMesh(intersectionMeshOne,
+                                                                unionMesh,
+                                                                0,
+                                                                conformMeshOne));
+
+        Gedim::ConformerMeshPolygon::ConformerMeshPolygonConfiguration conformerMeshPolygonOneConfig;
+        conformerMeshPolygonOneConfig.Type = Gedim::ConformerMeshPolygon::ConformerMeshPolygonConfiguration::Types::OnlyOnEdges;
+        Gedim::ConformerMeshPolygon conformerMeshPolygonOne(geometryUtilities,
+                                                            conformerMeshPolygonOneConfig);
+        Gedim::ConformerMeshPolygon::ConformMesh fractureConformedMeshOne;
+
+        ASSERT_NO_THROW(conformerMeshPolygonOne.CreateConformMesh(segmentOneOrigin,
+                                                                  segmentOneEnd,
+                                                                  conformMeshOne,
+                                                                  fractureMeshOne,
+                                                                  fractureConformedMeshOne));
+
+        EXPECT_EQ(mockMeshOne.Mesh.NumberCell0D, 5);
+        EXPECT_EQ(mockMeshOne.Mesh.NumberCell1D, 7);
+        EXPECT_EQ(mockMeshOne.Mesh.NumberCell2D, 4);
+        for (const auto& mesh1Dpoint : conformMeshOne.Points)
+          EXPECT_EQ(mesh1Dpoint.second.Vertex2DIds.size(), 1);
+        for (const auto& mesh1Dsegment : conformMeshOne.Segments)
+          EXPECT_EQ(mesh1Dsegment.Edge2DIds.size(), 2);
+
+        // Create second conform mesh
+        Gedim::ConformerMeshSegment conformMeshSegmentTwo(geometryUtilities);
+
+        Gedim::ConformerMeshSegment::ConformMesh conformMeshTwo;
+        ASSERT_NO_THROW(conformMeshSegmentTwo.CreateConformMesh(intersectionMeshTwo,
+                                                                unionMesh,
+                                                                1,
+                                                                conformMeshTwo));
+
+        Gedim::ConformerMeshPolygon::ConformerMeshPolygonConfiguration conformerMeshPolygonTwoConfig;
+        conformerMeshPolygonTwoConfig.Type = Gedim::ConformerMeshPolygon::ConformerMeshPolygonConfiguration::Types::OnlyOnEdges;
+        Gedim::ConformerMeshPolygon conformerMeshPolygonTwo(geometryUtilities,
+                                                            conformerMeshPolygonTwoConfig);
+        Gedim::ConformerMeshPolygon::ConformMesh fractureConformedMeshTwo;
+
+        ASSERT_NO_THROW(conformerMeshPolygonTwo.CreateConformMesh(segmentTwoOrigin,
+                                                                  segmentTwoEnd,
+                                                                  conformMeshTwo,
+                                                                  fractureMeshTwo,
+                                                                  fractureConformedMeshTwo));
+
+        EXPECT_EQ(mockMeshTwo.Mesh.NumberCell0D, 5);
+        EXPECT_EQ(mockMeshTwo.Mesh.NumberCell1D, 8);
+        EXPECT_EQ(mockMeshTwo.Mesh.NumberCell2D, 4);
+        for (const auto& mesh1Dpoint : conformMeshTwo.Points)
+          EXPECT_EQ(mesh1Dpoint.second.Vertex2DIds.size(), 1);
+        for (const auto& mesh1Dsegment : conformMeshTwo.Segments)
+          EXPECT_EQ(mesh1Dsegment.Edge2DIds.size(), 1);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
 }
 
 #endif // __TEST_CONFORMMESH_H

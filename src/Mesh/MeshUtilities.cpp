@@ -265,4 +265,20 @@ namespace Gedim
     }
   }
   // ***************************************************************************
+  vector<unsigned int> MeshUtilities::MeshCell2DRoots(const IMeshDAO& mesh) const
+  {
+    vector<unsigned int> rootCell2Ds(mesh.Cell2DTotalNumber());
+
+    for (unsigned int cc = 0; cc < mesh.Cell2DTotalNumber(); cc++)
+    {
+      unsigned int rootCell = cc;
+      while (mesh.Cell2DHasOriginalCell2D(rootCell))
+        rootCell = mesh.Cell2DOriginalCell2D(cc);
+
+      rootCell2Ds[cc] = rootCell;
+    }
+
+    return rootCell2Ds;
+  }
+  // ***************************************************************************
 }

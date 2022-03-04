@@ -44,6 +44,15 @@ namespace Gedim
                                         const T& minElement,
                                         const T& newElementInitialization);
 
+      /// \brief for each i element of container v if v[i] == element then v[i] = newElementInitialization
+      /// \param elements the container v
+      /// \param element the element
+      /// \param newElementInitialization the new element initialization
+      template<class Container, class T>
+      void AlignContainerElements(Container& elements,
+                                  const T& element,
+                                  const T& newElementInitialization);
+
       template<typename T>
       void ResizeNumberVectorWithNewNumberElements(vector<unsigned int>& numberElementVector,
                                                    vector<T>& elementVector,
@@ -615,14 +624,24 @@ namespace Gedim
         return _mesh.UpdatedCell2Ds.at(cell2DIndex).size();
       }
       inline bool Cell2DHasUpdatedCell2D(const unsigned int& cell2DIndex,
-                                         const unsigned int& updatedCell2DIdex) const
+                                         const unsigned int& updatedCell2DIndex) const
       {
         Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(updatedCell2DIdex < Cell2DTotalNumber());
-        return _mesh.UpdatedCell2Ds.at(cell2DIndex).find(updatedCell2DIdex) != _mesh.UpdatedCell2Ds.at(cell2DIndex).end();
+        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        return _mesh.UpdatedCell2Ds.at(cell2DIndex).find(updatedCell2DIndex) != _mesh.UpdatedCell2Ds.at(cell2DIndex).end();
       }
       void Cell2DInsertUpdatedCell2D(const unsigned int& cell2DIndex,
                                      const unsigned int& updatedCell2DIdex);
+      inline bool Cell2DHasOriginalCell2D(const unsigned int& updatedCell2DIndex) const
+      {
+        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        return _mesh.Cell2DOriginalCell2Ds.at(updatedCell2DIndex) < _mesh.NumberCell2D;
+      }
+      inline unsigned int Cell2DOriginalCell2D(const unsigned int& updatedCell2DIndex) const
+      {
+        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        return _mesh.Cell2DOriginalCell2Ds.at(updatedCell2DIndex);
+      }
       bool Cell2DUpdatedCell2Ds(const unsigned int& cell2DIndex,
                                 list<unsigned int>& updatedCell2DIds) const;
 

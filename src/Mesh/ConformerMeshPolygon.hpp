@@ -17,11 +17,20 @@ namespace Gedim
   {
     public:
       struct ConformMesh final {
-          vector<list<unsigned int>> Mesh2DCell2DMesh1DCell1DIds; ///< for each cell2D of mesh2D the list of cell1D of mesh1D
+      };
+
+      struct ConformerMeshPolygonConfiguration final {
+          enum struct Types {
+            Generalized = 0, // conform checking the intersection types
+            OnlyOnEdges = 1 // mesh 2D is already conform on edges, check only vertices
+          };
+
+          Types Type = Types::Generalized;
       };
 
     private:
       const Gedim::GeometryUtilities& _geometryUtilities;
+      ConformerMeshPolygonConfiguration configuration;
 
       ConformerMeshSegment::ConformMesh::ConformMeshPoint& InsertNewIntersection(const double& curvilinearCoordinate,
                                                                                  ConformerMeshSegment::ConformMesh& result,
@@ -68,11 +77,18 @@ namespace Gedim
                              map<unsigned int, unsigned int>& cell2DMesh2DEdgesMap,
                              const Gedim::GeometryUtilities::SplitPolygonWithSegmentResult& splitResult);
 
+      void UpdateCell2DMesh2DWithSegmentOnEdges(const Eigen::Vector3d& segmentOrigin,
+                                                const Eigen::Vector3d& segmentTangent,
+                                                ConformerMeshSegment::ConformMesh& mesh1D,
+                                                Gedim::IMeshDAO& mesh2D,
+                                                const vector<unsigned int>& cell1DMesh1DIds,
+                                                const unsigned int& cell2DMesh2DId);
+
       void InsertCell2DMesh2DMiddleEdgesPolygonUpdate(const Eigen::Vector3d& segmentOrigin,
                                                       const Eigen::Vector3d& segmentTangent,
                                                       ConformerMeshSegment::ConformMesh& mesh1D,
                                                       Gedim::IMeshDAO& mesh2D,
-                                                      const list<unsigned int> cell1DMesh1DIds,
+                                                      const list<unsigned int>& cell1DMesh1DIds,
                                                       const unsigned int& cell2DMesh2DId);
 
       void InsertCell2DMesh2DMiddleEdgesPolygonCreation(const Eigen::Vector3d& segmentOrigin,
@@ -96,8 +112,22 @@ namespace Gedim
                         const map<unsigned int, set<unsigned int> >& mesh2DUpdatedCellIds,
                         list<unsigned int>& newCellIds);
 
+      void CreateConformMeshGeneralized(const Eigen::Vector3d& segmentOrigin,
+                                        const Eigen::Vector3d& segmentEnd,
+                                        ConformerMeshSegment::ConformMesh& mesh1D,
+                                        Gedim::IMeshDAO& mesh2D,
+                                        ConformerMeshPolygon::ConformMesh& meshConformedInformation);
+
+      void CreateConformMeshOnlyOnEdges(const Eigen::Vector3d& segmentOrigin,
+                                        const Eigen::Vector3d& segmentEnd,
+                                        ConformerMeshSegment::ConformMesh& mesh1D,
+                                        Gedim::IMeshDAO& mesh2D,
+                                        ConformerMeshPolygon::ConformMesh& meshConformedInformation);
+
     public:
       ConformerMeshPolygon(const Gedim::GeometryUtilities& geometryUtilities);
+      ConformerMeshPolygon(const Gedim::GeometryUtilities& geometryUtilities,
+                           const ConformerMeshPolygonConfiguration& configuration);
       ~ConformerMeshPolygon();
 
       /// \brief Conformer the input Mesh2D with a linear mesh1D
