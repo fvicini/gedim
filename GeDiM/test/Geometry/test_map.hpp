@@ -7,7 +7,7 @@
 
 #include "MapQuadrilateral.hpp"
 #include "MapTriangle.hpp"
-#include "Eigen"
+#include "Eigen/Eigen"
 
 using namespace testing;
 using namespace std;
