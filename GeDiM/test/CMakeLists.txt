@@ -58,8 +58,6 @@ endif()
 add_subdirectory(Geometry)
 add_subdirectory(Mesh)
 
-MESSAGE(WARNING ${gedim_test_src_headers})
-
 list(APPEND ${GEDIM_LIBRARY_TEST_SOURCES} ${gedim_test_src_sources})
 list(APPEND ${GEDIM_LIBRARY_TEST_HEADERS} ${gedim_test_src_headers})
 list(APPEND ${GEDIM_LIBRARY_TEST_INCLUDE} ${gedim_test_src_includes})
