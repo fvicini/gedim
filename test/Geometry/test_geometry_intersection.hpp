@@ -1065,10 +1065,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
 
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
@@ -1111,10 +1111,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1168,10 +1168,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1234,10 +1234,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1302,10 +1302,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1359,10 +1359,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1430,10 +1430,10 @@ namespace GedimUnitTesting {
       Eigen::Vector3d width(+0.0, +1.0, +0.0);
       Eigen::Vector3d height(+0.0, +0.0, +1.0);
 
-      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateCubeWithOrigin(origin,
-                                                                                             length,
-                                                                                             height,
-                                                                                             width);
+      Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtility.CreateParallelepipedWithOrigin(origin,
+                                                                                                       length,
+                                                                                                       height,
+                                                                                                       width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                     polyhedron.Edges,
                                                                                                     polyhedron.Faces);
@@ -1498,22 +1498,22 @@ namespace GedimUnitTesting {
       const unsigned int numCell3Ds = 4;
       vector<Gedim::GeometryUtilities::Polyhedron> cell3Ds(numCell3Ds);
 
-      cell3Ds[0] = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.5, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.0, 0.0, 1.0),
-                                                        Eigen::Vector3d(0.0, 0.5, 0.0));
-      cell3Ds[1] = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.5, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.5, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.0, 0.0, 1.0),
-                                                        Eigen::Vector3d(0.0, 0.5, 0.0));
-      cell3Ds[2] = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0, 0.5, 0.0),
-                                                        Eigen::Vector3d(0.5, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.0, 0.0, 1.0),
-                                                        Eigen::Vector3d(0.0, 0.5, 0.0));
-      cell3Ds[3] = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.5, 0.5, 0.0),
-                                                        Eigen::Vector3d(0.5, 0.0, 0.0),
-                                                        Eigen::Vector3d(0.0, 0.0, 1.0),
-                                                        Eigen::Vector3d(0.0, 0.5, 0.0));
+      cell3Ds[0] = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.0, 0.0, 1.0),
+                                                                  Eigen::Vector3d(0.0, 0.5, 0.0));
+      cell3Ds[1] = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.0, 0.0, 1.0),
+                                                                  Eigen::Vector3d(0.0, 0.5, 0.0));
+      cell3Ds[2] = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0, 0.5, 0.0),
+                                                                  Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.0, 0.0, 1.0),
+                                                                  Eigen::Vector3d(0.0, 0.5, 0.0));
+      cell3Ds[3] = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.5, 0.5, 0.0),
+                                                                  Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                  Eigen::Vector3d(0.0, 0.0, 1.0),
+                                                                  Eigen::Vector3d(0.0, 0.5, 0.0));
 
       vector<vector<Eigen::MatrixXd>> cell3DsFaceVertices(numCell3Ds);
       vector<Eigen::Vector3d> cell3DsBarycenters(numCell3Ds);

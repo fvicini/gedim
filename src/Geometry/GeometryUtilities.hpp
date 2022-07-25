@@ -935,7 +935,7 @@ namespace Gedim
       /// \note works only with convex polyhedra
       IntersectionPolyhedronPlaneResult IntersectionPolyhedronPlane(const Eigen::MatrixXd& polyhedronVertices,
                                                                     const Eigen::MatrixXi& polyhedronEdges,
-                                                                    const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                    const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                     const Eigen::Vector3d& planeNormal,
                                                                     const Eigen::Vector3d& planeOrigin,
                                                                     const Eigen::Matrix3d& planeRotationMatrix,
@@ -1379,16 +1379,16 @@ namespace Gedim
                                                const Eigen::Vector3d& v3,
                                                const Eigen::Vector3d& v4) const;
 
-      /// \brief Create a Cube with three vertices
+      /// \brief Create a Parallelepiped with origin and dimension
       /// \param origin the origin
       /// \param lengthVector the length vector
       /// \param heightVector the heigth vector
       /// \param widthVector the width vector
-      /// \return the cube created
-      Polyhedron CreateCubeWithOrigin(const Eigen::Vector3d& origin,
-                                      const Eigen::Vector3d& lengthVector,
-                                      const Eigen::Vector3d& heightVector,
-                                      const Eigen::Vector3d& widthVector) const;
+      /// \return the parallelepiped created
+      Polyhedron CreateParallelepipedWithOrigin(const Eigen::Vector3d& origin,
+                                                const Eigen::Vector3d& lengthVector,
+                                                const Eigen::Vector3d& heightVector,
+                                                const Eigen::Vector3d& widthVector) const;
 
       /// \brief Compute Polyhedron Faces Vertices
       /// \param polyhedronVertices the polyhedron vertices

@@ -22,10 +22,10 @@ namespace GedimUnitTesting
 
       // check cube barycenter
       {
-        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(1.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(0.0,0.0,1.0),
-                                                                                               Eigen::Vector3d(0.0,1.0,0.0));
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
         ASSERT_TRUE(geometryUtility.PointsAreCoincident(geometryUtility.PolyhedronBarycenter(cube.Vertices),
                                                         Eigen::Vector3d(0.5, 0.5, 0.5)));
       }
@@ -57,10 +57,10 @@ namespace GedimUnitTesting
 
       // check cube face vertices
       {
-        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(1.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(0.0,0.0,1.0),
-                                                                                               Eigen::Vector3d(0.0,1.0,0.0));
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
         vector<Eigen::MatrixXd> expectedFaceVertices(6, Eigen::MatrixXd(3, 4));
         expectedFaceVertices[0]<< 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00,
             0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00,
@@ -132,10 +132,10 @@ namespace GedimUnitTesting
 
       // check cube face normals
       {
-        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(1.0,0.0,0.0),
-                                                                                               Eigen::Vector3d(0.0,0.0,1.0),
-                                                                                               Eigen::Vector3d(0.0,1.0,0.0));
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
 
         const Eigen::Vector3d barycenter(0.5, 0.5, 0.5);
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
