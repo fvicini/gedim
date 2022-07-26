@@ -562,8 +562,7 @@ namespace Gedim
       inline double RelativeDifference(const double& first,
                                        const double& second) const
       {
-        double relativeValue = (first == 0.0) ? 1.0 : abs(first);
-        return abs(second - first) /  relativeValue;
+        return abs(second - first) / ((first == 0.0) ? 1.0 : abs(first));
       }
 
       /// \brief Compare two 1D values according to tolerance
