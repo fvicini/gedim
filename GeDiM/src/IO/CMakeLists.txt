@@ -1,9 +1,11 @@
 list(APPEND gedim_src_sources ${CMAKE_CURRENT_SOURCE_DIR}/IOUtilities.cpp)
 list(APPEND gedim_src_sources ${CMAKE_CURRENT_SOURCE_DIR}/FileTextReader.cpp)
+list(APPEND gedim_src_sources ${CMAKE_CURRENT_SOURCE_DIR}/StringsUtilities.cpp)
 
 list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/IOUtilities.hpp)
 list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/FileTextReader.hpp)
 list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/IFileTextReader.hpp)
+list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/StringsUtilities.hpp)
 
 list(APPEND gedim_src_includes ${CMAKE_CURRENT_SOURCE_DIR})
 
