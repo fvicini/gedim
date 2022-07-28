@@ -6,6 +6,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "Configurations.hpp"
+#include "IOUtilities.hpp"
 
 using namespace testing;
 using namespace std;
@@ -190,111 +191,61 @@ namespace GedimUnitTesting
   // ***************************************************************************
   TEST(TestConfigurations, ExportToCsv_Test)
   {
-    Gedim::Configurations::Reset();
+    ASSERT_NO_THROW(Gedim::Configurations::Reset());
 
-    Gedim::Configurations::AddProperty("TestInt", 10, "int test");
-    Gedim::Configurations::AddProperty("TestChar", 'b', "char test");
-    Gedim::Configurations::AddProperty("TestDouble", 12.6, "double test");
-    Gedim::Configurations::AddProperty("TestString", "pippo", "string test");
-    Gedim::Configurations::AddProperty("TestVectorInt", vector<int>{1, 7, 8}, "vector<int> test");
-    Gedim::Configurations::AddProperty("TestVectorDouble", vector<double>{1.6, 8.7, 10.8}, "vector<double> test");
-    Gedim::Configurations::AddProperty("TestBool", true, "bool test");
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestInt", 10, "int test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestChar", 'b', "char test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestDouble", 12.6, "double test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestString", "pippo", "string test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestVectorInt", vector<int>{1, 7, 8}, "vector<int> test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestVectorDouble", vector<double>{1.6, 8.7, 10.8}, "vector<double> test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestBool", true, "bool test"));
 
-    Output::CreateFolder("./Output");
-    Output::AssertTest(Gedim::Configurations::ExportToCsv("./Output/Parameters.csv", false, ';'), "%s: Export", __func__);
+    string exportFolder = "./Export/TestConfigurations/ExportToCsv_Test";
+    Gedim::Output::CreateFolder(exportFolder);
+    ASSERT_NO_THROW(Gedim::Configurations::ExportToCsv(exportFolder + "/Parameters.csv", false, ';'));
 
-    Gedim::Configurations::Reset();
-    Output::AssertTest(Gedim::Configurations::InitializeFromCsv("./Output/Parameters.csv", true, ';'), "%s: Initialize", __func__);
-    Output::AssertTest(Gedim::Configurations::NumberProperties() == 7, "%s: Test NumberProperties", __func__);
+    ASSERT_NO_THROW(Gedim::Configurations::Reset());
+    ASSERT_NO_THROW(Gedim::Configurations::InitializeFromCsv(exportFolder + "/Parameters.csv", true, ';'));
+    ASSERT_EQ(7, Gedim::Configurations::NumberProperties());
 
-    ASSERT_EQ(202, Gedim::Configurations::GetPropertyValue<int>("TestInt"));
-    ASSERT_EQ(103, Gedim::Configurations::GetPropertyValue<unsigned int>("TestUnsignedInt"));
+    ASSERT_EQ(10, Gedim::Configurations::GetPropertyValue<int>("TestInt"));
     ASSERT_EQ('b', Gedim::Configurations::GetPropertyValue<char>("TestChar"));
-    ASSERT_EQ(202.79, Gedim::Configurations::GetPropertyValue<double>("TestDouble"));
-    ASSERT_EQ("202", Gedim::Configurations::GetPropertyValue<string>("TestString"));
+    ASSERT_EQ(12.6, Gedim::Configurations::GetPropertyValue<double>("TestDouble"));
+    ASSERT_EQ("pippo", Gedim::Configurations::GetPropertyValue<string>("TestString"));
     ASSERT_EQ(true, Gedim::Configurations::GetPropertyValue<bool>("TestBool"));
-    ASSERT_EQ(vector<int>({1, 2, 3}), Gedim::Configurations::GetPropertyValue<vector<int>>("TestVectorInt"));
-    ASSERT_EQ(vector<unsigned int>({7, 4, 5}), Gedim::Configurations::GetPropertyValue<vector<unsigned int>>("TestVectorUInt"));
-    ASSERT_EQ(vector<double>({1.5, 1.6}), Gedim::Configurations::GetPropertyValue<vector<double>>("TestVectorDouble"));
-
-    int intProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestInt", intProperty), "%s: int GetPropertyValue", __func__);
-    Output::AssertTest(intProperty == 10, "%s: Test int Property Value", __func__);
-
-    char charProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestChar", charProperty), "%s: char GetPropertyValue", __func__);
-    Output::AssertTest(charProperty == 'b', "%s: Test char Property Value", __func__);
-
-    double doubleProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestDouble", doubleProperty), "%s: double GetPropertyValue", __func__);
-    Output::AssertTest(doubleProperty == 12.6, "%s: Test double Property Value", __func__);
-
-    string stringProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestString", stringProperty), "%s: string GetPropertyValue", __func__);
-    Output::AssertTest(stringProperty == "pippo", "%s: Test string Property Value", __func__);
-
-    bool boolProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestBool", boolProperty), "%s: bool GetPropertyValue", __func__);
-    Output::AssertTest(boolProperty == true, "%s: Test bool Property Value", __func__);
-
-    vector<int> vectorIntProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestVectorInt", vectorIntProperty), "%s: vector<int> GetPropertyValue", __func__);
-    Output::AssertTest(vectorIntProperty == vector<int>{1, 7, 8}, "%s: Test vector<int> Property Value", __func__);
-
-    vector<double> vectorDoubleProperty;
-    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestVectorDouble", vectorDoubleProperty), "%s: vector<double> GetPropertyValue", __func__);
-    Output::AssertTest(vectorDoubleProperty == vector<double>{1.6, 8.7, 10.8}, "%s: Test vector<double> Property Value", __func__);
+    ASSERT_EQ(vector<int>({1, 7, 8}), Gedim::Configurations::GetPropertyValue<vector<int>>("TestVectorInt"));
+    ASSERT_EQ(vector<double>({1.6, 8.7, 10.8}), Gedim::Configurations::GetPropertyValue<vector<double>>("TestVectorDouble"));
   }
-  //  // ***************************************************************************
-  //  TEST(TestConfigurations, ExportToIni_Test)
-  //  {
-  //    Gedim::Configurations::Reset();
+  // ***************************************************************************
+  TEST(TestConfigurations, ExportToIni_Test)
+  {
+    ASSERT_NO_THROW(Gedim::Configurations::Reset());
 
-  //    Gedim::Configurations::AddProperty("TestInt", 10, "int test");
-  //    Gedim::Configurations::AddProperty("TestChar", 'b', "char test");
-  //    Gedim::Configurations::AddProperty("TestDouble", 12.6, "double test");
-  //    Gedim::Configurations::AddProperty("TestString", "pippo", "string test");
-  //    Gedim::Configurations::AddProperty("TestVectorInt", vector<int>{1, 7, 8}, "vector<int> test");
-  //    Gedim::Configurations::AddProperty("TestVectorDouble", vector<double>{1.6, 8.7, 10.8}, "vector<double> test");
-  //    Gedim::Configurations::AddProperty("TestBool", true, "bool test");
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestInt", 10, "int test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestChar", 'b', "char test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestDouble", 12.6, "double test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestString", "pippo", "string test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestVectorInt", vector<int>{1, 7, 8}, "vector<int> test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestVectorDouble", vector<double>{1.6, 8.7, 10.8}, "vector<double> test"));
+    ASSERT_NO_THROW(Gedim::Configurations::AddProperty("TestBool", true, "bool test"));
 
-  //    Output::CreateFolder("./Output");
-  //    Output::AssertTest(Gedim::Configurations::ExportToIni("./Output/Parameters.ini", false, "Test"), "%s: Export", __func__);
+    string exportFolder = "./Export/TestConfigurations/ExportToIni_Test";
+    Gedim::Output::CreateFolder(exportFolder);
+    ASSERT_NO_THROW(Gedim::Configurations::ExportToIni(exportFolder + "/Parameters.ini", false, "Test"));
 
-  //    Gedim::Configurations::Reset();
-  //    Output::AssertTest(Gedim::Configurations::InitializeFromIni("./Output/Parameters.ini"), "%s: Initialize", __func__);
-  //    Output::AssertTest(Gedim::Configurations::NumberProperties() == 7, "%s: Test NumberProperties", __func__);
+    ASSERT_NO_THROW(Gedim::Configurations::Reset());
+    ASSERT_NO_THROW(Gedim::Configurations::InitializeFromIni(exportFolder + "/Parameters.ini"));
+    ASSERT_EQ(7, Gedim::Configurations::NumberProperties());
 
-  //    Output::AssertTest(Gedim::Configurations::ExportToIni("./Output/Parameters_after.ini", false, "Test"), "%s: Export", __func__);
-
-  //    int intProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestInt", intProperty), "%s: int GetPropertyValue", __func__);
-  //    Output::AssertTest(intProperty == 10, "%s: Test int Property Value", __func__);
-
-  //    char charProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestChar", charProperty), "%s: char GetPropertyValue", __func__);
-  //    Output::AssertTest(charProperty == 'b', "%s: Test char Property Value", __func__);
-
-  //    double doubleProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestDouble", doubleProperty), "%s: double GetPropertyValue", __func__);
-  //    Output::AssertTest(doubleProperty == 12.6, "%s: Test double Property Value", __func__);
-
-  //    string stringProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestString", stringProperty), "%s: string GetPropertyValue", __func__);
-  //    Output::AssertTest(stringProperty == "pippo", "%s: Test string Property Value", __func__);
-
-  //    bool boolProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestBool", boolProperty), "%s: bool GetPropertyValue", __func__);
-  //    Output::AssertTest(boolProperty == true, "%s: Test bool Property Value", __func__);
-
-  //    vector<int> vectorIntProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestVectorInt", vectorIntProperty), "%s: vector<int> GetPropertyValue", __func__);
-  //    Output::AssertTest(vectorIntProperty == vector<int>{1, 7, 8}, "%s: Test vector<int> Property Value", __func__);
-
-  //    vector<double> vectorDoubleProperty;
-  //    Output::AssertTest(Gedim::Configurations::GetPropertyValue("TestVectorDouble", vectorDoubleProperty), "%s: vector<double> GetPropertyValue", __func__);
-  //    Output::AssertTest(vectorDoubleProperty == vector<double>{1.6, 8.7, 10.8}, "%s: Test vector<double> Property Value", __func__);
-  //  }
+    ASSERT_EQ(10, Gedim::Configurations::GetPropertyValue<int>("TestInt"));
+    ASSERT_EQ('b', Gedim::Configurations::GetPropertyValue<char>("TestChar"));
+    ASSERT_EQ(12.6, Gedim::Configurations::GetPropertyValue<double>("TestDouble"));
+    ASSERT_EQ("pippo", Gedim::Configurations::GetPropertyValue<string>("TestString"));
+    ASSERT_EQ(true, Gedim::Configurations::GetPropertyValue<bool>("TestBool"));
+    ASSERT_EQ(vector<int>({1, 7, 8}), Gedim::Configurations::GetPropertyValue<vector<int>>("TestVectorInt"));
+    ASSERT_EQ(vector<double>({1.6, 8.7, 10.8}), Gedim::Configurations::GetPropertyValue<vector<double>>("TestVectorDouble"));
+  }
   // ***************************************************************************
 }
 
