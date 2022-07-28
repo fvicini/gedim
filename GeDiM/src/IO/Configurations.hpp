@@ -12,17 +12,23 @@ using namespace std;
 
 namespace Gedim
 {
-  template <class T>
-  struct ConfigurationProperty //: public ICsvExportRow, public IIniExport
-  {
-      string Id; ///< Id
-      string Description = ""; ///< Description
-      T Value = T(); ///< Actual Value
-  };
-
   class Configurations final
   {
     private:
+      template <class T>
+      struct ConfigurationProperty
+      {
+          string Id;
+          string Description = "";
+          T Value = T();
+      };
+
+      struct ExportProperty
+      {
+          string Description = "";
+          string Value;
+      };
+
       static unsigned int numberProperties;
       static unordered_map<string, ConfigurationPropertySupportedTypes::SupportedTypes> propertyTypes;
       static unordered_map<string, void*> properties;
@@ -39,6 +45,10 @@ namespace Gedim
       template<class T>
       static ConfigurationProperty<T>& GetProperty(const string& id)
       { return *static_cast<ConfigurationProperty<T>*>(properties[id]); }
+
+      /// Get Property Value To string
+      static ExportProperty GetPropertyForExport(const string& id,
+                                                 const ConfigurationPropertySupportedTypes::SupportedTypes& type);
 
     public:
       static const unsigned int& NumberProperties() { return numberProperties;  }

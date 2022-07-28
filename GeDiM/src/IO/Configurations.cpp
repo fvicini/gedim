@@ -61,6 +61,92 @@ namespace Gedim
     numberProperties--;
   }
   // ***************************************************************************
+  Configurations::ExportProperty Configurations::GetPropertyForExport(const string& id,
+                                                                      const ConfigurationPropertySupportedTypes::SupportedTypes& type)
+  {
+    Configurations::ExportProperty exportProperty;
+
+    ostringstream propertyStringConverter;
+    string propertyDescription = "";
+
+    switch (type)
+    {
+      case ConfigurationPropertySupportedTypes::Int:
+      {
+        propertyStringConverter<< GetProperty<int>(id).Value;
+        propertyDescription = GetProperty<int>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::Char:
+      {
+        propertyStringConverter<< GetProperty<char>(id).Value;
+        propertyDescription = GetProperty<char>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::String:
+      {
+        propertyStringConverter<< GetProperty<string>(id).Value;
+        propertyDescription = GetProperty<string>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::Double:
+      {
+        propertyStringConverter<< GetProperty<double>(id).Value;
+        propertyDescription = GetProperty<double>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::VectorInt:
+      {
+        propertyStringConverter<< GetProperty<vector<int>>(id).Value;
+        propertyDescription = GetProperty<vector<int>>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::VectorDouble:
+      {
+        propertyStringConverter<< GetProperty<vector<double>>(id).Value;
+        propertyDescription = GetProperty<vector<double>>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::Bool:
+      {
+        propertyStringConverter<< GetProperty<bool>(id).Value;
+        propertyDescription = GetProperty<bool>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::UInt:
+      {
+        propertyStringConverter<< GetProperty<unsigned int>(id).Value;
+        propertyDescription = GetProperty<unsigned int>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::VectorUInt:
+      {
+        propertyStringConverter<< GetProperty<vector<unsigned int>>(id).Value;
+        propertyDescription = GetProperty<vector<unsigned int>>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::SetUInt:
+      {
+        propertyStringConverter<< GetProperty<set<unsigned int>>(id).Value;
+        propertyDescription = GetProperty<set<unsigned int>>(id).Description;
+        break;
+      }
+      case ConfigurationPropertySupportedTypes::Matrix:
+      {
+        propertyStringConverter<< GetProperty<MatrixXd>(id).Value;
+        propertyDescription = GetProperty<MatrixXd>(id).Description;
+        break;
+      }
+      default:
+        throw invalid_argument("Property '" + id + "' cannot be converted. Type not recognized");
+    }
+
+    exportProperty.Value = propertyStringConverter.str();
+    exportProperty.Description = propertyDescription;
+
+    return exportProperty;
+  }
+  // ***************************************************************************
   void Configurations::ConvertPropertyFromString(const string& id,
                                                  const string& type,
                                                  const string& value,
@@ -183,7 +269,8 @@ namespace Gedim
     property.Description = description;
   }
   // ***************************************************************************
-  void Configurations::SetPropertyValue(const string& id, const char* value)
+  void Configurations::SetPropertyValue(const string& id,
+                                        const char* value)
   {
     if (!ExistsProperty(id))
       throw invalid_argument("");
@@ -192,7 +279,9 @@ namespace Gedim
     property.Value = string(value);
   }
   // ***************************************************************************
-  void Configurations::InitializeFromCsv(const string& inputFile, const bool& hasHeader, const char& separator)
+  void Configurations::InitializeFromCsv(const string& inputFile,
+                                         const bool& hasHeader,
+                                         const char& separator)
   {
     if (!Output::FileExists(inputFile))
       throw runtime_error("File '" + inputFile + "' not found");
@@ -362,119 +451,86 @@ namespace Gedim
                                    const bool& append,
                                    const char& separator)
   {
-    throw runtime_error("Unimplemented method");
+    ofstream file;
 
-    // CsvExporter exporter(separator);
+    if (append)
+      file.open(filePath.c_str(), ofstream::app);
+    else
+      file.open(filePath.c_str());
 
-    // exporter.AddRowName("name");
-    // exporter.AddRowName("type");
-    // exporter.AddRowName("value");
-    // exporter.AddRowName("description");
+    if (file.fail())
+      throw runtime_error("File '" + filePath + "' cannot be opened");
 
-    // for (auto it = propertyTypes.begin(); it != propertyTypes.end(); it++)
-    // {
-    //   const string& id = it->first;
-    //   const ConfigurationPropertySupportedTypes::SupportedTypes type = it->second;
+    if (!append)
+    {
+      file<< "Id"<< separator;
+      file<< "Type"<< separator;
+      file<< "Value"<< separator;
+      file<< "Description"<< endl;
+    }
 
-    //   switch (type)
-    //   {
-    //     case ConfigurationPropertySupportedTypes::Int:
-    //       exporter.AddRow(GetProperty<int>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::Char:
-    //       exporter.AddRow(GetProperty<char>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::String:
-    //       exporter.AddRow(GetProperty<string>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::Double:
-    //       exporter.AddRow(GetProperty<double>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::VectorInt:
-    //       exporter.AddRow(GetProperty<vector<int>>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::VectorDouble:
-    //       exporter.AddRow(GetProperty<vector<double>>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::Bool:
-    //       exporter.AddRow(GetProperty<bool>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::UInt:
-    //       exporter.AddRow(GetProperty<unsigned int>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::VectorUInt:
-    //       exporter.AddRow(GetProperty<vector<unsigned int>>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::SetUInt:
-    //       exporter.AddRow(GetProperty<set<unsigned int>>(id));
-    //       break;
-    //     case ConfigurationPropertySupportedTypes::Matrix:
-    //       exporter.AddRow(GetProperty<MatrixXd>(id));
-    //       break;
-    //     default:
-    //       Output::PrintWarningMessage("Property '%s' cannot be converted. Type not recognized", false);
-    //       break;
-    //   }
-    // }
+    for (auto it = propertyTypes.begin(); it != propertyTypes.end(); it++)
+    {
+      const string& id = it->first;
+      const ConfigurationPropertySupportedTypes::SupportedTypes& type = it->second;
+      const string propertyType = ConfigurationPropertySupportedTypes::TypeToString(type);
+      const ExportProperty property = GetPropertyForExport(id, type);
 
-    // return exporter.Export(filePath, append);
+      const string& csvDescription = property.Description;
+      const string& csvKey = id;
+      const string& csvType = propertyType;
+      const string& csvValue = property.Value;
+
+      file<< csvKey<< separator;
+      file<< csvType<< separator;
+      file<< csvValue<< separator;
+      file<< csvDescription<< endl;
+    }
+
+    file.close();
   }
   // ***************************************************************************
   void Configurations::ExportToIni(const string& filePath,
                                    const bool& append,
                                    const string& section)
   {
-    throw runtime_error("Unimplemented method");
+    ofstream file;
 
-    //    IniExporter exporter(section);
+    if (append)
+      file.open(filePath.c_str(), ofstream::app);
+    else
+      file.open(filePath.c_str());
 
-    //    for (auto it = propertyTypes.begin(); it != propertyTypes.end(); it++)
-    //    {
-    //      const string& id = it->first;
-    //      const ConfigurationPropertySupportedTypes::SupportedTypes type = it->second;
+    if (file.fail())
+      throw runtime_error("File '" + filePath + "' cannot be opened");
 
-    //      switch (type)
-    //      {
-    //        case ConfigurationPropertySupportedTypes::Int:
-    //          exporter.AddProperty(GetProperty<int>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::Char:
-    //          exporter.AddProperty(GetProperty<char>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::String:
-    //          exporter.AddProperty(GetProperty<string>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::Double:
-    //          exporter.AddProperty(GetProperty<double>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::VectorInt:
-    //          exporter.AddProperty(GetProperty<vector<int>>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::VectorDouble:
-    //          exporter.AddProperty(GetProperty<vector<double>>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::Bool:
-    //          exporter.AddProperty(GetProperty<bool>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::UInt:
-    //          exporter.AddProperty(GetProperty<unsigned int>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::VectorUInt:
-    //          exporter.AddProperty(GetProperty<vector<unsigned int>>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::SetUInt:
-    //          exporter.AddProperty(GetProperty<set<unsigned int>>(id));
-    //          break;
-    //        case ConfigurationPropertySupportedTypes::Matrix:
-    //          exporter.AddProperty(GetProperty<MatrixXd>(id));
-    //          break;
-    //        default:
-    //          Output::PrintWarningMessage("Property '%s' cannot be converted. Type not recognized", false);
-    //          break;
-    //      }
-    //    }
+    if (!append && !section.empty())
+      file<< "# "<< section<< endl;
 
-    //    return exporter.Export(filePath, append);
+    for (auto it = propertyTypes.begin(); it != propertyTypes.end(); it++)
+    {
+      const string& id = it->first;
+      const ConfigurationPropertySupportedTypes::SupportedTypes& type = it->second;
+      const string propertyType = ConfigurationPropertySupportedTypes::TypeToString(type);
+      const ExportProperty property = GetPropertyForExport(id, type);
+
+      const string& iniDescription = property.Description;
+      const string& iniKey = id;
+      const string& iniType = propertyType;
+      const string& iniValue = property.Value;
+
+      if (iniKey.empty() || iniValue.empty() || iniType.empty())
+        continue;
+
+      file<< "#####################################################"<< endl;
+
+      if (!iniDescription.empty())
+        file<< "# "<< iniDescription<< endl;
+
+      file<< iniKey<< " "<< iniType<< " "<< iniValue<< endl;
+    }
+
+    file.close();
   }
   // ***************************************************************************
   void Configurations::Reset()
