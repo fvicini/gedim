@@ -33,7 +33,7 @@ namespace GedimUnitTesting
   TEST(TestStringsUtilities, TestFindSeparator_Test)
   {
     ASSERT_EQ(':', Gedim::StringsUtilities::FindSeparator("id:type", "id", "type"));
-    ASSERT_EQ('-', Gedim::StringsUtilities::FindSeparator("type - id", "id", "type"));
+    ASSERT_EQ('-', Gedim::StringsUtilities::FindSeparator("type-id", "id", "type"));
   }
   // ***************************************************************************
   TEST(TestStringsUtilities, TestToUpper_Test)
