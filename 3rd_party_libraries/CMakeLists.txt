@@ -10,6 +10,7 @@ set(MAIN_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/Main_Install CACHE PATH "Mai
 
 option(INSTALL_EIGEN3 "Install Eigen3" ON)
 option(INSTALL_GOOGLETEST "Install GoogleTest" ON)
+option(INSTALL_VTK "Install VTK" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
@@ -27,4 +28,9 @@ endif()
 ## GoogleTest
 if(INSTALL_GOOGLETEST)
 	include(InstallGTest)
+endif()
+
+## VTK
+if(INSTALL_VTK)
+	include(InstallVTK)
 endif()

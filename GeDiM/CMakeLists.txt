@@ -44,6 +44,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(Eigen3 CONFIG REQUIRED)
 list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC Eigen3::Eigen)
 
+## VTK
+find_package(VTK REQUIRED)
+list(APPEND ${GEDIM_LIBRARY_INCLUDE} ${VTK_INCLUDE_DIRS})
+list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC ${VTK_LIBRARIES})
+
 # Insert Sources
 ###############################################################################################
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
