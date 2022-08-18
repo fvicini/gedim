@@ -37,6 +37,9 @@ endif()
 ## Eigen3
 find_package(Eigen3 CONFIG REQUIRED)
 
+## VTK
+find_package(VTK CONFIG REQUIRED)
+
 ## GeDiM
 if (NOT TARGET GeDiM::GeDiM)
 	find_package(GeDiM CONFIG REQUIRED)

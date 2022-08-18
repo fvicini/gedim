@@ -1,10 +1,10 @@
 #ifndef __GEDIM_MACRO_H
 #define __GEDIM_MACRO_H
 
-/// Activate deprecated class use
+/// Enable VTK
 /// - 0 false
 /// - 1 true
-#cmakedefine01 USE_DEPRECATED
+#cmakedefine01 ENABLE_VTK
 
 /// Use MPI
 /// - 0 false
