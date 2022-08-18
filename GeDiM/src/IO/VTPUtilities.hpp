@@ -116,7 +116,7 @@ namespace Gedim
 
   /// \brief The VTPExtension class
   /// \copyright See top level LICENSE file for details.
-  class VTPExtension final
+  class VTPUtilities final
   {
     public:
       enum ExportFormat
@@ -132,8 +132,8 @@ namespace Gedim
 
       std::list<VTPProperty> properties;
     public:
-      VTPExtension();
-      ~VTPExtension();
+      VTPUtilities();
+      ~VTPUtilities();
 
       void SetExportFormat(const ExportFormat& exportFormat) { _exportFormat = exportFormat; }
 

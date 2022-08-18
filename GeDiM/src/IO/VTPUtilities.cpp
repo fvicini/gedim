@@ -1,4 +1,4 @@
-#include "VTPExtension.hpp"
+#include "VTPUtilities.hpp"
 
 #if ENABLE_VTK == 1
 #include "vtkSmartPointer.h"
@@ -25,17 +25,17 @@ using namespace Eigen;
 namespace Gedim
 {
   // ***************************************************************************
-  VTPExtension::VTPExtension()
+  VTPUtilities::VTPUtilities()
   {
-    _exportFormat = VTPExtension::Binary;
+    _exportFormat = VTPUtilities::Binary;
   }
-  VTPExtension::~VTPExtension()
+  VTPUtilities::~VTPUtilities()
   {
     properties.clear();
     geometries.clear();
   }
   // ***************************************************************************
-  void VTPExtension::AddProperty(const string& solutionLabel,
+  void VTPUtilities::AddProperty(const string& solutionLabel,
                                  const VTPProperty::Formats& format)
   {
     properties.push_back(VTPProperty());
@@ -47,7 +47,7 @@ namespace Gedim
   // ***************************************************************************
 
   // ***************************************************************************
-  void VTPExtension::AddGeometrySolution(const unsigned int& solutionSize,
+  void VTPUtilities::AddGeometrySolution(const unsigned int& solutionSize,
                                          const double* solution)
   {
     VTPProperty& property = properties.back();
@@ -56,7 +56,7 @@ namespace Gedim
     property.Size.push_back(solutionSize);
   }
   // ***************************************************************************
-  void VTPExtension::Export(const string& filePath) const
+  void VTPUtilities::Export(const string& filePath) const
   {
     Utilities::Unused(filePath); //< Is unused with VTK off
 
@@ -109,13 +109,13 @@ namespace Gedim
 
     switch (_exportFormat)
     {
-      case VTPExtension::Binary:
+      case VTPUtilities::Binary:
         writer->SetDataModeToBinary();
         break;
-      case VTPExtension::Ascii:
+      case VTPUtilities::Ascii:
         writer->SetDataModeToAscii();
         break;
-      case VTPExtension::Appended:
+      case VTPUtilities::Appended:
         writer->SetDataModeToAppended();
         break;
       default:

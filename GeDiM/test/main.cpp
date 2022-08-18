@@ -14,6 +14,7 @@
 #include "test_unionMeshSegment.hpp"
 #include "test_conformMesh.hpp"
 #include "test_export_conformMesh.hpp"
+#include "test_VTPUtilities.hpp"
 
 #include <gtest/gtest.h>
 
