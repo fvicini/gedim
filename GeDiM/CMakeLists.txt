@@ -46,9 +46,10 @@ find_package(Eigen3 CONFIG REQUIRED)
 list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC Eigen3::Eigen)
 
 ## VTK
-find_package(VTK CONFIG REQUIRED)
-list(APPEND ${GEDIM_LIBRARY_INCLUDE} ${VTK_INCLUDE_DIRS})
-list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC ${VTK_LIBRARIES})
+if(${ENABLE_VTK})
+  find_package(VTK CONFIG REQUIRED)
+  list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC ${VTK_LIBRARIES})
+endif()
 
 # Insert Sources
 ###############################################################################################
@@ -94,8 +95,10 @@ target_compile_options(${PROJECT_NAME} PUBLIC -fPIC)
 
 # Create install target
 ###############################################################################################
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${${GEDIM_LIBRARY_PUBLIC_HEADERS}}")
-set_target_properties(${PROJECT_NAME} PROPERTIES EXPORT_NAME GeDiM)
+set_target_properties(${PROJECT_NAME} PROPERTIES 
+PUBLIC_HEADER "${${GEDIM_LIBRARY_PUBLIC_HEADERS}}" 
+EXPORT_NAME GeDiM)
+
 install(
 	TARGETS ${PROJECT_NAME} 
 	EXPORT GeDiMTargets

@@ -1,21 +1,5 @@
 #include "VTPUtilities.hpp"
 
-#if ENABLE_VTK == 1
-#include "vtkSmartPointer.h"
-#include "vtkWeakPointer.h"
-#include "vtkPoints.h"
-#include "vtkUnstructuredGrid.h"
-#include "vtkIdList.h"
-#include "vtkXMLUnstructuredGridWriter.h"
-#include "vtkXMLPolyDataWriter.h"
-#include "vtkCellTypes.h"
-#include "vtkDoubleArray.h"
-#include "vtkPolyData.h"
-#include "vtkPointData.h"
-#include "vtkCellData.h"
-#include "vtkAppendFilter.h"
-#endif // ENABLE_VTK
-
 #include "IOUtilities.hpp"
 #include "CommonUtilities.hpp"
 

@@ -38,7 +38,9 @@ endif()
 find_package(Eigen3 CONFIG REQUIRED)
 
 ## VTK
-find_package(VTK CONFIG REQUIRED)
+if(${ENABLE_VTK})
+  find_package(VTK CONFIG REQUIRED)
+endif()
 
 ## GeDiM
 if (NOT TARGET GeDiM::GeDiM)
@@ -55,6 +57,10 @@ else()
 	list(APPEND ${GEDIM_LIBRARY_TEST_HEADERS} ${GEDIM_LIBRARY_HEADERS})
 	list(APPEND ${GEDIM_LIBRARY_TEST_INCLUDE} ${GEDIM_LIBRARY_INCLUDE_DIRECTORIES})
 endif()
+
+MESSAGE(WARNING GEDIMTEST)
+message(WARNING ${${GEDIM_LIBRARY_TEST_LINKED_LIBRARIES}})
+message(WARNING ${${GEDIM_LIBRARY_TEST_INCLUDE}})
 
 # Insert Sources
 ###############################################################################################
