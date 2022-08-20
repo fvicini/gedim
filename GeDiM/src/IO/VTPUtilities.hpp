@@ -28,7 +28,7 @@
 
 namespace Gedim
 {
-  struct VTPGeometry
+  struct IVTPGeometry
   {
       enum Types
       {
@@ -38,52 +38,51 @@ namespace Gedim
         Polyhedron = 3
       };
 
-      Types Type;
+      virtual ~IVTPGeometry() {}
 
-      VTPGeometry(Types type) :
-        Type(type)
-      {}
-
-      virtual ~VTPGeometry() {}
+      virtual Types Type() const = 0;
   };
 
-  struct VTPPoint final : VTPGeometry
+  struct VTPPoint final : public IVTPGeometry
   {
       const Eigen::Vector3d& Point;
 
       VTPPoint(const Eigen::Vector3d& point) :
-        VTPGeometry(Types::Point),
         Point(point)
       { }
+
+      Types Type() const { return Types::Point; }
   };
 
-  struct VTPSegment final : VTPGeometry
+  struct VTPSegment final : public IVTPGeometry
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::VectorXi& Edge;
 
       VTPSegment(const Eigen::MatrixXd& vertices,
                  const Eigen::VectorXi& edge) :
-        VTPGeometry(Types::Segment),
         Vertices(vertices),
         Edge(edge)
       { }
+
+      Types Type() const { return Types::Segment; }
   };
 
-  struct VTPPolygon final : VTPGeometry
+  struct VTPPolygon final : public IVTPGeometry
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::MatrixXi& Edges;
 
       VTPPolygon(const Eigen::MatrixXd& vertices,
                  const Eigen::MatrixXi& edges) :
-        VTPGeometry(Types::Polygon),
         Vertices(vertices),
         Edges(edges)
       { }
+
+      Types Type() const { return Types::Polygon; }
   };
 
-  struct VTPPolyhedron final : VTPGeometry
+  struct VTPPolyhedron final : public IVTPGeometry
   {
       const Eigen::MatrixXd& Vertices; /// size 3xnumVertices
       const Eigen::MatrixXi& Edges; /// size 2xnumEdges
@@ -92,11 +91,12 @@ namespace Gedim
       VTPPolyhedron(const Eigen::MatrixXd& vertices,
                     const Eigen::MatrixXi& edges,
                     const std::vector<Eigen::MatrixXi>& faces) :
-        VTPGeometry(Types::Polyhedron),
         Vertices(vertices),
         Edges(edges),
         Faces(faces)
       { }
+
+      Types Type() const { return Types::Polyhedron; }
   };
 
   struct VTPProperty final
@@ -128,9 +128,9 @@ namespace Gedim
 
     private:
       ExportFormat _exportFormat;
-      std::list<VTPGeometry> geometries;
+      std::list<IVTPGeometry*> geometries;
 
-      std::list<VTPProperty> properties;
+      std::unordered_map<std::string, VTPProperty> properties;
     public:
       VTPUtilities();
       ~VTPUtilities();
@@ -142,42 +142,62 @@ namespace Gedim
 
       inline void AddPoint(const Eigen::Vector3d& point)
       {
-        geometries.push_back(VTPPoint(point));
+        geometries.push_back(new VTPPoint(point));
       }
 
       inline void AddSegment(const Eigen::MatrixXd& vertices,
                              const Eigen::VectorXi& edge)
       {
-        geometries.push_back(VTPSegment(vertices,
-                                        edge));
+        geometries.push_back(new VTPSegment(vertices,
+                                            edge));
       }
 
       inline void AddPolygon(const Eigen::MatrixXd& vertices,
                              const Eigen::MatrixXi& edges)
       {
-        geometries.push_back(VTPPolygon(vertices,
-                                        edges));
+        geometries.push_back(new VTPPolygon(vertices,
+                                            edges));
       }
 
       inline void AddPolyhedron(const Eigen::MatrixXd& vertices,
                                 const Eigen::MatrixXi& edges,
                                 const std::vector<Eigen::MatrixXi>& faces)
       {
-        geometries.push_back(VTPPolyhedron(vertices,
-                                           edges,
-                                           faces));
+        geometries.push_back(new VTPPolyhedron(vertices,
+                                               edges,
+                                               faces));
       }
 
-      void AddGeometrySolution(const unsigned int& solutionSize,
+      void AddGeometryProperty(const std::string& solutionLabel,
+                               const unsigned int& solutionSize,
                                const double* solution);
 
       void Export(const std::string& filePath) const;
   };
 
-  class GeometryToPolyData final
+  class IGeometryToPolyData
+  {
+    public:
+      virtual ~IGeometryToPolyData() { }
+
+      virtual void InitializeSolutions(const unsigned int& _numberSolutions) = 0;
+      virtual void SetSolutionOptions(const unsigned int& solutionPosition,
+                                      const std::string& solutionLabel,
+                                      const VTPProperty::Formats& format = VTPProperty::Formats::Points) = 0;
+      virtual void AddSolution(const unsigned int& solutionPosition,
+                               const unsigned int& solutionSize,
+                               const double* solution) = 0;
+
+      virtual void Convert() = 0;
+
+      virtual const void* PolyDataPointer() const = 0;
+  };
+
+  template <typename T>
+  class GeometryToPolyData final : public IGeometryToPolyData
   {
     protected:
-      const VTPGeometry& geometry;
+      const T& geometry;
 
       unsigned int numberSolutions;
       std::vector<VTPProperty::Formats> solutionFormats;
@@ -214,7 +234,7 @@ namespace Gedim
       void AddSolution(const unsigned int& solutionPosition, void* vtkDoubleArrayPointer) const;
 
     public:
-      GeometryToPolyData(const VTPGeometry& geometry);
+      GeometryToPolyData(const T& geometry);
       ~GeometryToPolyData();
 
       const void* PolyDataPointer() const { return vtkPolyDataPointer; }

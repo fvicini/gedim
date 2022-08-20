@@ -13,37 +13,48 @@ namespace GedimUnitTesting
   // ***************************************************************************
   TEST(TestVTPUtilities, VTPUtilities_Test0D)
   {
-    unsigned int numPoints = 2;
+    const unsigned int numGeometries = 4;
+    const unsigned int numProperties = 2;
+
+    vector<Eigen::Vector3d> points(numGeometries);
+    vector<vector<vector<double>>> properties(numProperties, vector<vector<double>>(numGeometries));
+    vector<string> propertyLabels = { "Id", "Data" };
+
+    vector<vector<double>>& id = properties[0];
+    vector<vector<double>>& test = properties[1];
+
+    // Initialize data
+    for (unsigned g = 0; g < numGeometries; g++)
+    {
+      points[g]<< 1.0 + g, 0.0 + g, 0.0 + g;
+      id[g].resize(1, g + 1);
+      test[g].resize(1, 10.8 + g);
+    }
 
     Gedim::VTPUtilities vtpUtilities;
     vtpUtilities.SetExportFormat(Gedim::VTPUtilities::Ascii);
 
-    Eigen::MatrixXd points;
-    vector<vector<double>> properties;
+    // Export to VTK
+    for (unsigned int p = 0; p < numProperties; p++)
+      vtpUtilities.AddProperty(propertyLabels[p],
+                               Gedim::VTPProperty::Formats::Points);
 
-    points.setZero(3, 3 * numPoints);
-    properties.resize(numPoints);
-
-    vtpUtilities.AddProperty("TestSolution",
-                             Gedim::VTPProperty::Formats::Points);
-
-    for (unsigned p = 0; p < numPoints; p++)
+    for (unsigned g = 0; g < numGeometries; g++)
     {
-      points.col(p)<< 1.0 + p, 0.0 + p, 0.0 + p, 0;
-      vtpUtilities.AddPoint(points.col(p));
+      vtpUtilities.AddPoint(points[g]);
 
-      /// <li> Create Solution
-      vector<double>& property = properties[p];
-      property.resize(1, 10.8);
-
-      vtpUtilities.AddGeometrySolution(property.size(),
-                                       property.data());
+      for (unsigned int p = 0; p < numProperties; p++)
+      {
+        vtpUtilities.AddGeometryProperty(propertyLabels[p],
+                                         properties[p][g].size(),
+                                         properties[p][g].data());
+      }
     }
 
-    std::string exportFolder = "./Export/Paraview";
+    std::string exportFolder = "./Export/TestVTPUtilities/Test0D";
     Gedim::Output::CreateFolder(exportFolder);
 
-    vtpUtilities.Export(exportFolder + "/Geometry1D.vtu");
+    vtpUtilities.Export(exportFolder + "/Geometry0D.vtu");
   }
   // ***************************************************************************
   //  TEST(TestVTPUtilities, VTPUtilities_Test1D)

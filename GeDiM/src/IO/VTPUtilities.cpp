@@ -15,26 +15,28 @@ namespace Gedim
   }
   VTPUtilities::~VTPUtilities()
   {
-    properties.clear();
+    for (IVTPGeometry* geometry : geometries)
+      delete geometry;
     geometries.clear();
+
+    properties.clear();
   }
   // ***************************************************************************
   void VTPUtilities::AddProperty(const string& solutionLabel,
                                  const VTPProperty::Formats& format)
   {
-    properties.push_back(VTPProperty());
+    properties.insert(make_pair(solutionLabel, VTPProperty()));
 
-    VTPProperty& property = properties.back();
+    VTPProperty& property = properties.at(solutionLabel);
     property.Label = solutionLabel;
     property.Format = format;
   }
   // ***************************************************************************
-
-  // ***************************************************************************
-  void VTPUtilities::AddGeometrySolution(const unsigned int& solutionSize,
+  void VTPUtilities::AddGeometryProperty(const string& solutionLabel,
+                                         const unsigned int& solutionSize,
                                          const double* solution)
   {
-    VTPProperty& property = properties.back();
+    VTPProperty& property = properties.at(solutionLabel);
 
     property.Data.push_back(solution);
     property.Size.push_back(solutionSize);
@@ -47,33 +49,56 @@ namespace Gedim
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkAppendFilter> append =	vtkSmartPointer<vtkAppendFilter>::New();
 
-    vector<GeometryToPolyData> domainToPolyDatas;
+    vector<IGeometryToPolyData*> domainToPolyDatas;
     domainToPolyDatas.reserve(geometries.size());
 
     vector<vector<unsigned int>> geometryPropertySizes(properties.size());
     vector<vector<const double*>> geometryPropertyDatas(properties.size());
 
     unsigned int p = 0;
-    for (const VTPProperty& property : properties)
+    for (const pair<string, VTPProperty>& propertyPair : properties)
     {
+      const VTPProperty& property = propertyPair.second;
       geometryPropertySizes[p] = vector<unsigned int>(property.Size.begin(), property.Size.end());
       geometryPropertyDatas[p] = vector<const double*>(property.Data.begin(), property.Data.end());
+      p++;
     }
 
     unsigned int g = 0;
-    for (const VTPGeometry& geometry : geometries)
+    for (const IVTPGeometry* geometry : geometries)
     {
-      domainToPolyDatas.push_back(GeometryToPolyData(geometry));
+      switch (geometry->Type())
+      {
+        case IVTPGeometry::Types::Point:
+          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPoint>(*static_cast<const VTPPoint*>(geometry)));
+          break;
+        case IVTPGeometry::Types::Segment:
+          domainToPolyDatas.push_back(new GeometryToPolyData<VTPSegment>(*static_cast<const VTPSegment*>(geometry)));
+          break;
+        case IVTPGeometry::Types::Polygon:
+          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolygon>(*static_cast<const VTPPolygon*>(geometry)));
+          break;
+        case IVTPGeometry::Types::Polyhedron:
+          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolyhedron>(*static_cast<const VTPPolyhedron*>(geometry)));
+          break;
+        default:
+          throw runtime_error("");
+      }
 
-      GeometryToPolyData& domainToPolyData = domainToPolyDatas.back();
+      IGeometryToPolyData& domainToPolyData = *domainToPolyDatas.back();
 
       domainToPolyData.InitializeSolutions(properties.size());
 
       unsigned int p = 0;
-      for (const VTPProperty& property : properties)
+      for (const pair<string, VTPProperty>& propertyPair : properties)
       {
-        domainToPolyData.SetSolutionOptions(p, property.Label, property.Format);
-        domainToPolyData.AddSolution(p, geometryPropertySizes[p][g], geometryPropertyDatas[p][g]);
+        const VTPProperty& property = propertyPair.second;
+        domainToPolyData.SetSolutionOptions(p,
+                                            property.Label,
+                                            property.Format);
+        domainToPolyData.AddSolution(p,
+                                     geometryPropertySizes[p][g],
+                                     geometryPropertyDatas[p][g]);
         p++;
       }
 
@@ -111,7 +136,13 @@ namespace Gedim
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  GeometryToPolyData::GeometryToPolyData(const VTPGeometry& geometry) :
+  template class GeometryToPolyData<VTPPoint>;
+  template class GeometryToPolyData<VTPSegment>;
+  template class GeometryToPolyData<VTPPolygon>;
+  template class GeometryToPolyData<VTPPolyhedron>;
+  // ***************************************************************************
+  template <typename T>
+  GeometryToPolyData<T>::GeometryToPolyData(const T& geometry) :
     geometry(geometry)
   {
     numberSolutions = 0;
@@ -122,7 +153,8 @@ namespace Gedim
     vtkFacesPointer = NULL;
     vtkPolyDataPointer = NULL;
   }
-  GeometryToPolyData::~GeometryToPolyData()
+  template <typename T>
+  GeometryToPolyData<T>::~GeometryToPolyData()
   {
 #if ENABLE_VTK == 1
     if (vtkPolyDataPointer != NULL)
@@ -173,7 +205,8 @@ namespace Gedim
 #endif
   }
   // ***************************************************************************
-  void GeometryToPolyData::InitializeSolutions(const unsigned int& _numberSolutions)
+  template <typename T>
+  void GeometryToPolyData<T>::InitializeSolutions(const unsigned int& _numberSolutions)
   {
     Output::Assert(_numberSolutions > 0);
     numberSolutions = _numberSolutions;
@@ -185,9 +218,10 @@ namespace Gedim
     vtkDoubleArrayPointers.reserve(numberSolutions);
   }
   // ***************************************************************************
-  void GeometryToPolyData::SetSolutionOptions(const unsigned int& solutionPosition,
-                                              const string& solutionLabel,
-                                              const VTPProperty::Formats& format)
+  template <typename T>
+  void GeometryToPolyData<T>::SetSolutionOptions(const unsigned int& solutionPosition,
+                                                 const string& solutionLabel,
+                                                 const VTPProperty::Formats& format)
   {
     Output::Assert(solutionPosition < numberSolutions);
 
@@ -195,9 +229,10 @@ namespace Gedim
     solutionFormats[solutionPosition] = format;
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddSolution(const unsigned int& solutionPosition,
-                                       const unsigned int& solutionSize,
-                                       const double* solution)
+  template <typename T>
+  void GeometryToPolyData<T>::AddSolution(const unsigned int& solutionPosition,
+                                          const unsigned int& solutionSize,
+                                          const double* solution)
   {
     Output::Assert(solutionPosition < solutionLabels.size());
 
@@ -209,9 +244,10 @@ namespace Gedim
   }
   // ***************************************************************************
 #if ENABLE_VTK == 1
-  void GeometryToPolyData::AddPoint(const Eigen::Vector3d& point,
-                                    vtkSmartPointer<vtkPoints>& points,
-                                    vtkSmartPointer<vtkCellArray>& vertices) const
+  template <typename T>
+  void GeometryToPolyData<T>::AddPoint(const Eigen::Vector3d& point,
+                                       vtkSmartPointer<vtkPoints>& points,
+                                       vtkSmartPointer<vtkCellArray>& vertices) const
   {
     vtkIdType pointId[1];
     pointId[0] = points->InsertNextPoint(point(0), point(1), point(2));
@@ -219,10 +255,11 @@ namespace Gedim
     vertices->InsertNextCell(1, pointId);
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddLine(const unsigned int& originId,
-                                   const unsigned int& endId,
-                                   vtkSmartPointer<vtkIdList>& pointIds,
-                                   vtkSmartPointer<vtkCellArray>& lines) const
+  template <typename T>
+  void GeometryToPolyData<T>::AddLine(const unsigned int& originId,
+                                      const unsigned int& endId,
+                                      vtkSmartPointer<vtkIdList>& pointIds,
+                                      vtkSmartPointer<vtkCellArray>& lines) const
   {
     pointIds->Initialize();
     pointIds->Allocate(2);
@@ -237,9 +274,10 @@ namespace Gedim
     pointIds->Reset();
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddFace(const Eigen::VectorXi& faceVerticesIds,
-                                   vtkSmartPointer<vtkIdList>& pointIds,
-                                   vtkSmartPointer<vtkCellArray>& faces) const
+  template <typename T>
+  void GeometryToPolyData<T>::AddFace(const Eigen::VectorXi& faceVerticesIds,
+                                      vtkSmartPointer<vtkIdList>& pointIds,
+                                      vtkSmartPointer<vtkCellArray>& faces) const
   {
     pointIds->Initialize();
     pointIds->Allocate(faceVerticesIds.size());
@@ -255,8 +293,9 @@ namespace Gedim
   }
 #endif
   // ***************************************************************************
-  void GeometryToPolyData::InitializePoints(void* vtkPointsPointer,
-                                            void* vtkVerticesPointer) const
+  template<>
+  void GeometryToPolyData<VTPPoint>::InitializePoints(void* vtkPointsPointer,
+                                                      void* vtkVerticesPointer) const
   {
     if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
       throw runtime_error("");
@@ -265,36 +304,15 @@ namespace Gedim
     vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
     vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
 
-    unsigned int numberTotalPoints = 0;
-
-    switch (geometry.Type)
-    {
-      case VTPGeometry::Point:
-        numberTotalPoints += 1;
-        break;
-      case VTPGeometry::Segment:
-        numberTotalPoints += 2;
-        break;
-      case VTPGeometry::Polygon:
-        numberTotalPoints += static_cast<const VTPPolygon&>(geometry).Vertices.cols();
-        break;
-      case VTPGeometry::Polyhedron:
-        numberTotalPoints += static_cast<const VTPPolyhedron&>(geometry).Vertices.cols();
-        break;
-      default:
-        throw runtime_error("");
-    }
-
-    if (numberTotalPoints > 0)
-    {
-      points->Allocate(numberTotalPoints);
-      vertices->Allocate(numberTotalPoints);
-    }
+    const unsigned int numberTotalPoints = 1;
+    points->Allocate(numberTotalPoints);
+    vertices->Allocate(numberTotalPoints);
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddPoints(void* vtkPointsPointer,
-                                     void* vtkVerticesPointer) const
+  template<>
+  void GeometryToPolyData<VTPSegment>::InitializePoints(void* vtkPointsPointer,
+                                                        void* vtkVerticesPointer) const
   {
     if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
       throw runtime_error("");
@@ -303,56 +321,130 @@ namespace Gedim
     vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
     vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
 
-    switch (geometry.Type)
-    {
-      case VTPGeometry::Point:
-      {
-        AddPoint(static_cast<const VTPPoint&>(geometry).Point,
-                 points,
-                 vertices);
-      }
-        break;
-      case VTPGeometry::Segment:
-      {
-        const VTPSegment& segment = static_cast<const VTPSegment&>(geometry);
+    const unsigned int numberTotalPoints = 2;
+    points->Allocate(numberTotalPoints);
+    vertices->Allocate(numberTotalPoints);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template<>
+  void GeometryToPolyData<VTPPolygon>::InitializePoints(void* vtkPointsPointer,
+                                                        void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
 
-        AddPoint(segment.Vertices.col(0),
-                 points,
-                 vertices);
-        AddPoint(segment.Vertices.col(1),
-                 points,
-                 vertices);
-      }
-        break;
-      case VTPGeometry::Polygon:
-      {
-        const VTPPolygon& polygon = static_cast<const VTPPolygon&>(geometry);
-        for (unsigned int i = 0 ; i < polygon.Vertices.cols(); i++)
-        {
-          AddPoint(polygon.Vertices.col(i),
-                   points,
-                   vertices);
-        }
-      }
-        break;
-      case VTPGeometry::Polyhedron:
-      {
-        const VTPPolyhedron& polyhedron = static_cast<const VTPPolyhedron&>(geometry);
-        for (unsigned int i = 0 ; i < polyhedron.Vertices.cols(); i++)
-        {
-          AddPoint(polyhedron.Vertices.col(i),
-                   points,
-                   vertices);
-        }
-      }
-        break;
-      default:
-        throw runtime_error("");
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    const unsigned int numberTotalPoints = geometry.Vertices.cols();
+    points->Allocate(numberTotalPoints);
+    vertices->Allocate(numberTotalPoints);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template<>
+  void GeometryToPolyData<VTPPolyhedron>::InitializePoints(void* vtkPointsPointer,
+                                                           void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    const unsigned int numberTotalPoints = geometry.Vertices.cols();
+    points->Allocate(numberTotalPoints);
+    vertices->Allocate(numberTotalPoints);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPoint>::AddPoints(void* vtkPointsPointer,
+                                               void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    AddPoint(geometry.Point,
+             points,
+             vertices);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPSegment>::AddPoints(void* vtkPointsPointer,
+                                                 void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    AddPoint(geometry.Vertices.col(0),
+             points,
+             vertices);
+    AddPoint(geometry.Vertices.col(1),
+             points,
+             vertices);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolygon>::AddPoints(void* vtkPointsPointer,
+                                                 void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    for (unsigned int i = 0 ; i < geometry.Vertices.cols(); i++)
+    {
+      AddPoint(geometry.Vertices.col(i),
+               points,
+               vertices);
     }
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::InitializeLines(void* vtkLinesPointer) const
+  template <>
+  void GeometryToPolyData<VTPPolyhedron>::AddPoints(void* vtkPointsPointer,
+                                                    void* vtkVerticesPointer) const
+  {
+    if (vtkPointsPointer == NULL || vtkVerticesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkPoints>& points = *(vtkSmartPointer<vtkPoints>*)vtkPointsPointer;
+    vtkSmartPointer<vtkCellArray>& vertices = *(vtkSmartPointer<vtkCellArray>*)vtkVerticesPointer;
+
+    for (unsigned int i = 0 ; i < geometry.Vertices.cols(); i++)
+    {
+      AddPoint(geometry.Vertices.col(i),
+               points,
+               vertices);
+    }
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPoint>::InitializeLines(void* vtkLinesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPSegment>::InitializeLines(void* vtkLinesPointer) const
   {
     if (vtkLinesPointer == NULL)
       throw runtime_error("");
@@ -360,31 +452,46 @@ namespace Gedim
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
 
-    unsigned int numberTotalLines = 0;
-
-    switch (geometry.Type)
-    {
-      case VTPGeometry::Point:
-        break;
-      case VTPGeometry::Segment:
-        numberTotalLines += 1;
-        break;
-      case VTPGeometry::Polygon:
-        numberTotalLines += static_cast<const VTPPolygon&>(geometry).Vertices.cols();
-        break;
-      case VTPGeometry::Polyhedron:
-        numberTotalLines += static_cast<const VTPPolyhedron&>(geometry).Edges.cols();
-        break;
-      default:
-        throw runtime_error("");
-    }
-
-    if (numberTotalLines > 0)
-      lines->Allocate(numberTotalLines);
+    unsigned int numberTotalLines = 1;
+    lines->Allocate(numberTotalLines);
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddLines(void* vtkLinesPointer) const
+  template <>
+  void GeometryToPolyData<VTPPolygon>::InitializeLines(void* vtkLinesPointer) const
+  {
+    if (vtkLinesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
+
+    unsigned int numberTotalLines = geometry.Vertices.cols();
+    lines->Allocate(numberTotalLines);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolyhedron>::InitializeLines(void* vtkLinesPointer) const
+  {
+    if (vtkLinesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
+
+    unsigned int numberTotalLines = geometry.Vertices.cols();
+    lines->Allocate(numberTotalLines);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPoint>::AddLines(void* vtkLinesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPSegment>::AddLines(void* vtkLinesPointer) const
   {
     if (vtkLinesPointer == NULL)
       throw runtime_error("");
@@ -393,81 +500,122 @@ namespace Gedim
     vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
     vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
-    switch (geometry.Type)
+    AddLine(geometry.Edge[0],
+        geometry.Edge[1],
+        pointIds,
+        lines);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolygon>::AddLines(void* vtkLinesPointer) const
+  {
+    if (vtkLinesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
+    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
+
+    for (unsigned int i = 0 ; i < geometry.Edges.cols(); i++)
     {
-      case VTPGeometry::Point:
-        break;
-      case VTPGeometry::Segment:
-      {
-        const VTPSegment& segment = static_cast<const VTPSegment&>(geometry);
-        AddLine(segment.Edge[0],
-            segment.Edge[1],
+      AddLine(geometry.Edges(0, i),
+              geometry.Edges(1, i),
+              pointIds,
+              lines);
+    }
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolyhedron>::AddLines(void* vtkLinesPointer) const
+  {
+    if (vtkLinesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
+    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
+
+    for (unsigned int i = 0 ; i < geometry.Edges.cols(); i++)
+    {
+      AddLine(geometry.Edges(0, i),
+              geometry.Edges(1, i),
+              pointIds,
+              lines);
+    }
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPoint>::InitializeFaces(void* vtkFacesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPSegment>::InitializeFaces(void* vtkFacesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolygon>::InitializeFaces(void* vtkFacesPointer) const
+  {
+    if (vtkFacesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
+
+    unsigned int numberTotalFaces = 1;
+    faces->Allocate(numberTotalFaces);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolyhedron>::InitializeFaces(void* vtkFacesPointer) const
+  {
+    if (vtkFacesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
+
+    unsigned int numberTotalFaces = geometry.Faces.size();
+    faces->Allocate(numberTotalFaces);
+#endif // ENABLE_VTK
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPoint>::AddFaces(void* vtkFacesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPSegment>::AddFaces(void* vtkFacesPointer) const
+  {
+  }
+  // ***************************************************************************
+  template <>
+  void GeometryToPolyData<VTPPolygon>::AddFaces(void* vtkFacesPointer) const
+  {
+    if (vtkFacesPointer == NULL)
+      throw runtime_error("");
+
+#if ENABLE_VTK == 1
+    vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
+    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
+
+    Eigen::VectorXi faceVerticesId = Eigen::VectorXi::LinSpaced(geometry.Vertices.cols(),
+                                                                0.0,
+                                                                geometry.Vertices.cols() - 1);
+    AddFace(faceVerticesId,
             pointIds,
-            lines);
-      }
-        break;
-      case VTPGeometry::Polygon:
-      {
-        const VTPPolygon& polygon = static_cast<const VTPPolygon&>(geometry);
-        for (unsigned int i = 0 ; i < polygon.Edges.cols(); i++)
-        {
-          AddLine(polygon.Edges(0, i),
-                  polygon.Edges(1, i),
-                  pointIds,
-                  lines);
-        }
-      }
-        break;
-      case VTPGeometry::Polyhedron:
-      {
-        const VTPPolyhedron& polyhedron = static_cast<const VTPPolyhedron&>(geometry);
-        for (unsigned int i = 0 ; i < polyhedron.Edges.cols(); i++)
-        {
-          AddLine(polyhedron.Edges(0, i),
-                  polyhedron.Edges(1, i),
-                  pointIds,
-                  lines);
-        }
-      }
-        break;
-      default:
-        throw runtime_error("");
-    }
+            faces);
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::InitializeFaces(void* vtkFacesPointer) const
-  {
-    if (vtkFacesPointer == NULL)
-      throw runtime_error("");
-
-#if ENABLE_VTK == 1
-    vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
-
-    unsigned int numberTotalFaces = 0;
-
-    switch (geometry.Type)
-    {
-      case VTPGeometry::Point:
-        break;
-      case VTPGeometry::Segment:
-        break;
-      case VTPGeometry::Polygon:
-        numberTotalFaces += 1;
-        break;
-      case VTPGeometry::Polyhedron:
-        numberTotalFaces += static_cast<const VTPPolyhedron&>(geometry).Faces.size();
-        break;
-      default:
-        throw runtime_error("");
-    }
-
-    if (numberTotalFaces > 0)
-      faces->Allocate(numberTotalFaces);
-#endif // ENABLE_VTK
-  }
-  // ***************************************************************************
-  void GeometryToPolyData::AddFaces(void* vtkFacesPointer) const
+  template <>
+  void GeometryToPolyData<VTPPolyhedron>::AddFaces(void* vtkFacesPointer) const
   {
     if (vtkFacesPointer == NULL)
       throw runtime_error("");
@@ -476,42 +624,18 @@ namespace Gedim
     vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
     vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
-    switch (geometry.Type)
+    for (unsigned int i = 0 ; i < geometry.Faces.size(); i++)
     {
-      case VTPGeometry::Point:
-        break;
-      case VTPGeometry::Segment:
-        break;
-      case VTPGeometry::Polygon:
-      {
-        const VTPPolygon& polygon = static_cast<const VTPPolygon&>(geometry);
-        Eigen::VectorXi faceVerticesId = Eigen::VectorXi::LinSpaced(polygon.Vertices.cols(),
-                                                                    0.0,
-                                                                    polygon.Vertices.cols() - 1);
-        AddFace(faceVerticesId,
-                pointIds,
-                faces);
-      }
-        break;
-      case VTPGeometry::Polyhedron:
-      {
-        const VTPPolyhedron& polyhedron = static_cast<const VTPPolyhedron&>(geometry);
-        for (unsigned int i = 0 ; i < polyhedron.Faces.size(); i++)
-        {
-          AddFace(polyhedron.Faces[i].row(i),
-                  pointIds,
-                  faces);
-        }
-      }
-        break;
-      default:
-        throw runtime_error("");
+      AddFace(geometry.Faces[i].row(i),
+              pointIds,
+              faces);
     }
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::AddSolution(const unsigned int& solutionPosition,
-                                       void* vtkDoubleArrayPointer) const
+  template <typename T>
+  void GeometryToPolyData<T>::AddSolution(const unsigned int& solutionPosition,
+                                          void* vtkDoubleArrayPointer) const
   {
     if (solutionPosition >= numberSolutions)
       throw runtime_error("");
@@ -530,7 +654,8 @@ namespace Gedim
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  void GeometryToPolyData::Convert()
+  template <typename T>
+  void GeometryToPolyData<T>::Convert()
   {
 #if ENABLE_VTK == 1
     vtkPolyDataPointer = vtkPolyData::New();
@@ -571,7 +696,8 @@ namespace Gedim
 
         vtkSolution->SetName(solutionLabel.c_str());
 
-        switch (solutionFormat) {
+        switch (solutionFormat)
+        {
           case VTPProperty::Formats::Points:
             polyData->GetPointData()->AddArray(vtkSolution);
 
