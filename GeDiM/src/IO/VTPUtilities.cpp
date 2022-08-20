@@ -9,132 +9,184 @@ using namespace Eigen;
 namespace Gedim
 {
   // ***************************************************************************
-  VTPUtilities::VTPUtilities()
+  VTKUtilities::VTKUtilities()
   {
-    _exportFormat = VTPUtilities::Binary;
+#if ENABLE_VTK == 1
+    exportData = vtkSmartPointer<vtkAppendFilter>::New();
+#endif
   }
-  VTPUtilities::~VTPUtilities()
+  VTKUtilities::~VTKUtilities()
   {
-    for (IVTPGeometry* geometry : geometries)
-      delete geometry;
-    geometries.clear();
-
-    properties.clear();
-  }
-  // ***************************************************************************
-  void VTPUtilities::AddProperty(const string& solutionLabel,
-                                 const VTPProperty::Formats& format)
-  {
-    properties.insert(make_pair(solutionLabel, VTPProperty()));
-
-    VTPProperty& property = properties.at(solutionLabel);
-    property.Label = solutionLabel;
-    property.Format = format;
+#if ENABLE_VTK == 1
+    exportData->RemoveAllInputs();
+    exportData->Delete();
+#endif
   }
   // ***************************************************************************
-  void VTPUtilities::AddGeometryProperty(const string& solutionLabel,
-                                         const unsigned int& solutionSize,
-                                         const double* solution)
+  void VTKUtilities::AddPoint(const Eigen::Vector3d& point)
   {
-    VTPProperty& property = properties.at(solutionLabel);
-
-    property.Data.push_back(solution);
-    property.Size.push_back(solutionSize);
-  }
-  // ***************************************************************************
-  void VTPUtilities::Export(const string& filePath) const
-  {
-    Utilities::Unused(filePath); //< Is unused with VTK off
+    VTPPoint vtpPoint(point);
+    GeometryToPolyData<VTPPoint> polyData(vtpPoint);
 
 #if ENABLE_VTK == 1
-    vtkSmartPointer<vtkAppendFilter> append =	vtkSmartPointer<vtkAppendFilter>::New();
-
-    vector<IGeometryToPolyData*> domainToPolyDatas;
-    domainToPolyDatas.reserve(geometries.size());
-
-    vector<vector<unsigned int>> geometryPropertySizes(properties.size());
-    vector<vector<const double*>> geometryPropertyDatas(properties.size());
-
-    unsigned int p = 0;
-    for (const pair<string, VTPProperty>& propertyPair : properties)
-    {
-      const VTPProperty& property = propertyPair.second;
-      geometryPropertySizes[p] = vector<unsigned int>(property.Size.begin(), property.Size.end());
-      geometryPropertyDatas[p] = vector<const double*>(property.Data.begin(), property.Data.end());
-      p++;
-    }
-
-    unsigned int g = 0;
-    for (const IVTPGeometry* geometry : geometries)
-    {
-      switch (geometry->Type())
-      {
-        case IVTPGeometry::Types::Point:
-          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPoint>(*static_cast<const VTPPoint*>(geometry)));
-          break;
-        case IVTPGeometry::Types::Segment:
-          domainToPolyDatas.push_back(new GeometryToPolyData<VTPSegment>(*static_cast<const VTPSegment*>(geometry)));
-          break;
-        case IVTPGeometry::Types::Polygon:
-          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolygon>(*static_cast<const VTPPolygon*>(geometry)));
-          break;
-        case IVTPGeometry::Types::Polyhedron:
-          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolyhedron>(*static_cast<const VTPPolyhedron*>(geometry)));
-          break;
-        default:
-          throw runtime_error("");
-      }
-
-      IGeometryToPolyData& domainToPolyData = *domainToPolyDatas.back();
-
-      domainToPolyData.InitializeSolutions(properties.size());
-
-      unsigned int p = 0;
-      for (const pair<string, VTPProperty>& propertyPair : properties)
-      {
-        const VTPProperty& property = propertyPair.second;
-        domainToPolyData.SetSolutionOptions(p,
-                                            property.Label,
-                                            property.Format);
-        domainToPolyData.AddSolution(p,
-                                     geometryPropertySizes[p][g],
-                                     geometryPropertyDatas[p][g]);
-        p++;
-      }
-
-      domainToPolyData.Convert();
-
-      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)domainToPolyData.PolyDataPointer();
-      append->AddInputData(polyData);
-
-      g++;
-    }
-
-    append->Update();
+    exportData->AddInputData((vtkPolyData*)polyData.Convert());
+#endif
+  }
+  // ***************************************************************************
+  void VTKUtilities::Export(const std::string& filePath) const
+  {
+#if ENABLE_VTK == 1
+    exportData->Update();
 
     vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
     writer->SetFileName(filePath.c_str());
-    writer->SetInputData(append->GetOutput());
+    writer->SetInputData(exportData->GetOutput());
 
     switch (_exportFormat)
     {
-      case VTPUtilities::Binary:
+      case VTKUtilities::Binary:
         writer->SetDataModeToBinary();
         break;
-      case VTPUtilities::Ascii:
+      case VTKUtilities::Ascii:
         writer->SetDataModeToAscii();
         break;
-      case VTPUtilities::Appended:
+      case VTKUtilities::Appended:
         writer->SetDataModeToAppended();
         break;
       default:
         throw runtime_error("Export Format not supported");
-        break;
     }
 
     writer->Write();
-#endif // ENABLE_VTK
+#endif
   }
+  //  // ***************************************************************************
+  //  VTPUtilities::VTPUtilities()
+  //  {
+  //    _exportFormat = VTPUtilities::Binary;
+  //  }
+  //  VTPUtilities::~VTPUtilities()
+  //  {
+  //    for (IVTPGeometry* geometry : geometries)
+  //      delete geometry;
+  //    geometries.clear();
+
+  //    properties.clear();
+  //  }
+  //  // ***************************************************************************
+  //  void VTPUtilities::AddProperty(const string& solutionLabel,
+  //                                 const VTPProperty::Formats& format)
+  //  {
+  //    properties.insert(make_pair(solutionLabel, VTPProperty()));
+
+  //    VTPProperty& property = properties.at(solutionLabel);
+  //    property.Label = solutionLabel;
+  //    property.Format = format;
+  //  }
+  //  // ***************************************************************************
+  //  void VTPUtilities::AddGeometryProperty(const string& solutionLabel,
+  //                                         const unsigned int& solutionSize,
+  //                                         const double* solution)
+  //  {
+  //    VTPProperty& property = properties.at(solutionLabel);
+
+  //    property.Data.push_back(solution);
+  //    property.Size.push_back(solutionSize);
+  //  }
+  //  // ***************************************************************************
+  //  void VTPUtilities::Export(const string& filePath) const
+  //  {
+  //    Utilities::Unused(filePath); //< Is unused with VTK off
+
+  //#if ENABLE_VTK == 1
+  //    vtkSmartPointer<vtkAppendFilter> append =	vtkSmartPointer<vtkAppendFilter>::New();
+
+  //    vector<IGeometryToPolyData*> domainToPolyDatas;
+  //    domainToPolyDatas.reserve(geometries.size());
+
+  //    vector<vector<unsigned int>> geometryPropertySizes(properties.size());
+  //    vector<vector<const double*>> geometryPropertyDatas(properties.size());
+
+  //    unsigned int p = 0;
+  //    for (const pair<string, VTPProperty>& propertyPair : properties)
+  //    {
+  //      const VTPProperty& property = propertyPair.second;
+  //      geometryPropertySizes[p] = vector<unsigned int>(property.Size.begin(), property.Size.end());
+  //      geometryPropertyDatas[p] = vector<const double*>(property.Data.begin(), property.Data.end());
+  //      p++;
+  //    }
+
+  //    unsigned int g = 0;
+  //    for (const IVTPGeometry* geometry : geometries)
+  //    {
+  //      switch (geometry->Type())
+  //      {
+  //        case IVTPGeometry::Types::Point:
+  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPoint>(*static_cast<const VTPPoint*>(geometry)));
+  //          break;
+  //        case IVTPGeometry::Types::Segment:
+  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPSegment>(*static_cast<const VTPSegment*>(geometry)));
+  //          break;
+  //        case IVTPGeometry::Types::Polygon:
+  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolygon>(*static_cast<const VTPPolygon*>(geometry)));
+  //          break;
+  //        case IVTPGeometry::Types::Polyhedron:
+  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolyhedron>(*static_cast<const VTPPolyhedron*>(geometry)));
+  //          break;
+  //        default:
+  //          throw runtime_error("");
+  //      }
+
+  //      IGeometryToPolyData& domainToPolyData = *domainToPolyDatas.back();
+
+  //      domainToPolyData.InitializeSolutions(properties.size());
+
+  //      unsigned int p = 0;
+  //      for (const pair<string, VTPProperty>& propertyPair : properties)
+  //      {
+  //        const VTPProperty& property = propertyPair.second;
+  //        domainToPolyData.SetSolutionOptions(p,
+  //                                            property.Label,
+  //                                            property.Format);
+  //        domainToPolyData.AddSolution(p,
+  //                                     geometryPropertySizes[p][g],
+  //                                     geometryPropertyDatas[p][g]);
+  //        p++;
+  //      }
+
+  //      domainToPolyData.Convert();
+
+  //      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)domainToPolyData.PolyDataPointer();
+  //      append->AddInputData(polyData);
+
+  //      g++;
+  //    }
+
+  //    append->Update();
+
+  //    vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+  //    writer->SetFileName(filePath.c_str());
+  //    writer->SetInputData(append->GetOutput());
+
+  //    switch (_exportFormat)
+  //    {
+  //      case VTPUtilities::Binary:
+  //        writer->SetDataModeToBinary();
+  //        break;
+  //      case VTPUtilities::Ascii:
+  //        writer->SetDataModeToAscii();
+  //        break;
+  //      case VTPUtilities::Appended:
+  //        writer->SetDataModeToAppended();
+  //        break;
+  //      default:
+  //        throw runtime_error("Export Format not supported");
+  //        break;
+  //    }
+
+  //    writer->Write();
+  //#endif // ENABLE_VTK
+  //  }
   // ***************************************************************************
   template class GeometryToPolyData<VTPPoint>;
   template class GeometryToPolyData<VTPSegment>;
@@ -146,63 +198,57 @@ namespace Gedim
     geometry(geometry)
   {
     numberSolutions = 0;
-
-    vtkPointsPointer = NULL;
-    vtkVerticesPointer = NULL;
-    vtkLinesPointer = NULL;
-    vtkFacesPointer = NULL;
-    vtkPolyDataPointer = NULL;
   }
   template <typename T>
   GeometryToPolyData<T>::~GeometryToPolyData()
   {
-#if ENABLE_VTK == 1
-    if (vtkPolyDataPointer != NULL)
-    {
-      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)vtkPolyDataPointer;
-      polyData.GetPointer()->Delete();
-      vtkPolyDataPointer = NULL;
-    }
+    //#if ENABLE_VTK == 1
+    //    if (vtkPolyDataPointer != NULL)
+    //    {
+    //      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)vtkPolyDataPointer;
+    //      polyData.GetPointer()->Delete();
+    //      vtkPolyDataPointer = NULL;
+    //    }
 
-    if (vtkPointsPointer != NULL)
-    {
-      vtkWeakPointer<vtkPoints> points = (vtkPoints*)vtkPointsPointer;
-      points.GetPointer()->Delete();
-      vtkPointsPointer = NULL;
-    }
+    //    if (vtkPointsPointer != NULL)
+    //    {
+    //      vtkWeakPointer<vtkPoints> points = (vtkPoints*)vtkPointsPointer;
+    //      points.GetPointer()->Delete();
+    //      vtkPointsPointer = NULL;
+    //    }
 
-    if (vtkVerticesPointer != NULL)
-    {
-      vtkWeakPointer<vtkCellArray> vertices = (vtkCellArray*)vtkVerticesPointer;
-      vertices.GetPointer()->Delete();
-      vtkVerticesPointer = NULL;
-    }
+    //    if (vtkVerticesPointer != NULL)
+    //    {
+    //      vtkWeakPointer<vtkCellArray> vertices = (vtkCellArray*)vtkVerticesPointer;
+    //      vertices.GetPointer()->Delete();
+    //      vtkVerticesPointer = NULL;
+    //    }
 
-    if (vtkLinesPointer != NULL)
-    {
-      vtkWeakPointer<vtkCellArray> lines = (vtkCellArray*)vtkLinesPointer;
-      lines.GetPointer()->Delete();
-      vtkLinesPointer = NULL;
-    }
+    //    if (vtkLinesPointer != NULL)
+    //    {
+    //      vtkWeakPointer<vtkCellArray> lines = (vtkCellArray*)vtkLinesPointer;
+    //      lines.GetPointer()->Delete();
+    //      vtkLinesPointer = NULL;
+    //    }
 
-    if (vtkFacesPointer != NULL)
-    {
-      vtkWeakPointer<vtkCellArray> faces = (vtkCellArray*)vtkFacesPointer;
-      faces.GetPointer()->Delete();
-      vtkFacesPointer = NULL;
-    }
+    //    if (vtkFacesPointer != NULL)
+    //    {
+    //      vtkWeakPointer<vtkCellArray> faces = (vtkCellArray*)vtkFacesPointer;
+    //      faces.GetPointer()->Delete();
+    //      vtkFacesPointer = NULL;
+    //    }
 
-    for (unsigned int i = 0; i < vtkDoubleArrayPointers.size(); i++)
-    {
-      void* vtkDoubleArrayPointer = vtkDoubleArrayPointers[i];
-      if (vtkDoubleArrayPointer != NULL)
-      {
-        vtkWeakPointer<vtkDoubleArray> vtkSolution = (vtkDoubleArray*)vtkDoubleArrayPointer;
-        vtkSolution.GetPointer()->Delete();
-      }
-    }
-    vtkDoubleArrayPointers.clear();
-#endif
+    //    for (unsigned int i = 0; i < vtkDoubleArrayPointers.size(); i++)
+    //    {
+    //      void* vtkDoubleArrayPointer = vtkDoubleArrayPointers[i];
+    //      if (vtkDoubleArrayPointer != NULL)
+    //      {
+    //        vtkWeakPointer<vtkDoubleArray> vtkSolution = (vtkDoubleArray*)vtkDoubleArrayPointer;
+    //        vtkSolution.GetPointer()->Delete();
+    //      }
+    //    }
+    //    vtkDoubleArrayPointers.clear();
+    //#endif
   }
   // ***************************************************************************
   template <typename T>
@@ -215,7 +261,6 @@ namespace Gedim
     solutionFormats.resize(numberSolutions, VTPProperty::Formats::Points);
     solutionSizes.resize(numberSolutions, 0);
     solutions.resize(numberSolutions, NULL);
-    vtkDoubleArrayPointers.reserve(numberSolutions);
   }
   // ***************************************************************************
   template <typename T>
@@ -655,14 +700,18 @@ namespace Gedim
   }
   // ***************************************************************************
   template <typename T>
-  void GeometryToPolyData<T>::Convert()
+  void* GeometryToPolyData<T>::Convert() const
   {
+    void* vtkPolyDataPointer = nullptr;
+
 #if ENABLE_VTK == 1
     vtkPolyDataPointer = vtkPolyData::New();
-    vtkPointsPointer = vtkPoints::New();
-    vtkVerticesPointer = vtkCellArray::New();
-    vtkLinesPointer = vtkCellArray::New();
-    vtkFacesPointer = vtkCellArray::New();
+    void* vtkPointsPointer = vtkPoints::New();
+    void* vtkVerticesPointer = vtkCellArray::New();
+    void* vtkLinesPointer = vtkCellArray::New();
+    void* vtkFacesPointer = vtkCellArray::New();
+    std::vector<void*> vtkDoubleArrayPointers;
+    vtkDoubleArrayPointers.reserve(numberSolutions);
 
     vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)vtkPolyDataPointer;
     vtkWeakPointer<vtkPoints> points = (vtkPoints*)vtkPointsPointer;
@@ -691,7 +740,7 @@ namespace Gedim
 
         vtkDoubleArray* vtkSolution = (vtkDoubleArray*)vtkDoubleArrayPointers.back();
 
-        string& solutionLabel = solutionLabels[s];
+        const string& solutionLabel = solutionLabels[s];
         VTPProperty::Formats solutionFormat = solutionFormats[s];
 
         vtkSolution->SetName(solutionLabel.c_str());
@@ -712,6 +761,8 @@ namespace Gedim
       }
     }
 #endif // ENABLE_VTK
+
+    return vtkPolyDataPointer;
   }
   // ***************************************************************************
 }

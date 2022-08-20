@@ -51,6 +51,8 @@ namespace Gedim
                                                  const ConfigurationPropertySupportedTypes::SupportedTypes& type);
 
     public:
+      ~Configurations() { Reset(); }
+
       static const unsigned int& NumberProperties() { return numberProperties;  }
 
       /// Read the configuration from csv file

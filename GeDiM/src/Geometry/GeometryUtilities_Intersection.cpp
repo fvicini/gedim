@@ -587,7 +587,7 @@ namespace Gedim
       if (r.IntersectionSegmentsType == IntersectionSegmentSegmentResult::IntersectionSegmentTypes::SingleIntersection)
       {
         double c = r.SecondSegmentIntersections[0].CurvilinearCoordinate;
-        bool intGiaPresente;
+        bool intGiaPresente = false;
         for (unsigned int k=0; k<coordCurv.size(); k++)
         {
           if (Are1DValuesEqual(coordCurv[k], max*c))

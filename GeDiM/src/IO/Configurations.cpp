@@ -54,7 +54,6 @@ namespace Gedim
         break;
       default:
         throw invalid_argument("Property '%s' cannot be deleted. Type not recognized");
-        break;
     }
 
     properties.erase(id);

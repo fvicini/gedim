@@ -16,7 +16,7 @@ namespace GedimUnitTesting
     const unsigned int numGeometries = 4;
     const unsigned int numProperties = 2;
 
-    vector<Eigen::Vector3d> points(numGeometries);
+    Eigen::MatrixXd points(3, numGeometries);
     vector<vector<vector<double>>> properties(numProperties, vector<vector<double>>(numGeometries));
     vector<string> propertyLabels = { "Id", "Data" };
 
@@ -26,29 +26,29 @@ namespace GedimUnitTesting
     // Initialize data
     for (unsigned g = 0; g < numGeometries; g++)
     {
-      points[g]<< 1.0 + g, 0.0 + g, 0.0 + g;
+      points.col(g)<< 1.0 + g, 0.0 + g, 0.0 + g;
       id[g].resize(1, g + 1);
       test[g].resize(1, 10.8 + g);
     }
 
-    Gedim::VTPUtilities vtpUtilities;
-    vtpUtilities.SetExportFormat(Gedim::VTPUtilities::Ascii);
+    Gedim::VTKUtilities vtpUtilities;
+    vtpUtilities.SetExportFormat(Gedim::VTKUtilities::Ascii);
 
     // Export to VTK
-    for (unsigned int p = 0; p < numProperties; p++)
-      vtpUtilities.AddProperty(propertyLabels[p],
-                               Gedim::VTPProperty::Formats::Points);
+    //    for (unsigned int p = 0; p < numProperties; p++)
+    //      vtpUtilities.AddProperty(propertyLabels[p],
+    //                               Gedim::VTPProperty::Formats::Points);
 
     for (unsigned g = 0; g < numGeometries; g++)
     {
-      vtpUtilities.AddPoint(points[g]);
+      vtpUtilities.AddPoint(points.col(g));
 
-      for (unsigned int p = 0; p < numProperties; p++)
-      {
-        vtpUtilities.AddGeometryProperty(propertyLabels[p],
-                                         properties[p][g].size(),
-                                         properties[p][g].data());
-      }
+      //      for (unsigned int p = 0; p < numProperties; p++)
+      //      {
+      //        vtpUtilities.AddGeometryProperty(propertyLabels[p],
+      //                                         properties[p][g].size(),
+      //                                         properties[p][g].data());
+      //      }
     }
 
     std::string exportFolder = "./Export/TestVTPUtilities/Test0D";
@@ -56,6 +56,52 @@ namespace GedimUnitTesting
 
     vtpUtilities.Export(exportFolder + "/Geometry0D.vtu");
   }
+  // ***************************************************************************
+  //  TEST(TestVTPUtilities, VTPUtilities_Test0D)
+  //  {
+  //    const unsigned int numGeometries = 4;
+  //    const unsigned int numProperties = 2;
+
+  //    vector<Eigen::Vector3d> points(numGeometries);
+  //    vector<vector<vector<double>>> properties(numProperties, vector<vector<double>>(numGeometries));
+  //    vector<string> propertyLabels = { "Id", "Data" };
+
+  //    vector<vector<double>>& id = properties[0];
+  //    vector<vector<double>>& test = properties[1];
+
+  //    // Initialize data
+  //    for (unsigned g = 0; g < numGeometries; g++)
+  //    {
+  //      points[g]<< 1.0 + g, 0.0 + g, 0.0 + g;
+  //      id[g].resize(1, g + 1);
+  //      test[g].resize(1, 10.8 + g);
+  //    }
+
+  //    Gedim::VTPUtilities vtpUtilities;
+  //    vtpUtilities.SetExportFormat(Gedim::VTPUtilities::Ascii);
+
+  //    // Export to VTK
+  //    for (unsigned int p = 0; p < numProperties; p++)
+  //      vtpUtilities.AddProperty(propertyLabels[p],
+  //                               Gedim::VTPProperty::Formats::Points);
+
+  //    for (unsigned g = 0; g < numGeometries; g++)
+  //    {
+  //      vtpUtilities.AddPoint(points[g]);
+
+  //      for (unsigned int p = 0; p < numProperties; p++)
+  //      {
+  //        vtpUtilities.AddGeometryProperty(propertyLabels[p],
+  //                                         properties[p][g].size(),
+  //                                         properties[p][g].data());
+  //      }
+  //    }
+
+  //    std::string exportFolder = "./Export/TestVTPUtilities/Test0D";
+  //    Gedim::Output::CreateFolder(exportFolder);
+
+  //    vtpUtilities.Export(exportFolder + "/Geometry0D.vtu");
+  //  }
   // ***************************************************************************
   //  TEST(TestVTPUtilities, VTPUtilities_Test1D)
   //  {
