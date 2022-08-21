@@ -72,11 +72,14 @@ namespace Gedim
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::MatrixXi& Edges;
+      const Eigen::MatrixXi& Face;
 
       VTPPolygon(const Eigen::MatrixXd& vertices,
-                 const Eigen::MatrixXi& edges) :
+                 const Eigen::MatrixXi& edges,
+                 const Eigen::MatrixXi& face) :
         Vertices(vertices),
-        Edges(edges)
+        Edges(edges),
+        Face(face)
       { }
 
       Types Type() const { return Types::Polygon; }
@@ -110,8 +113,8 @@ namespace Gedim
       std::string Label;
       Formats Format;
 
-      std::list<unsigned int> Size;
-      std::list<const double*> Data;
+      unsigned int Size;
+      const double* Data;
   };
 
   class IGeometryToPolyData
@@ -127,7 +130,9 @@ namespace Gedim
                                const unsigned int& solutionSize,
                                const double* solution) = 0;
 
-      virtual void* Convert() const = 0;
+#if ENABLE_VTK == 1
+      virtual vtkSmartPointer<vtkPolyData> Convert() const = 0;
+#endif
   };
 
   class VTKUtilities final
@@ -146,8 +151,11 @@ namespace Gedim
       std::list<IGeometryToPolyData*> geometries;
 
 #if ENABLE_VTK == 1
-      vtkSmartPointer<vtkAppendFilter> exportData;
+      vtkNew<vtkAppendFilter> exportData;
 #endif
+
+      void AddToExportData(IGeometryToPolyData& polyData,
+                           const std::vector<VTPProperty>& properties);
 
     public:
       VTKUtilities();
@@ -155,70 +163,25 @@ namespace Gedim
 
       void SetExportFormat(const ExportFormat& exportFormat) { _exportFormat = exportFormat; }
 
-      void AddPoint(const Eigen::Vector3d& point);
+      void AddPoint(const Eigen::Vector3d& point,
+                    const std::vector<VTPProperty>& properties = {});
+      void AddSegment(const Eigen::MatrixXd& vertices,
+                      const std::vector<VTPProperty>& properties = {});
+      void AddSegment(const Eigen::MatrixXd& vertices,
+                      const Eigen::VectorXi& edge,
+                      const std::vector<VTPProperty>& properties = {});
+      void AddPolygon(const Eigen::MatrixXd& vertices,
+                      const std::vector<VTPProperty>& properties = {});
+      void AddPolygon(const Eigen::MatrixXd& vertices,
+                      const Eigen::MatrixXi& edges,
+                      const std::vector<VTPProperty>& properties = {});
+      void AddPolyhedron(const Eigen::MatrixXd& vertices,
+                         const Eigen::MatrixXi& edges,
+                         const std::vector<Eigen::MatrixXi>& faces,
+                         const std::vector<VTPProperty>& properties = {});
+
       void Export(const std::string& filePath) const;
   };
-
-  /// \brief The VTPExtension class
-  /// \copyright See top level LICENSE file for details.
-  //  class VTPUtilities final
-  //  {
-  //    public:
-  //      enum ExportFormat
-  //      {
-  //        Binary = 0,
-  //        Ascii = 1,
-  //        Appended = 2
-  //      };
-
-  //    private:
-  //      ExportFormat _exportFormat;
-  //      std::list<IVTPGeometry*> geometries;
-
-  //      std::unordered_map<std::string, VTPProperty> properties;
-  //    public:
-  //      VTPUtilities();
-  //      ~VTPUtilities();
-
-  //      void SetExportFormat(const ExportFormat& exportFormat) { _exportFormat = exportFormat; }
-
-  //      void AddProperty(const std::string& solutionLabel = "Property",
-  //                       const VTPProperty::Formats& format = VTPProperty::Formats::Points);
-
-  //      inline void AddPoint(const Eigen::Vector3d& point)
-  //      {
-  //        geometries.push_back(new VTPPoint(point));
-  //      }
-
-  //      inline void AddSegment(const Eigen::MatrixXd& vertices,
-  //                             const Eigen::VectorXi& edge)
-  //      {
-  //        geometries.push_back(new VTPSegment(vertices,
-  //                                            edge));
-  //      }
-
-  //      inline void AddPolygon(const Eigen::MatrixXd& vertices,
-  //                             const Eigen::MatrixXi& edges)
-  //      {
-  //        geometries.push_back(new VTPPolygon(vertices,
-  //                                            edges));
-  //      }
-
-  //      inline void AddPolyhedron(const Eigen::MatrixXd& vertices,
-  //                                const Eigen::MatrixXi& edges,
-  //                                const std::vector<Eigen::MatrixXi>& faces)
-  //      {
-  //        geometries.push_back(new VTPPolyhedron(vertices,
-  //                                               edges,
-  //                                               faces));
-  //      }
-
-  //      void AddGeometryProperty(const std::string& solutionLabel,
-  //                               const unsigned int& solutionSize,
-  //                               const double* solution);
-
-  //      void Export(const std::string& filePath) const;
-  //  };
 
   template <typename T>
   class GeometryToPolyData final : public IGeometryToPolyData
@@ -238,7 +201,6 @@ namespace Gedim
                     vtkSmartPointer<vtkCellArray>& vertices) const;
       void AddLine(const unsigned int& originId,
                    const unsigned int& endId,
-                   vtkSmartPointer<vtkIdList>& pointIds,
                    vtkSmartPointer<vtkCellArray>& lines) const;
       void AddFace(const Eigen::VectorXi& faceVerticesIds,
                    vtkSmartPointer<vtkIdList>& pointIds,
@@ -265,7 +227,9 @@ namespace Gedim
                        const unsigned int& solutionSize,
                        const double* solution);
 
-      void* Convert() const;
+#if ENABLE_VTK == 1
+      vtkSmartPointer<vtkPolyData> Convert() const;
+#endif
   };
 }
 

@@ -11,25 +11,96 @@ namespace Gedim
   // ***************************************************************************
   VTKUtilities::VTKUtilities()
   {
-#if ENABLE_VTK == 1
-    exportData = vtkSmartPointer<vtkAppendFilter>::New();
-#endif
   }
   VTKUtilities::~VTKUtilities()
   {
+  }
+  // ***************************************************************************
+  void VTKUtilities::AddToExportData(IGeometryToPolyData& polyData,
+                                     const vector<VTPProperty>& properties)
+  {
 #if ENABLE_VTK == 1
-    exportData->RemoveAllInputs();
-    exportData->Delete();
+    if (properties.size() > 0)
+    {
+      polyData.InitializeSolutions(properties.size());
+      unsigned int p = 0;
+      for (const VTPProperty& property : properties)
+      {
+        polyData.SetSolutionOptions(p,
+                                    property.Label,
+                                    property.Format);
+        polyData.AddSolution(p,
+                             property.Size,
+                             property.Data);
+        p++;
+      }
+    }
+
+    exportData->AddInputData(polyData.Convert());
 #endif
   }
   // ***************************************************************************
-  void VTKUtilities::AddPoint(const Eigen::Vector3d& point)
+  void VTKUtilities::AddPoint(const Eigen::Vector3d& point,
+                              const vector<VTPProperty>& properties)
   {
+#if ENABLE_VTK == 1
     VTPPoint vtpPoint(point);
     GeometryToPolyData<VTPPoint> polyData(vtpPoint);
-
+    AddToExportData(polyData,
+                    properties);
+#endif
+  }
+  // ***************************************************************************
+  void VTKUtilities::AddSegment(const Eigen::MatrixXd& vertices,
+                                const std::vector<VTPProperty>& properties)
+  {
 #if ENABLE_VTK == 1
-    exportData->AddInputData((vtkPolyData*)polyData.Convert());
+    Eigen::MatrixXi edge =  (Eigen::MatrixXi(2,1)<< 0, 1).finished();
+    VTPSegment vtpSegment(vertices,
+                          edge);
+    GeometryToPolyData<VTPSegment> polyData(vtpSegment);
+    AddToExportData(polyData,
+                    properties);
+#endif
+  }
+  // ***************************************************************************
+  void VTKUtilities::AddPolygon(const Eigen::MatrixXd& vertices,
+                                const std::vector<VTPProperty>& properties)
+  {
+#if ENABLE_VTK == 1
+    Eigen::MatrixXi edges(2, vertices.cols());
+    for (unsigned int v = 0; v < vertices.cols(); v++)
+      edges.col(v)<< v, (v + 1) % vertices.cols();
+
+    Eigen::MatrixXi face(2, vertices.cols());
+    face.row(0)<< Eigen::VectorXi::LinSpaced(vertices.cols(),
+                                             0.0,
+                                             vertices.cols() - 1).transpose();
+    face.row(1)<< Eigen::VectorXi::LinSpaced(vertices.cols(),
+                                             0.0,
+                                             vertices.cols() - 1).transpose();
+
+    VTPPolygon vtpPolygon(vertices,
+                          edges,
+                          face);
+    GeometryToPolyData<VTPPolygon> polyData(vtpPolygon);
+    AddToExportData(polyData,
+                    properties);
+#endif
+  }
+  // ***************************************************************************
+  void VTKUtilities::AddPolyhedron(const Eigen::MatrixXd& vertices,
+                                   const Eigen::MatrixXi& edges,
+                                   const std::vector<Eigen::MatrixXi>& faces,
+                                   const std::vector<VTPProperty>& properties)
+  {
+#if ENABLE_VTK == 1
+    VTPPolyhedron vtpPolyhedron(vertices,
+                                edges,
+                                faces);
+    GeometryToPolyData<VTPPolyhedron> polyData(vtpPolyhedron);
+    AddToExportData(polyData,
+                    properties);
 #endif
   }
   // ***************************************************************************
@@ -60,133 +131,6 @@ namespace Gedim
     writer->Write();
 #endif
   }
-  //  // ***************************************************************************
-  //  VTPUtilities::VTPUtilities()
-  //  {
-  //    _exportFormat = VTPUtilities::Binary;
-  //  }
-  //  VTPUtilities::~VTPUtilities()
-  //  {
-  //    for (IVTPGeometry* geometry : geometries)
-  //      delete geometry;
-  //    geometries.clear();
-
-  //    properties.clear();
-  //  }
-  //  // ***************************************************************************
-  //  void VTPUtilities::AddProperty(const string& solutionLabel,
-  //                                 const VTPProperty::Formats& format)
-  //  {
-  //    properties.insert(make_pair(solutionLabel, VTPProperty()));
-
-  //    VTPProperty& property = properties.at(solutionLabel);
-  //    property.Label = solutionLabel;
-  //    property.Format = format;
-  //  }
-  //  // ***************************************************************************
-  //  void VTPUtilities::AddGeometryProperty(const string& solutionLabel,
-  //                                         const unsigned int& solutionSize,
-  //                                         const double* solution)
-  //  {
-  //    VTPProperty& property = properties.at(solutionLabel);
-
-  //    property.Data.push_back(solution);
-  //    property.Size.push_back(solutionSize);
-  //  }
-  //  // ***************************************************************************
-  //  void VTPUtilities::Export(const string& filePath) const
-  //  {
-  //    Utilities::Unused(filePath); //< Is unused with VTK off
-
-  //#if ENABLE_VTK == 1
-  //    vtkSmartPointer<vtkAppendFilter> append =	vtkSmartPointer<vtkAppendFilter>::New();
-
-  //    vector<IGeometryToPolyData*> domainToPolyDatas;
-  //    domainToPolyDatas.reserve(geometries.size());
-
-  //    vector<vector<unsigned int>> geometryPropertySizes(properties.size());
-  //    vector<vector<const double*>> geometryPropertyDatas(properties.size());
-
-  //    unsigned int p = 0;
-  //    for (const pair<string, VTPProperty>& propertyPair : properties)
-  //    {
-  //      const VTPProperty& property = propertyPair.second;
-  //      geometryPropertySizes[p] = vector<unsigned int>(property.Size.begin(), property.Size.end());
-  //      geometryPropertyDatas[p] = vector<const double*>(property.Data.begin(), property.Data.end());
-  //      p++;
-  //    }
-
-  //    unsigned int g = 0;
-  //    for (const IVTPGeometry* geometry : geometries)
-  //    {
-  //      switch (geometry->Type())
-  //      {
-  //        case IVTPGeometry::Types::Point:
-  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPoint>(*static_cast<const VTPPoint*>(geometry)));
-  //          break;
-  //        case IVTPGeometry::Types::Segment:
-  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPSegment>(*static_cast<const VTPSegment*>(geometry)));
-  //          break;
-  //        case IVTPGeometry::Types::Polygon:
-  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolygon>(*static_cast<const VTPPolygon*>(geometry)));
-  //          break;
-  //        case IVTPGeometry::Types::Polyhedron:
-  //          domainToPolyDatas.push_back(new GeometryToPolyData<VTPPolyhedron>(*static_cast<const VTPPolyhedron*>(geometry)));
-  //          break;
-  //        default:
-  //          throw runtime_error("");
-  //      }
-
-  //      IGeometryToPolyData& domainToPolyData = *domainToPolyDatas.back();
-
-  //      domainToPolyData.InitializeSolutions(properties.size());
-
-  //      unsigned int p = 0;
-  //      for (const pair<string, VTPProperty>& propertyPair : properties)
-  //      {
-  //        const VTPProperty& property = propertyPair.second;
-  //        domainToPolyData.SetSolutionOptions(p,
-  //                                            property.Label,
-  //                                            property.Format);
-  //        domainToPolyData.AddSolution(p,
-  //                                     geometryPropertySizes[p][g],
-  //                                     geometryPropertyDatas[p][g]);
-  //        p++;
-  //      }
-
-  //      domainToPolyData.Convert();
-
-  //      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)domainToPolyData.PolyDataPointer();
-  //      append->AddInputData(polyData);
-
-  //      g++;
-  //    }
-
-  //    append->Update();
-
-  //    vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-  //    writer->SetFileName(filePath.c_str());
-  //    writer->SetInputData(append->GetOutput());
-
-  //    switch (_exportFormat)
-  //    {
-  //      case VTPUtilities::Binary:
-  //        writer->SetDataModeToBinary();
-  //        break;
-  //      case VTPUtilities::Ascii:
-  //        writer->SetDataModeToAscii();
-  //        break;
-  //      case VTPUtilities::Appended:
-  //        writer->SetDataModeToAppended();
-  //        break;
-  //      default:
-  //        throw runtime_error("Export Format not supported");
-  //        break;
-  //    }
-
-  //    writer->Write();
-  //#endif // ENABLE_VTK
-  //  }
   // ***************************************************************************
   template class GeometryToPolyData<VTPPoint>;
   template class GeometryToPolyData<VTPSegment>;
@@ -202,53 +146,6 @@ namespace Gedim
   template <typename T>
   GeometryToPolyData<T>::~GeometryToPolyData()
   {
-    //#if ENABLE_VTK == 1
-    //    if (vtkPolyDataPointer != NULL)
-    //    {
-    //      vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)vtkPolyDataPointer;
-    //      polyData.GetPointer()->Delete();
-    //      vtkPolyDataPointer = NULL;
-    //    }
-
-    //    if (vtkPointsPointer != NULL)
-    //    {
-    //      vtkWeakPointer<vtkPoints> points = (vtkPoints*)vtkPointsPointer;
-    //      points.GetPointer()->Delete();
-    //      vtkPointsPointer = NULL;
-    //    }
-
-    //    if (vtkVerticesPointer != NULL)
-    //    {
-    //      vtkWeakPointer<vtkCellArray> vertices = (vtkCellArray*)vtkVerticesPointer;
-    //      vertices.GetPointer()->Delete();
-    //      vtkVerticesPointer = NULL;
-    //    }
-
-    //    if (vtkLinesPointer != NULL)
-    //    {
-    //      vtkWeakPointer<vtkCellArray> lines = (vtkCellArray*)vtkLinesPointer;
-    //      lines.GetPointer()->Delete();
-    //      vtkLinesPointer = NULL;
-    //    }
-
-    //    if (vtkFacesPointer != NULL)
-    //    {
-    //      vtkWeakPointer<vtkCellArray> faces = (vtkCellArray*)vtkFacesPointer;
-    //      faces.GetPointer()->Delete();
-    //      vtkFacesPointer = NULL;
-    //    }
-
-    //    for (unsigned int i = 0; i < vtkDoubleArrayPointers.size(); i++)
-    //    {
-    //      void* vtkDoubleArrayPointer = vtkDoubleArrayPointers[i];
-    //      if (vtkDoubleArrayPointer != NULL)
-    //      {
-    //        vtkWeakPointer<vtkDoubleArray> vtkSolution = (vtkDoubleArray*)vtkDoubleArrayPointer;
-    //        vtkSolution.GetPointer()->Delete();
-    //      }
-    //    }
-    //    vtkDoubleArrayPointers.clear();
-    //#endif
   }
   // ***************************************************************************
   template <typename T>
@@ -303,9 +200,10 @@ namespace Gedim
   template <typename T>
   void GeometryToPolyData<T>::AddLine(const unsigned int& originId,
                                       const unsigned int& endId,
-                                      vtkSmartPointer<vtkIdList>& pointIds,
                                       vtkSmartPointer<vtkCellArray>& lines) const
   {
+    vtkNew<vtkIdList> pointIds;
+
     pointIds->Initialize();
     pointIds->Allocate(2);
 
@@ -543,11 +441,9 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
-    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
     AddLine(geometry.Edge[0],
         geometry.Edge[1],
-        pointIds,
         lines);
 #endif // ENABLE_VTK
   }
@@ -560,13 +456,11 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
-    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
     for (unsigned int i = 0 ; i < geometry.Edges.cols(); i++)
     {
       AddLine(geometry.Edges(0, i),
               geometry.Edges(1, i),
-              pointIds,
               lines);
     }
 #endif // ENABLE_VTK
@@ -580,13 +474,10 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> lines = *(vtkSmartPointer<vtkCellArray>*)vtkLinesPointer;
-    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
-
     for (unsigned int i = 0 ; i < geometry.Edges.cols(); i++)
     {
       AddLine(geometry.Edges(0, i),
               geometry.Edges(1, i),
-              pointIds,
               lines);
     }
 #endif // ENABLE_VTK
@@ -650,10 +541,7 @@ namespace Gedim
     vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
     vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
-    Eigen::VectorXi faceVerticesId = Eigen::VectorXi::LinSpaced(geometry.Vertices.cols(),
-                                                                0.0,
-                                                                geometry.Vertices.cols() - 1);
-    AddFace(faceVerticesId,
+    AddFace(geometry.Face.row(0).transpose(),
             pointIds,
             faces);
 #endif // ENABLE_VTK
@@ -699,25 +587,19 @@ namespace Gedim
 #endif // ENABLE_VTK
   }
   // ***************************************************************************
-  template <typename T>
-  void* GeometryToPolyData<T>::Convert() const
-  {
-    void* vtkPolyDataPointer = nullptr;
-
 #if ENABLE_VTK == 1
-    vtkPolyDataPointer = vtkPolyData::New();
-    void* vtkPointsPointer = vtkPoints::New();
-    void* vtkVerticesPointer = vtkCellArray::New();
-    void* vtkLinesPointer = vtkCellArray::New();
-    void* vtkFacesPointer = vtkCellArray::New();
-    std::vector<void*> vtkDoubleArrayPointers;
+  template <typename T>
+  vtkSmartPointer<vtkPolyData> GeometryToPolyData<T>::Convert() const
+  {
+    vtkNew<vtkPolyData> polyData;
+
+    std::vector<vtkSmartPointer<vtkDoubleArray>> vtkDoubleArrayPointers;
     vtkDoubleArrayPointers.reserve(numberSolutions);
 
-    vtkWeakPointer<vtkPolyData> polyData = (vtkPolyData*)vtkPolyDataPointer;
-    vtkWeakPointer<vtkPoints> points = (vtkPoints*)vtkPointsPointer;
-    vtkWeakPointer<vtkCellArray> vertices = (vtkCellArray*)vtkVerticesPointer;
-    vtkWeakPointer<vtkCellArray> lines = (vtkCellArray*)vtkLinesPointer;
-    vtkWeakPointer<vtkCellArray> faces = (vtkCellArray*)vtkFacesPointer;
+    vtkNew<vtkPoints> points;
+    vtkNew<vtkCellArray> vertices;
+    vtkNew<vtkCellArray> lines;
+    vtkNew<vtkCellArray> faces;
 
     InitializePoints(&points, &vertices);
     InitializeLines(&lines);
@@ -736,7 +618,7 @@ namespace Gedim
     {
       for (unsigned int s = 0; s < numberSolutions; s++)
       {
-        vtkDoubleArrayPointers.push_back(vtkDoubleArray::New());
+        vtkDoubleArrayPointers.push_back(vtkNew<vtkDoubleArray>());
 
         vtkDoubleArray* vtkSolution = (vtkDoubleArray*)vtkDoubleArrayPointers.back();
 
@@ -760,9 +642,9 @@ namespace Gedim
         AddSolution(s, vtkSolution);
       }
     }
-#endif // ENABLE_VTK
 
-    return vtkPolyDataPointer;
+    return polyData;
   }
+#endif // ENABLE_VTK
   // ***************************************************************************
 }
