@@ -28,33 +28,16 @@
 
 namespace Gedim
 {
-  struct IVTPGeometry
-  {
-      enum Types
-      {
-        Point = 0,
-        Segment = 1,
-        Polygon = 2,
-        Polyhedron = 3
-      };
-
-      virtual ~IVTPGeometry() {}
-
-      virtual Types Type() const = 0;
-  };
-
-  struct VTPPoint final : public IVTPGeometry
+  struct VTPPoint final
   {
       const Eigen::Vector3d& Point;
 
       VTPPoint(const Eigen::Vector3d& point) :
         Point(point)
       { }
-
-      Types Type() const { return Types::Point; }
   };
 
-  struct VTPSegment final : public IVTPGeometry
+  struct VTPSegment final
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::VectorXi& Edge;
@@ -64,11 +47,9 @@ namespace Gedim
         Vertices(vertices),
         Edge(edge)
       { }
-
-      Types Type() const { return Types::Segment; }
   };
 
-  struct VTPPolygon final : public IVTPGeometry
+  struct VTPPolygon final
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::MatrixXi& Edges;
@@ -81,11 +62,9 @@ namespace Gedim
         Edges(edges),
         Face(face)
       { }
-
-      Types Type() const { return Types::Polygon; }
   };
 
-  struct VTPPolyhedron final : public IVTPGeometry
+  struct VTPPolyhedron final
   {
       const Eigen::MatrixXd& Vertices; /// size 3xnumVertices
       const Eigen::MatrixXi& Edges; /// size 2xnumEdges
@@ -98,8 +77,6 @@ namespace Gedim
         Edges(edges),
         Faces(faces)
       { }
-
-      Types Type() const { return Types::Polyhedron; }
   };
 
   struct VTPProperty final

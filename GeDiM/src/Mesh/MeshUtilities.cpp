@@ -1,6 +1,6 @@
 #include "MeshUtilities.hpp"
-#include <iostream>
-#include <fstream>
+
+#include "TriangleInterface.hpp"
 
 using namespace Eigen;
 
@@ -639,6 +639,17 @@ namespace Gedim
         cell2DIndex++;
       }
     }
+  }
+  // ***************************************************************************
+  void MeshUtilities::CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
+                                           const double& minTriangleArea,
+                                           IMeshDAO& mesh) const
+  {
+    TriangleInterface triangleInterface;
+
+    triangleInterface.CreateMesh(polygonVertices,
+                                 minTriangleArea,
+                                 mesh);
   }
   // ***************************************************************************
 }

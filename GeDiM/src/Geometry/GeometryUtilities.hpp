@@ -1368,6 +1368,40 @@ namespace Gedim
       vector<Eigen::Matrix3d> ExtractTriangulationPointsByExternalPoint(const Eigen::MatrixXd& points,
                                                                         const Eigen::Vector3d& externalPoint,
                                                                         const vector<unsigned int>& pointsTriangulation) const;
+      /// \brief Create a triangle with points
+      Eigen::MatrixXd CreateTriangle(const Eigen::Vector3d& p1,
+                                     const Eigen::Vector3d& p2,
+                                     const Eigen::Vector3d& p3) const;
+      /// \brief Create a parallelogram with origin and dimension
+      /// \param origin the origin
+      /// \param lengthVector the length vector
+      /// \param widthVector the width vector
+      Eigen::MatrixXd CreateParallelogram(const Eigen::Vector3d& origin,
+                                          const Eigen::Vector3d& lengthVector,
+                                          const Eigen::Vector3d& widthVector) const;
+      /// \brief Create a rectangle with origin and dimensions parallel to axis
+      /// \param origin the origin
+      /// \param base the base length
+      /// \param height the height length
+      inline Eigen::MatrixXd CreateRectangle(const Eigen::Vector3d& origin,
+                                             const double& base,
+                                             const double& height) const
+      {
+        return CreateParallelogram(origin,
+                                   Eigen::Vector3d(base, 0.0, 0.0),
+                                   Eigen::Vector3d(0.0, height, 0.0));
+      }
+
+      /// \brief Create a square with origin and dimensions parallel to axis
+      /// \param origin the origin
+      /// \param edgeLength the edge length
+      inline Eigen::MatrixXd CreateSquare(const Eigen::Vector3d& origin,
+                                          const double& edgeLength) const
+      {
+        return CreateRectangle(origin,
+                               edgeLength,
+                               edgeLength);
+      }
 
       /// \brief Create a Tetrahedron with origin and dimension
       /// \param origin the origin

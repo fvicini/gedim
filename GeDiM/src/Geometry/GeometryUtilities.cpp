@@ -163,4 +163,28 @@ namespace Gedim
     return triangulations;
   }
   // ***************************************************************************
+  MatrixXd GeometryUtilities::CreateTriangle(const Eigen::Vector3d& p1,
+                                             const Eigen::Vector3d& p2,
+                                             const Eigen::Vector3d& p3) const
+  {
+    MatrixXd vertices(3, 3);
+    vertices.col(0)<< p1;
+    vertices.col(1)<< p2;
+    vertices.col(2)<< p3;
+
+    return vertices;
+  }
+// ***************************************************************************
+  MatrixXd GeometryUtilities::CreateParallelogram(const Eigen::Vector3d& origin,
+                                                  const Eigen::Vector3d& lengthVector,
+                                                  const Eigen::Vector3d& widthVector) const
+  {
+    MatrixXd vertices(3, 4);
+    vertices.col(0)<< origin;
+    vertices.col(1)<< origin + lengthVector;
+    vertices.col(2)<< origin + lengthVector + widthVector;
+    vertices.col(3)<< origin + widthVector;
+    return vertices;
+  }
+  // ***************************************************************************
 }

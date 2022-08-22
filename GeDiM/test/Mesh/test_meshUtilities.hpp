@@ -5,6 +5,8 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
+#include "MeshMatrices_2D_26Cells_Mock.hpp"
+
 #include "MeshMatrices.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "MeshUtilities.hpp"
@@ -118,6 +120,40 @@ namespace GedimUnitTesting
               cell0DCoordinates);
     EXPECT_EQ(meshDao.Cell1DExtremes(),
               cell1DExtremes);
+  }
+
+  TEST(TestMeshUtilities, TestCreateTriangleMesh)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    GedimUnitTesting::MeshMatrices_2D_26Cells_Mock mockMesh;
+    Gedim::MeshMatricesDAO expectedMesh(mockMesh.Mesh);
+
+    Gedim::MeshMatrices mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh);
+
+    Gedim::MeshUtilities meshUtilities;
+
+    const Eigen::MatrixXd polygon = geometryUtilities.CreateSquare(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                   1.0);
+
+    meshUtilities.CreateTriangularMesh(polygon,
+                                       0.033,
+                                       meshDao);
+
+    EXPECT_EQ(expectedMesh.Dimension(),
+              meshDao.Dimension());
+    EXPECT_EQ(expectedMesh.Cell0DTotalNumber(),
+              meshDao.Cell0DTotalNumber());
+    EXPECT_EQ(expectedMesh.Cell1DTotalNumber(),
+              meshDao.Cell1DTotalNumber());
+    EXPECT_EQ(expectedMesh.Cell2DTotalNumber(),
+              meshDao.Cell2DTotalNumber());
+    EXPECT_EQ(expectedMesh.Cell0DCoordinates(),
+              meshDao.Cell0DCoordinates());
+    EXPECT_EQ(expectedMesh.Cell1DExtremes(),
+              meshDao.Cell1DExtremes());
   }
 
   TEST(TestMeshUtilities, TestComputeCell1DCell2DNeighbours)

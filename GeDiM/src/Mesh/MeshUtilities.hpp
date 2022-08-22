@@ -113,6 +113,15 @@ namespace Gedim
                                const vector<double>& baseMeshCurvilinearCoordinates,
                                const vector<double>& heightMeshCurvilinearCoordinates,
                                IMeshDAO& mesh) const;
+
+      /// \brief Crete triangular mesh on 2D polygon
+      /// \param polygonVertices the 2D polygon vertices, size 3xnumVertices
+      /// \param minTriangleArea the minimum triangular area
+      /// \note markers on border are set as { 1, 2, 3, 4, ... } for cell0Ds and { 5, 6, 7, 8, ... } for cell1Ds
+      /// \note use triangle library
+      void CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
+                                const double& minTriangleArea,
+                                IMeshDAO& mesh) const;
   };
 
 }
