@@ -5,7 +5,10 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
+#include "MeshMatrices_2D_26Cells_Mock.hpp"
+
 #include "GeometryUtilities.hpp"
+#include "MeshMatricesDAO.hpp"
 #include "IOUtilities.hpp"
 #include "VTPUtilities.hpp"
 
@@ -228,45 +231,113 @@ namespace GedimUnitTesting
                         Gedim::VTKUtilities::Ascii);
   }
   // ***************************************************************************
-  //  TEST(TestVTPUtilities, VTPUtilities_Test3D)
-  //  {
-  //    double angle = 0.785398; // 45Â°
-  //    Matrix3d rotationMatrix;
-  //    rotationMatrix.row(0) << cos(angle), 0.0, sin(angle);
-  //    rotationMatrix.row(1) << 0.0, 1.0, 0.0;
-  //    rotationMatrix.row(2) << -sin(angle), 0.0, cos(angle);
+  TEST(TestVTPUtilities, VTPUtilities_TestMesh2D_Cell0Ds)
+  {
+    GedimUnitTesting::MeshMatrices_2D_26Cells_Mock mockMesh;
+    Gedim::MeshMatricesDAO mesh(mockMesh.Mesh);
+    Gedim::VTKUtilities vtpUtilities;
 
-  //    Vector3d translation(0.0, 2.0, 0.0);
+    // Export to VTK
+    for (unsigned int g = 0; g < mesh.Cell0DTotalNumber(); g++)
+    {
+      vector<double> id(1, mesh.Cell0DId(g));
+      vector<double> marker(1, mesh.Cell0DMarker(g));
 
-  //    /// <li> Create Domain
-  //    GeometryFactory geometryFactory;
-  //    ShapeCreator shapeCreator(geometryFactory);
+      vtpUtilities.AddPoint(mesh.Cell0DCoordinates(g),
+                            {
+                              {
+                                "Id",
+                                Gedim::VTPProperty::Formats::Points,
+                                static_cast<unsigned int>(id.size()),
+                                id.data()
+                              },
+                              {
+                                "Marker",
+                                Gedim::VTPProperty::Formats::Points,
+                                static_cast<unsigned int>(marker.size()),
+                                marker.data()
+                              }
+                            });
+    }
 
-  //    Vector3d origin(0.0, 0.0, 0.0);
-  //    Polyhedron& geometry = shapeCreator.CreateCube(origin,
-  //                                                   1.0);
+    std::string exportFolder = "./Export/TestVTPUtilities";
+    Gedim::Output::CreateFolder(exportFolder);
 
-  //    unsigned int id = geometry.Id();
+    vtpUtilities.Export(exportFolder + "/Mesh2D_Cell0Ds.vtu",
+                        Gedim::VTKUtilities::Ascii);
+  }
+  // ***************************************************************************
+  TEST(TestVTPUtilities, VTPUtilities_TestMesh2D_Cell1Ds)
+  {
+    GedimUnitTesting::MeshMatrices_2D_26Cells_Mock mockMesh;
+    Gedim::MeshMatricesDAO mesh(mockMesh.Mesh);
+    Gedim::VTKUtilities vtpUtilities;
 
-  //    VTPUtilities VTPUtilities;
-  //    Output::AssertTest(VTPUtilities.Initialize(1), "%s: Initialize", __func__);
-  //    Output::AssertTest(VTPUtilities.InitializeSolutions(1), "%s: InitializeSolutions", __func__);
-  //    VTPUtilities.SetExportFormat(VTPUtilities::Ascii);
+    // Export to VTK
+    for (unsigned int g = 0; g < mesh.Cell1DTotalNumber(); g++)
+    {
+      vector<double> id(2, mesh.Cell1DId(g));
+      vector<double> marker(2, mesh.Cell1DMarker(g));
 
-  //    string exportFolder = "./Export/Paraview";
-  //    Output::CreateFolder(exportFolder);
+      vtpUtilities.AddSegment(mesh.Cell1DCoordinates(g),
+                              {
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                },
+                                {
+                                  "Marker",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(marker.size()),
+                                  marker.data()
+                                }
+                              });
+    }
 
-  //    Output::AssertTest(VTPUtilities.AddGeometry(id, geometry), "%s: AddGeometry", __func__);
-  //    Output::AssertTest(VTPUtilities.AddRotationAndTranslation(id,
-  //                                                              rotationMatrix,
-  //                                                              translation), "%s: AddRotationAndTranslation", __func__);
+    std::string exportFolder = "./Export/TestVTPUtilities";
+    Gedim::Output::CreateFolder(exportFolder);
 
-  //    vector<double> solution(geometry.NumberOfVertices(), 10.8);
-  //    Output::AssertTest(VTPUtilities.AddSolution(id, 0, solution.size(), solution.data()), "%s: AddSolution", __func__);
-  //    Output::AssertTest(VTPUtilities.SetSolutionOptions(0, "TestSolution", VTPUtilities::Points), "%s: SetSolutionOptions", __func__);
+    vtpUtilities.Export(exportFolder + "/Mesh2D_Cell1Ds.vtu",
+                        Gedim::VTKUtilities::Ascii);
+  }
+  // ***************************************************************************
+  TEST(TestVTPUtilities, VTPUtilities_TestMesh2D_Cell2Ds)
+  {
+    GedimUnitTesting::MeshMatrices_2D_26Cells_Mock mockMesh;
+    Gedim::MeshMatricesDAO mesh(mockMesh.Mesh);
+    Gedim::VTKUtilities vtpUtilities;
 
-  //    Output::AssertTest(VTPUtilities.Export(exportFolder + "/Geometry3D.vtu"), "%s: Export", __func__);
-  //  }
+    // Export to VTK
+    for (unsigned int g = 0; g < mesh.Cell2DTotalNumber(); g++)
+    {
+      vector<double> id(mesh.Cell2DNumberVertices(g), mesh.Cell2DId(g));
+      vector<double> marker(mesh.Cell2DNumberVertices(g), mesh.Cell2DMarker(g));
+
+      vtpUtilities.AddPolygon(mesh.Cell2DVerticesCoordinates(g),
+                              {
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                },
+                                {
+                                  "Marker",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(marker.size()),
+                                  marker.data()
+                                }
+                              });
+    }
+
+    std::string exportFolder = "./Export/TestVTPUtilities";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    vtpUtilities.Export(exportFolder + "/Mesh2D_Cell2Ds.vtu",
+                        Gedim::VTKUtilities::Ascii);
+  }
   // ***************************************************************************
 }
 

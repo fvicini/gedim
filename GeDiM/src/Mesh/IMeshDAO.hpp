@@ -304,6 +304,9 @@ namespace Gedim
       virtual unsigned int Cell1DVertex(const unsigned int& cell1DIndex,
                                         const unsigned int& vertexIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
+      /// \return the coordinates of Cell1D, size 3x2
+      virtual Eigen::MatrixXd Cell1DCoordinates(const unsigned int& cell1DIndex) const = 0;
+      /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return the origin coordinates of Cell1D
       virtual Eigen::Vector3d Cell1DOriginCoordinates(const unsigned int& cell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()

@@ -381,6 +381,10 @@ namespace Gedim
         Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.Cell1DVertices[2 * cell1DIndex + 1];
       }
+      inline Eigen::MatrixXd Cell1DCoordinates(const unsigned int& cell1DIndex) const
+      {
+        return (Eigen::MatrixXd(3, 2)<< Cell1DOriginCoordinates(cell1DIndex), Cell1DEndCoordinates(cell1DIndex)).finished();
+      }
       inline Eigen::Vector3d Cell1DOriginCoordinates(const unsigned int& cell1DIndex) const
       {
         return Cell0DCoordinates(Cell1DOrigin(cell1DIndex));
