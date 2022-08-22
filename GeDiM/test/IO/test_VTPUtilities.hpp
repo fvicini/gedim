@@ -238,7 +238,7 @@ namespace GedimUnitTesting
                             {
                               {
                                 "Id",
-                                Gedim::VTPProperty::Formats::Points,
+                                Gedim::VTPProperty::Formats::Cells,
                                 static_cast<unsigned int>(id.size()),
                                 id.data()
                               },
@@ -267,14 +267,14 @@ namespace GedimUnitTesting
     // Export to VTK
     for (unsigned int g = 0; g < mesh.Cell1DTotalNumber(); g++)
     {
-      vector<double> id(2, mesh.Cell1DId(g));
+      vector<double> id(1, mesh.Cell1DId(g));
       vector<double> marker(2, mesh.Cell1DMarker(g));
 
       vtpUtilities.AddSegment(mesh.Cell1DCoordinates(g),
                               {
                                 {
                                   "Id",
-                                  Gedim::VTPProperty::Formats::Points,
+                                  Gedim::VTPProperty::Formats::Cells,
                                   static_cast<unsigned int>(id.size()),
                                   id.data()
                                 },
