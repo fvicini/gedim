@@ -203,7 +203,6 @@ namespace Gedim
                    const unsigned int& endId,
                    vtkSmartPointer<vtkCellArray>& lines) const;
       void AddFace(const Eigen::VectorXi& faceVerticesIds,
-                   vtkSmartPointer<vtkIdList>& pointIds,
                    vtkSmartPointer<vtkCellArray>& faces) const;
 #endif
 

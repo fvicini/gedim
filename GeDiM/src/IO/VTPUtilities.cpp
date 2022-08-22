@@ -55,7 +55,7 @@ namespace Gedim
                                 const std::vector<VTPProperty>& properties)
   {
 #if ENABLE_VTK == 1
-    Eigen::MatrixXi edge =  (Eigen::MatrixXi(2,1)<< 0, 1).finished();
+    Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
     VTPSegment vtpSegment(vertices,
                           edge);
     GeometryToPolyData<VTPSegment> polyData(vtpSegment);
@@ -219,9 +219,10 @@ namespace Gedim
   // ***************************************************************************
   template <typename T>
   void GeometryToPolyData<T>::AddFace(const Eigen::VectorXi& faceVerticesIds,
-                                      vtkSmartPointer<vtkIdList>& pointIds,
                                       vtkSmartPointer<vtkCellArray>& faces) const
   {
+    vtkNew<vtkIdList> pointIds;
+
     pointIds->Initialize();
     pointIds->Allocate(faceVerticesIds.size());
 
@@ -539,10 +540,8 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
-    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
     AddFace(geometry.Face.row(0).transpose(),
-            pointIds,
             faces);
 #endif // ENABLE_VTK
   }
@@ -555,12 +554,10 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
     vtkSmartPointer<vtkCellArray> faces = *(vtkSmartPointer<vtkCellArray>*)vtkFacesPointer;
-    vtkSmartPointer<vtkIdList> pointIds = vtkSmartPointer<vtkIdList>::New();
 
     for (unsigned int i = 0 ; i < geometry.Faces.size(); i++)
     {
       AddFace(geometry.Faces[i].row(i),
-              pointIds,
               faces);
     }
 #endif // ENABLE_VTK
