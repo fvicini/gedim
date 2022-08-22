@@ -122,6 +122,13 @@ namespace Gedim
       void CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
                                 const double& minTriangleArea,
                                 IMeshDAO& mesh) const;
+
+      /// \brief Export Mesh To VTU
+      /// \param mesh the mesh
+      /// \param exportFolder the folder in which the mesh is exported
+      void ExportMeshToVTU(const IMeshDAO& mesh,
+                           const string& exportFolder,
+                           const string& fileName) const;
   };
 
 }

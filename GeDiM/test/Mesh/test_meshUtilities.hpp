@@ -142,6 +142,15 @@ namespace GedimUnitTesting
                                        0.033,
                                        meshDao);
 
+    std::string exportFolder = "./Export/TestMeshUtilities/TestCreateTriangleMesh";
+    Gedim::Output::CreateFolder(exportFolder);
+    meshUtilities.ExportMeshToVTU(meshDao,
+                                  exportFolder,
+                                  "CreatedTriangleMesh");
+    meshUtilities.ExportMeshToVTU(expectedMesh,
+                                  exportFolder,
+                                  "ExpectedTriangleMesh");
+
     EXPECT_EQ(expectedMesh.Dimension(),
               meshDao.Dimension());
     EXPECT_EQ(expectedMesh.Cell0DTotalNumber(),

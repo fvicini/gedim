@@ -1,6 +1,7 @@
 #include "MeshUtilities.hpp"
 
 #include "TriangleInterface.hpp"
+#include "VTPUtilities.hpp"
 
 using namespace Eigen;
 
@@ -650,6 +651,95 @@ namespace Gedim
     triangleInterface.CreateMesh(polygonVertices,
                                  minTriangleArea,
                                  mesh);
+  }
+  // ***************************************************************************
+  void MeshUtilities::ExportMeshToVTU(const IMeshDAO& mesh,
+                                      const string& exportFolder,
+                                      const string& fileName) const
+  {
+    // Export Cell0Ds
+    {
+      Gedim::VTKUtilities vtpUtilities;
+      for (unsigned int g = 0; g < mesh.Cell0DTotalNumber(); g++)
+      {
+        vector<double> id(1, mesh.Cell0DId(g));
+        vector<double> marker(1, mesh.Cell0DMarker(g));
+
+        vtpUtilities.AddPoint(mesh.Cell0DCoordinates(g),
+                              {
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                },
+                                {
+                                  "Marker",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(marker.size()),
+                                  marker.data()
+                                }
+                              });
+      }
+
+      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell0Ds.vtu");
+    }
+
+    // Export Cell1Ds
+    {
+      Gedim::VTKUtilities vtpUtilities;
+      for (unsigned int g = 0; g < mesh.Cell1DTotalNumber(); g++)
+      {
+        vector<double> id(1, mesh.Cell1DId(g));
+        vector<double> marker(1, mesh.Cell1DMarker(g));
+
+        vtpUtilities.AddSegment(mesh.Cell1DCoordinates(g),
+                                {
+                                  {
+                                    "Id",
+                                    Gedim::VTPProperty::Formats::Cells,
+                                    static_cast<unsigned int>(id.size()),
+                                    id.data()
+                                  },
+                                  {
+                                    "Marker",
+                                    Gedim::VTPProperty::Formats::Cells,
+                                    static_cast<unsigned int>(marker.size()),
+                                    marker.data()
+                                  }
+                                });
+      }
+
+      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell1Ds.vtu");
+    }
+
+    // Export Cell2Ds
+    {
+      Gedim::VTKUtilities vtpUtilities;
+      for (unsigned int g = 0; g < mesh.Cell2DTotalNumber(); g++)
+      {
+        vector<double> id(1, mesh.Cell2DId(g));
+        vector<double> marker(1, mesh.Cell2DMarker(g));
+
+        vtpUtilities.AddPolygon(mesh.Cell2DVerticesCoordinates(g),
+                                {
+                                  {
+                                    "Id",
+                                    Gedim::VTPProperty::Formats::Cells,
+                                    static_cast<unsigned int>(id.size()),
+                                    id.data()
+                                  },
+                                  {
+                                    "Marker",
+                                    Gedim::VTPProperty::Formats::Cells,
+                                    static_cast<unsigned int>(marker.size()),
+                                    marker.data()
+                                  }
+                                });
+      }
+
+      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell2Ds.vtu");
+    }
   }
   // ***************************************************************************
 }
