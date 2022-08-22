@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
+#include "GeometryUtilities.hpp"
 #include "IOUtilities.hpp"
 #include "VTPUtilities.hpp"
 
@@ -14,42 +15,32 @@ namespace GedimUnitTesting
   TEST(TestVTPUtilities, VTPUtilities_Test0D)
   {
     const unsigned int numGeometries = 4;
-    const unsigned int numProperties = 2;
-
-    Eigen::MatrixXd points(3, numGeometries);
-    vector<vector<vector<double>>> properties(numProperties, vector<vector<double>>(numGeometries));
-    vector<string> propertyLabels = { "Id", "Data" };
-
-    vector<vector<double>>& id = properties[0];
-    vector<vector<double>>& test = properties[1];
-
-    // Initialize data
-    for (unsigned g = 0; g < numGeometries; g++)
-    {
-      points.col(g)<< 1.0 + g, 0.0 + g, 0.0 + g;
-      id[g].resize(1, g + 1);
-      test[g].resize(1, 10.8 + g);
-    }
 
     Gedim::VTKUtilities vtpUtilities;
-    vtpUtilities.SetExportFormat(Gedim::VTKUtilities::Ascii);
 
     // Export to VTK
-    for (unsigned g = 0; g < numGeometries; g++)
+    for (unsigned int g = 0; g < numGeometries; g++)
     {
-      vtpUtilities.AddPoint(points.col(g),
+      Eigen::Vector3d geometry(1.0 + g,
+                               0.0 + g,
+                               0.0 + g);
+
+      vector<double> id(1, g + 1);
+      vector<double> data(1, 10.8 + g);
+
+      vtpUtilities.AddPoint(geometry,
                             {
                               {
-                                propertyLabels[0],
+                                "Id",
                                 Gedim::VTPProperty::Formats::Points,
-                                static_cast<unsigned int>(properties[0][g].size()),
-                                properties[0][g].data()
+                                static_cast<unsigned int>(id.size()),
+                                id.data()
                               },
                               {
-                                propertyLabels[1],
+                                "Data",
                                 Gedim::VTPProperty::Formats::Points,
-                                static_cast<unsigned int>(properties[1][g].size()),
-                                properties[1][g].data()
+                                static_cast<unsigned int>(data.size()),
+                                data.data()
                               }
                             });
     }
@@ -57,53 +48,46 @@ namespace GedimUnitTesting
     std::string exportFolder = "./Export/TestVTPUtilities";
     Gedim::Output::CreateFolder(exportFolder);
 
-    vtpUtilities.Export(exportFolder + "/Geometry0D.vtu");
+    vtpUtilities.Export(exportFolder + "/Geometry0D.vtu",
+                        Gedim::VTKUtilities::Ascii);
   }
   // ***************************************************************************
   TEST(TestVTPUtilities, VTPUtilities_Test1D)
   {
     const unsigned int numGeometries = 4;
-    const unsigned int numProperties = 2;
-
-    Eigen::MatrixXd points(3, 2 * numGeometries);
-    vector<vector<vector<double>>> properties(numProperties, vector<vector<double>>(numGeometries));
-    vector<string> propertyLabels = { "Id", "Data" };
-
-    vector<vector<double>>& id = properties[0];
-    vector<vector<double>>& test = properties[1];
-
-    // Initialize data
-    for (unsigned g = 0; g < numGeometries; g++)
-    {
-      points.col(2 * g)<< 1.0 + g, 0.0 + g, 0.0 + g;
-      points.col(2 * g + 1)<< 0.0 + g, 1.0 + g, 1.0 + g;
-
-      id[g].resize(2, g + 1);
-      test[g].resize(2, 10.8 + g);
-    }
 
     Gedim::VTKUtilities vtpUtilities;
-    vtpUtilities.SetExportFormat(Gedim::VTKUtilities::Ascii);
 
     // Export to VTK
-    for (unsigned g = 0; g < numGeometries; g++)
+    for (unsigned int g = 0; g < numGeometries; g++)
     {
-      vtpUtilities.AddSegment(points.block(0,
-                                           2* g,
-                                           3,
-                                           2),
+      Eigen::MatrixXd geometry(3, 2);
+
+      geometry.col(0)<< 1.0 + g, 0.0 + g, 0.0 + g;
+      geometry.col(1)<< 0.0 + g, 1.0 + g, 1.0 + g;
+
+      vector<double> id(geometry.cols());
+      vector<double> data(geometry.cols());
+
+      for (unsigned int v = 0; v < geometry.cols(); v++)
+      {
+        id[v] = g + v;
+        data[v] = 10.8 + g + v;
+      }
+
+      vtpUtilities.AddSegment(geometry,
                               {
                                 {
-                                  propertyLabels[0],
+                                  "Id",
                                   Gedim::VTPProperty::Formats::Points,
-                                  static_cast<unsigned int>(properties[0][g].size()),
-                                  properties[0][g].data()
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
                                 },
                                 {
-                                  propertyLabels[1],
+                                  "Data",
                                   Gedim::VTPProperty::Formats::Points,
-                                  static_cast<unsigned int>(properties[1][g].size()),
-                                  properties[1][g].data()
+                                  static_cast<unsigned int>(data.size()),
+                                  data.data()
                                 }
                               });
     }
@@ -111,108 +95,139 @@ namespace GedimUnitTesting
     std::string exportFolder = "./Export/TestVTPUtilities";
     Gedim::Output::CreateFolder(exportFolder);
 
-    vtpUtilities.Export(exportFolder + "/Geometry1D.vtu");
+    vtpUtilities.Export(exportFolder + "/Geometry1D.vtu",
+                        Gedim::VTKUtilities::Ascii);
   }
   // ***************************************************************************
-  //  TEST(TestVTPUtilities, VTPUtilities_Test1D)
-  //  {
-  //    unsigned int numberDomains = 2;
+  TEST(TestVTPUtilities, VTPUtilities_Test2D)
+  {
+    const unsigned int numGeometries = 4;
 
-  //    VTPUtilities VTPUtilities;
-  //    Output::AssertTest(VTPUtilities.Initialize(numberDomains), "%s: Initialize", __func__);
-  //    Output::AssertTest(VTPUtilities.InitializeSolutions(1), "%s: InitializeSolutions", __func__);
-  //    VTPUtilities.SetExportFormat(VTPUtilities::Ascii);
 
-  //    vector<Point*> points;
-  //    vector<Segment*> segments;
-  //    vector<vector<double>*> solutions;
+    double angle = M_PI / 4.0; // 45 degrees
+    Eigen::Matrix3d rotationMatrix;
+    rotationMatrix.row(0) << cos(angle), 0.0, sin(angle);
+    rotationMatrix.row(1) << 0.0, 1.0, 0.0;
+    rotationMatrix.row(2) << -sin(angle), 0.0, cos(angle);
 
-  //    segments.reserve(numberDomains);
-  //    points.reserve(2 * numberDomains);
-  //    solutions.reserve(numberDomains);
+    Eigen::Vector3d translation(0.0, 2.0, 0.0);
 
-  //    for (unsigned d = 0; d < numberDomains; d++)
-  //    {
-  //      unsigned int id = d + 1;
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
-  //      points.push_back(new Point(1.0 + d, 0.0 + d, 0.0 + d, 0));
-  //      points.push_back(new Point(0.0 + d, 1.0 + d, 1.0 + d, 1));
-  //      segments.push_back(new Segment(id));
-  //      solutions.push_back(new vector<double>());
+    Gedim::VTKUtilities vtpUtilities;
 
-  //      Segment& segment = *segments[d];
-  //      segment.AddVertex(*points[2*d]);
-  //      segment.AddVertex(*points[2*d + 1]);
+    // Export to VTK
+    for (unsigned int g = 0; g < numGeometries; g++)
+    {
+      Eigen::MatrixXd geometry(3, 4);
+      geometry.col(0)<< 0.0 + g, 0.0 + g, 0.0;
+      geometry.col(1)<< 1.0 + g, 0.0 + g, 0.0;
+      geometry.col(2)<< 1.0 + g, 1.0 + g, 0.0;
+      geometry.col(3)<< 0.0 + g, 1.0 + g, 0.0;
 
-  //      Output::AssertTest(VTPUtilities.AddGeometry(id, segment), "%s: AddGeometry", __func__);
+      geometry = geometryUtilities.RotatePointsFrom2DTo3D(geometry,
+                                                          rotationMatrix,
+                                                          translation);
 
-  //      /// <li> Create Solution
-  //      vector<double>& solution = *solutions[d];
-  //      solution.resize(segment.NumberOfVertices(), 10.8);
+      vector<double> id(geometry.cols());
+      vector<double> data(geometry.cols());
 
-  //      Output::AssertTest(VTPUtilities.AddSolution(id, 0, solution.size(), solution.data()), "%s: AddSolution", __func__);
-  //      Output::AssertTest(VTPUtilities.SetSolutionOptions(0, "TestSolution", VTPUtilities::Points), "%s: SetSolutionOptions", __func__);
-  //    }
+      for (unsigned int v = 0; v < geometry.cols(); v++)
+      {
+        id[v] = g + v;
+        data[v] = 10.8 + g + v;
+      }
 
-  //    string exportFolder = "./Export/Paraview";
-  //    Output::CreateFolder(exportFolder);
+      vtpUtilities.AddPolygon(geometry,
+                              {
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                },
+                                {
+                                  "Data",
+                                  Gedim::VTPProperty::Formats::Points,
+                                  static_cast<unsigned int>(data.size()),
+                                  data.data()
+                                }
+                              });
+    }
 
-  //    Output::AssertTest(VTPUtilities.Export(exportFolder + "/Geometry1D.vtu"), "%s: Export", __func__);
-  //    for (unsigned d = 0; d < numberDomains; d++)
-  //    {
-  //      delete points[2*d];
-  //      delete points[2*d + 1];
-  //      delete segments[d];
-  //      delete solutions[d];
-  //    }
-  //  }
-  //  // ***************************************************************************
-  //  TEST(TestVTPUtilities, VTPUtilities_Test2D)
-  //  {
-  //    double angle = 0.785398; // 45Â°
-  //    Matrix3d rotationMatrix;
-  //    rotationMatrix.row(0) << cos(angle), 0.0, sin(angle);
-  //    rotationMatrix.row(1) << 0.0, 1.0, 0.0;
-  //    rotationMatrix.row(2) << -sin(angle), 0.0, cos(angle);
+    std::string exportFolder = "./Export/TestVTPUtilities";
+    Gedim::Output::CreateFolder(exportFolder);
 
-  //    Vector3d translation(0.0, 2.0, 0.0);
+    vtpUtilities.Export(exportFolder + "/Geometry2D.vtu",
+                        Gedim::VTKUtilities::Ascii);
+  }
+  // ***************************************************************************
+  TEST(TestVTPUtilities, VTPUtilities_Test3D)
+  {
+    const unsigned int numGeometries = 4;
 
-  //    GeometryFactory geometryFactory;
-  //    ShapeCreator shapeCreator(geometryFactory);
 
-  //    vector<Vector3d> points {
-  //      Vector3d {0.0, 0.0, 0.0},
-  //      Vector3d {1.0, 0.0, 0.0},
-  //      Vector3d {1.0, 1.0, 0.0},
-  //      Vector3d {0.0, 1.0, 0.0},
-  //    };
+    double angle = M_PI / 4.0; // 45 degrees
+    Eigen::Matrix3d rotationMatrix;
+    rotationMatrix.row(0) << cos(angle), 0.0, sin(angle);
+    rotationMatrix.row(1) << 0.0, 1.0, 0.0;
+    rotationMatrix.row(2) << -sin(angle), 0.0, cos(angle);
 
-  //    Polygon& geometry = shapeCreator.CreatePolygon(points);
-  //    geometry.Set2DPolygon();
+    Eigen::Vector3d translation(0.0, 2.0, 0.0);
 
-  //    unsigned int id = geometry.Id();
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
-  //    VTPUtilities VTPUtilities;
-  //    Output::AssertTest(VTPUtilities.Initialize(1), "%s: Initialize", __func__);
-  //    Output::AssertTest(VTPUtilities.InitializeSolutions(1), "%s: InitializeSolutions", __func__);
-  //    VTPUtilities.SetExportFormat(VTPUtilities::Ascii);
+    Gedim::VTKUtilities vtpUtilities;
 
-  //    string exportFolder = "./Export/Paraview";
-  //    Output::CreateFolder(exportFolder);
+    // Export to VTK
+    for (unsigned int g = 0; g < numGeometries; g++)
+    {
+      Gedim::GeometryUtilities::Polyhedron geometry = geometryUtilities.CreateCubeWithOrigin(Eigen::Vector3d(0.0 + g,
+                                                                                                             0.0 + g,
+                                                                                                             0.0 + g),
+                                                                                             1.0);
 
-  //    Output::AssertTest(VTPUtilities.AddGeometry(id, geometry), "%s: AddGeometry", __func__);
-  //    Output::AssertTest(VTPUtilities.AddRotationAndTranslation(id,
-  //                                                              rotationMatrix,
-  //                                                              translation), "%s: AddRotationAndTranslation", __func__);
+      geometry.Vertices = geometryUtilities.RotatePoints(geometry.Vertices,
+                                                         rotationMatrix,
+                                                         translation);
 
-  //    vector<double> solution(geometry.NumberOfVertices(), 10.8);
-  //    Output::AssertTest(VTPUtilities.AddSolution(id, 0, solution.size(), solution.data()), "%s: AddSolution", __func__);
-  //    Output::AssertTest(VTPUtilities.SetSolutionOptions(0, "TestSolution", VTPUtilities::Points), "%s: SetSolutionOptions", __func__);
+      vector<double> id(geometry.Vertices.cols());
+      vector<double> data(geometry.Vertices.cols());
 
-  //    Output::AssertTest(VTPUtilities.Export(exportFolder + "/Geometry2D.vtu"), "%s: Export", __func__);
-  //  }
+      for (unsigned int v = 0; v < geometry.Vertices.cols(); v++)
+      {
+        id[v] = g + v;
+        data[v] = 10.8 + g + v;
+      }
 
-  //  // ***************************************************************************
+      vtpUtilities.AddPolyhedron(geometry.Vertices,
+                                 geometry.Edges,
+                                 geometry.Faces,
+                                 {
+                                   {
+                                     "Id",
+                                     Gedim::VTPProperty::Formats::Points,
+                                     static_cast<unsigned int>(id.size()),
+                                     id.data()
+                                   },
+                                   {
+                                     "Data",
+                                     Gedim::VTPProperty::Formats::Points,
+                                     static_cast<unsigned int>(data.size()),
+                                     data.data()
+                                   }
+                                 });
+    }
+
+    std::string exportFolder = "./Export/TestVTPUtilities";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    vtpUtilities.Export(exportFolder + "/Geometry3D.vtu",
+                        Gedim::VTKUtilities::Ascii);
+  }
+  // ***************************************************************************
   //  TEST(TestVTPUtilities, VTPUtilities_Test3D)
   //  {
   //    double angle = 0.785398; // 45Â°

@@ -104,7 +104,8 @@ namespace Gedim
 #endif
   }
   // ***************************************************************************
-  void VTKUtilities::Export(const std::string& filePath) const
+  void VTKUtilities::Export(const std::string& filePath,
+                            const ExportFormat& format) const
   {
 #if ENABLE_VTK == 1
     exportData->Update();
@@ -113,7 +114,7 @@ namespace Gedim
     writer->SetFileName(filePath.c_str());
     writer->SetInputData(exportData->GetOutput());
 
-    switch (_exportFormat)
+    switch (format)
     {
       case VTKUtilities::Binary:
         writer->SetDataModeToBinary();
@@ -557,7 +558,7 @@ namespace Gedim
 
     for (unsigned int i = 0 ; i < geometry.Faces.size(); i++)
     {
-      AddFace(geometry.Faces[i].row(i),
+      AddFace(geometry.Faces[i].row(0).transpose(),
               faces);
     }
 #endif // ENABLE_VTK

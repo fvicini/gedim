@@ -1255,6 +1255,19 @@ namespace Gedim
         return planeOrigin;
       }
 
+      /// \brief Rotate Points P using rotation matrix Q and translation t: Q * P + t
+      /// \param points the points (size 3 x numPoints)
+      /// \param rotationMatrix the rotation matrix, size 3x3
+      /// \param translation the translation vector, size 1x3
+      /// \param rotatedPoints the resulting rotated points (size 3 x numPoints) rP = Q * P + t
+      inline Eigen::MatrixXd RotatePoints(const Eigen::MatrixXd& points,
+                                          const Eigen::Matrix3d& rotationMatrix,
+                                          const Eigen::Vector3d& translation = Eigen::Vector3d::Zero()) const
+      {
+        Gedim::Output::Assert(points.rows() == 3 && points.cols() > 0);
+        return (rotationMatrix * points).colwise() + translation;
+      }
+
       /// \brief Rotate Points P From 2D To 3D using rotation matrix Q and translation t: Q * P + t
       /// \param points the points (size 3 x numPoints)
       /// \param rotationMatrix the rotation matrix from 2D to 3D
@@ -1388,6 +1401,19 @@ namespace Gedim
                                                 const Eigen::Vector3d& lengthVector,
                                                 const Eigen::Vector3d& heightVector,
                                                 const Eigen::Vector3d& widthVector) const;
+
+      /// \brief Create a Cube with origin aligned to axis
+      /// \param origin the origin
+      /// \param edgeLength the edge length
+      /// \return the cube created
+      inline Polyhedron CreateCubeWithOrigin(const Eigen::Vector3d& origin,
+                                             const double& edgeLength) const
+      {
+        return CreateParallelepipedWithOrigin(origin,
+                                              Eigen::Vector3d(edgeLength, 0.0, 0.0),
+                                              Eigen::Vector3d(0.0, 0.0, edgeLength),
+                                              Eigen::Vector3d(0.0, edgeLength, 0.0));
+      }
 
       /// \brief Compute Polyhedron Faces Vertices
       /// \param polyhedronVertices the polyhedron vertices

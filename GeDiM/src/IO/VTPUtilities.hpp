@@ -146,8 +146,6 @@ namespace Gedim
       };
 
     private:
-      ExportFormat _exportFormat;
-
       std::list<IGeometryToPolyData*> geometries;
 
 #if ENABLE_VTK == 1
@@ -160,8 +158,6 @@ namespace Gedim
     public:
       VTKUtilities();
       ~VTKUtilities();
-
-      void SetExportFormat(const ExportFormat& exportFormat) { _exportFormat = exportFormat; }
 
       void AddPoint(const Eigen::Vector3d& point,
                     const std::vector<VTPProperty>& properties = {});
@@ -180,7 +176,8 @@ namespace Gedim
                          const std::vector<Eigen::MatrixXi>& faces,
                          const std::vector<VTPProperty>& properties = {});
 
-      void Export(const std::string& filePath) const;
+      void Export(const std::string& filePath,
+                  const ExportFormat& format = ExportFormat::Binary) const;
   };
 
   template <typename T>
