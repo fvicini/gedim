@@ -194,17 +194,19 @@ namespace Gedim
 
 #if ENABLE_VTK == 1
       void AddPoint(const Eigen::Vector3d& point,
-                    vtkSmartPointer<vtkPoints>& points,
-                    vtkSmartPointer<vtkCellArray>& vertices) const;
+                    vtkSmartPointer<vtkPoints>& points) const;
+      void AddVertex(const unsigned int& pointId,
+                     vtkSmartPointer<vtkCellArray>& vertices) const;
       void AddLine(const unsigned int& originId,
                    const unsigned int& endId,
                    vtkSmartPointer<vtkCellArray>& lines) const;
-      void AddFace(const Eigen::VectorXi& faceVerticesIds,
-                   vtkSmartPointer<vtkCellArray>& faces) const;
+      void AddPolygon(const Eigen::VectorXi& faceVerticesIds,
+                      vtkSmartPointer<vtkCellArray>& faces) const;
 #endif
 
       void InitializePoints(void* vtkPointsPointer, void* vtkVerticesPointer) const;
       void AddPoints(void* vtkPointsPointer, void* vtkVerticesPointer) const;
+      void AddVertices(void* vtkVerticesPointer) const;
       void InitializeLines(void* vtkLinesPointer) const;
       void AddLines(void* vtkLinesPointer) const;
       void InitializeFaces(void* vtkFacesPointer) const;

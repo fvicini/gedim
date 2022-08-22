@@ -35,7 +35,7 @@ namespace GedimUnitTesting
                             {
                               {
                                 "Id",
-                                Gedim::VTPProperty::Formats::Points,
+                                Gedim::VTPProperty::Formats::Cells,
                                 static_cast<unsigned int>(id.size()),
                                 id.data()
                               },
@@ -69,20 +69,17 @@ namespace GedimUnitTesting
       geometry.col(0)<< 1.0 + g, 0.0 + g, 0.0 + g;
       geometry.col(1)<< 0.0 + g, 1.0 + g, 1.0 + g;
 
-      vector<double> id(geometry.cols());
+      vector<double> id(1, g);
       vector<double> data(geometry.cols());
 
       for (unsigned int v = 0; v < geometry.cols(); v++)
-      {
-        id[v] = g + v;
         data[v] = 10.8 + g + v;
-      }
 
       vtpUtilities.AddSegment(geometry,
                               {
                                 {
                                   "Id",
-                                  Gedim::VTPProperty::Formats::Points,
+                                  Gedim::VTPProperty::Formats::Cells,
                                   static_cast<unsigned int>(id.size()),
                                   id.data()
                                 },
@@ -133,20 +130,17 @@ namespace GedimUnitTesting
                                                           rotationMatrix,
                                                           translation);
 
-      vector<double> id(geometry.cols());
+      vector<double> id(1, g);
       vector<double> data(geometry.cols());
 
       for (unsigned int v = 0; v < geometry.cols(); v++)
-      {
-        id[v] = g + v;
         data[v] = 10.8 + g + v;
-      }
 
       vtpUtilities.AddPolygon(geometry,
                               {
                                 {
                                   "Id",
-                                  Gedim::VTPProperty::Formats::Points,
+                                  Gedim::VTPProperty::Formats::Cells,
                                   static_cast<unsigned int>(id.size()),
                                   id.data()
                                 },
@@ -168,7 +162,7 @@ namespace GedimUnitTesting
   // ***************************************************************************
   TEST(TestVTPUtilities, VTPUtilities_Test3D)
   {
-    const unsigned int numGeometries = 4;
+    const unsigned int numGeometries = 1;
 
 
     double angle = M_PI / 4.0; // 45 degrees
@@ -196,14 +190,11 @@ namespace GedimUnitTesting
                                                          rotationMatrix,
                                                          translation);
 
-      vector<double> id(geometry.Vertices.cols());
+      vector<double> id(geometry.Faces.size(), g);
       vector<double> data(geometry.Vertices.cols());
 
       for (unsigned int v = 0; v < geometry.Vertices.cols(); v++)
-      {
-        id[v] = g + v;
         data[v] = 10.8 + g + v;
-      }
 
       vtpUtilities.AddPolyhedron(geometry.Vertices,
                                  geometry.Edges,
@@ -211,7 +202,7 @@ namespace GedimUnitTesting
                                  {
                                    {
                                      "Id",
-                                     Gedim::VTPProperty::Formats::Points,
+                                     Gedim::VTPProperty::Formats::Cells,
                                      static_cast<unsigned int>(id.size()),
                                      id.data()
                                    },
@@ -312,14 +303,14 @@ namespace GedimUnitTesting
     // Export to VTK
     for (unsigned int g = 0; g < mesh.Cell2DTotalNumber(); g++)
     {
-      vector<double> id(mesh.Cell2DNumberVertices(g), mesh.Cell2DId(g));
+      vector<double> id(1, mesh.Cell2DId(g));
       vector<double> marker(mesh.Cell2DNumberVertices(g), mesh.Cell2DMarker(g));
 
       vtpUtilities.AddPolygon(mesh.Cell2DVerticesCoordinates(g),
                               {
                                 {
                                   "Id",
-                                  Gedim::VTPProperty::Formats::Points,
+                                  Gedim::VTPProperty::Formats::Cells,
                                   static_cast<unsigned int>(id.size()),
                                   id.data()
                                 },
