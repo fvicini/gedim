@@ -36,6 +36,11 @@ set_property(CACHE VERBOSE PROPERTY STRINGS 0 1 2 3 4)
 if(NOT ${VERBOSE} MATCHES 0 AND NOT ${VERBOSE} MATCHES 1 AND NOT ${VERBOSE} MATCHES 2 AND NOT ${VERBOSE} MATCHES 3 AND NOT ${VERBOSE} MATCHES 4)
         message(SEND_ERROR "VERBOSE variable must be either 0 (None), 1 (Error), 2 (Warning), 3 (Info) or 4 (Debug)")
 endif()
+set(LOGGING 3 CACHE STRING "Select logging level (0, 1, 2 or 3)")
+set_property(CACHE LOGGING PROPERTY STRINGS 0 1 2 3)
+if(NOT ${LOGGING} MATCHES 0 AND NOT ${LOGGING} MATCHES 1 AND NOT ${LOGGING} MATCHES 2 AND NOT ${LOGGING} MATCHES 3)
+    message(SEND_ERROR "LOGGING variable must be either 0 (None), 1 (Console), 2 (LogFile) or 3 (Console and LogFile)")
+endif()
 
 # Add dependencies
 ###########################################################################################
