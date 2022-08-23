@@ -32,8 +32,6 @@
 #include <map>
 #include <set>
 
-using namespace std;
-
 namespace Gedim
 {
   class Output;
@@ -51,56 +49,84 @@ namespace Gedim
         Directories = 2
       };
 
-      static string BlueColor;
-      static string RedColor;
-      static string GreenColor;
-      static string YellowColor;
-      static string EndColor;
+      static std::string BlueColor;
+      static std::string RedColor;
+      static std::string GreenColor;
+      static std::string YellowColor;
+      static std::string EndColor;
 
       static int MaxElementToPrint; ///< Max elements to print in vectors
       static int StartingIndexToPrint; ///< Starting index to print in vectors
 
       /// Creating Folders if not exists
-      static void CreateFolder(const string& nameFolder);
-      /// Split a string in more strings dived by character
-      static vector<string> StringSplit(const string& stringToSplit, const char character);
+      static void CreateFolder(const std::string& nameFolder);
+      /// Split a std::string in more strings dived by character
+      static std::vector<std::string> StringSplit(const std::string& stringToSplit,
+                                                  const char character);
       /// Check if a file exists
-      static bool FileExists(const string& nameFile);
+      static bool FileExists(const std::string& nameFile);
       /// Get the path from a file path
-      static void GetFilePath(const string& nameFilePath, string& filePath, string& fileName, string& fileExtension);
+      static void GetFilePath(const std::string& nameFilePath,
+                              std::string& filePath,
+                              std::string& fileName,
+                              std::string& fileExtension);
       /// Returns a list of files/directories in mainDirectory
-      static void GetFileList(const string& mainDirectory, vector<string>& out, const FileFilter& filter = Output::FilesAndDirectories, const bool& hiddenElements = false);
+      static void GetFileList(const std::string& mainDirectory,
+                              std::vector<std::string>& out,
+                              const FileFilter& filter = Output::FilesAndDirectories,
+                              const bool& hiddenElements = false);
       /// Returns a list of paths containing the file/directory found in mainDirectory
-      static void FindPaths(const string& mainDirectory, const string& objectNameToFind, vector<string>& paths, const FileFilter& filter = Output::FilesAndDirectories, const bool& hiddenElements = false);
+      static void FindPaths(const std::string& mainDirectory,
+                            const std::string& objectNameToFind,
+                            std::vector<std::string>& paths,
+                            const FileFilter& filter = Output::FilesAndDirectories,
+                            const bool& hiddenElements = false);
 
-      static void GetBinaryFileSize(const string& nameFile, unsigned int& fileSize, const unsigned int& sizeOfSingleDataToWrite, const unsigned int& startingPosition = 0);
-      static void ReadBinaryFile(const string& nameFile, void* dataToRead, const unsigned int& sizeOfSingleDataToWrite, const unsigned int& dataSizeToRead, const unsigned int& startingPosition = 0);
-      static bool ReadBinaryFile(const string& nameFile, vector<double>& dataToRead, const unsigned int& dataSizeToRead = 0, const unsigned int& startingPosition = 0);
-      static void WriteBinaryFile(const string& nameFile, const void* dataToWrite, const unsigned int& sizeOfSingleDataToWrite, const unsigned int& dataSizeToWrite, const bool& append = false);
-      static bool WriteBinaryFile(const string& nameFile, const vector<double>& dataToWrite, const unsigned int& dataSizeToWrite = 0, const unsigned int& dataStartingPositionToWrite = 0, const bool& append = false);
+      static void GetBinaryFileSize(const std::string& nameFile,
+                                    unsigned int& fileSize,
+                                    const unsigned int& sizeOfSingleDataToWrite,
+                                    const unsigned int& startingPosition = 0);
+      static void ReadBinaryFile(const std::string& nameFile,
+                                 void* dataToRead,
+                                 const unsigned int& sizeOfSingleDataToWrite,
+                                 const unsigned int& dataSizeToRead,
+                                 const unsigned int& startingPosition = 0);
+      static bool ReadBinaryFile(const std::string& nameFile,
+                                 std::vector<double>& dataToRead,
+                                 const unsigned int& dataSizeToRead = 0,
+                                 const unsigned int& startingPosition = 0);
+      static void WriteBinaryFile(const std::string& nameFile,
+                                  const void* dataToWrite,
+                                  const unsigned int& sizeOfSingleDataToWrite,
+                                  const unsigned int& dataSizeToWrite,
+                                  const bool& append = false);
+      static bool WriteBinaryFile(const std::string& nameFile,
+                                  const std::vector<double>& dataToWrite,
+                                  const unsigned int& dataSizeToWrite = 0,
+                                  const unsigned int& dataStartingPositionToWrite = 0, const bool& append = false);
 
       /// Print a line of symbol
       static void PrintLine(char character = ' ', bool onlyMaster = true);
 
       /// Print a line of stars * in \p out.
-      static ostream& PrintStars(ostream& out);
+      static std::ostream& PrintStars(std::ostream& out);
       /// Print a line of lines - in \p out.
-      static ostream& PrintLines(ostream& out);
+      static std::ostream& PrintLines(std::ostream& out);
 
       /// Used to print to file, or on screen the status of the program.
-      static void PrintStatusProgram(const string& programStep, ...);
+      static void PrintStatusProgram(const std::string& programStep, ...);
       /// Used to print only on screen a generic message in the same line
-      static void PrintGenericMessageOnLine(const string& message, ...);
+      static void PrintGenericMessageOnLine(const std::string& message, ...);
       /// Used to print to file, or on screen a generic message
-      static void PrintGenericMessage(const string& message, const bool& onlyMaster, ...);
+      static void PrintGenericMessage(const std::string& message, const bool& onlyMaster, ...);
       /// Used to print to file, or on screen an error message
-      static void PrintErrorMessage(const string& message, const bool& onlyMaster, ...);
+      static void PrintErrorMessage(const std::string& message, const bool& onlyMaster, ...);
       /// Used to print to file, or on screen a warning message
-      static void PrintWarningMessage(const string& message, const bool& onlyMaster, ...);
+      static void PrintWarningMessage(const std::string& message, const bool& onlyMaster, ...);
       /// Used to print to file, or on screen a debug message
-      static void PrintDebugMessage(const string& message, const bool& onlyMaster, ...);
+      static void PrintDebugMessage(const std::string& message, const bool& onlyMaster, ...);
       /// Used to print to file, or on screen a success message
-      static void PrintSuccessMessage(const string& message, const bool& onlyMaster, ...);
+      static void PrintSuccessMessage(const std::string& message, const bool& onlyMaster, ...);
 
       /// Assert for all code, generate exception if something goes wrong
       inline static void Assert(const bool& logicResult)
@@ -110,74 +136,74 @@ namespace Gedim
       }
 
       /// Assert for all code, generate exception if something goes wrong with a message
-      static void Assert(const bool& logicResult, const string& message, ...);
+      static void Assert(const bool& logicResult, const std::string& message, ...);
   };
 
   class LogFile
   {
     private:
-      static string GetDateTime();
-      static void PrintMessage(const string& type, const string& message, va_list args);
+      static std::string GetDateTime();
+      static void PrintMessage(const std::string& type, const std::string& message, va_list args);
 
     public:
       static int LogMaxFileSize; ///< Max file log size (MB)
       static int LogMaxNumFiles; ///< Max number of backup log files to maintain
-      static string LogFolder; ///< Folder name where log files of the program are
-      static string LogNameFile; ///< File name of Log
+      static std::string LogFolder; ///< Folder name where log files of the program are
+      static std::string LogNameFile; ///< File name of Log
 
       static void PrintLine(const char& symbol = ' ');
-      static void PrintWarningMessage(const string& message, va_list args);
-      static void PrintErrorMessage(const string& message, va_list args);
-      static void PrintInfoMessage(const string& message, va_list args);
-      static void PrintDebugMessage(const string& message, va_list args);
+      static void PrintWarningMessage(const std::string& message, va_list args);
+      static void PrintErrorMessage(const std::string& message, va_list args);
+      static void PrintInfoMessage(const std::string& message, va_list args);
+      static void PrintDebugMessage(const std::string& message, va_list args);
 
       /// Check if file reach the maximum size and create new file
-      static void CheckFileSize(const string& nameFile);
+      static void CheckFileSize(const std::string& nameFile);
       /// Get the file size in MB
-      static double GetFileSize(const string& nameFile);
+      static double GetFileSize(const std::string& nameFile);
   };
 
   class Profiler
   {
     private:
-      static map<string, double> times; ///< list of times
-      static map<string, double> localTimes; ///< list of times
+      static std::map<std::string, double> times; ///< list of times
+      static std::map<std::string, double> localTimes; ///< list of times
       static unsigned long totalAvailStartingMemory; ///< Avail Memory on program start
       static int ParseLine(char* line); ///< used in the CheckMemory function
 
     public:
       static bool ActivateProfiler; ///< Compute time for program profiling
-      static string TimeFile; ///< File where time profiling data are stored
-      static string MemoryFile; ///< File where memory profiling data are stored
+      static std::string TimeFile; ///< File where time profiling data are stored
+      static std::string MemoryFile; ///< File where memory profiling data are stored
 
-      static double GetTime(const string& nameTime, const bool& localTime = false);
+      static double GetTime(const std::string& nameTime, const bool& localTime = false);
 
       /// \brief Get Total Physical Memory from file /proc/meminfo (KB)
       /// \param totalMemory will have 3 values: TotMemory, UsedMemory, AvailMemory
-      static void GetTotalMemory(vector<unsigned long>& totalMemory);
+      static void GetTotalMemory(std::vector<unsigned long>& totalMemory);
 
       /// \brief Get Current Virtual/Physical Memory used by process (KB)
       /// \param memoryUsed will have 2 values: virtual, physical
-      static void GetProcessMemory(vector<unsigned long>& memoryUsed);
+      static void GetProcessMemory(std::vector<unsigned long>& memoryUsed);
 
       /// \brief Compute the virtual memory used by the process
       /// \details Get from http://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process
-      static void CheckMemory(const string& nameMemory, const bool& checkProcessesMemory = false);
+      static void CheckMemory(const std::string& nameMemory, const bool& checkProcessesMemory = false);
 
       /// Sleep for n milliseconds
       static void Sleep(const unsigned int& milliseconds);
 
       /// Start time with nameTime if not exist
-      static void StartTime(const string& nameTime);
+      static void StartTime(const std::string& nameTime);
       /// Split time with nameTime if exists and return the global time and local time
-      static void SplitTime(const string& nameTime, double& globalTime, double& localTime);
+      static void SplitTime(const std::string& nameTime, double& globalTime, double& localTime);
       /// Stop time with nameTime if exists and print to file the result
-      static void StopTime(const string& nameTime, const bool& printTime = true);
+      static void StopTime(const std::string& nameTime, const bool& printTime = true);
   };
 
   /// General print of a vector
   template <typename T>
-  ostream& operator<<(ostream& out, const vector<T>& vec)
+  std::ostream& operator<<(std::ostream& out, const std::vector<T>& vec)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -194,7 +220,7 @@ namespace Gedim
   }
   /// General print of a vector
   template <typename T>
-  ostream& operator<<(ostream& out, const vector<T*>& vec)
+  std::ostream& operator<<(std::ostream& out, const std::vector<T*>& vec)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -212,7 +238,8 @@ namespace Gedim
 
   /// General print of a list
   template <typename T>
-  ostream& operator<<(ostream& out, const list<T>& listToPrint)
+  std::ostream& operator<<(std::ostream& out,
+                           const std::list<T>& listToPrint)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -222,7 +249,7 @@ namespace Gedim
     unsigned int counter = 0, elementPrinted = 0;
 
     out<< "{";
-    for(typename list<T>::const_iterator iterator = listToPrint.begin(); iterator != listToPrint.end(); iterator++)
+    for(typename std::list<T>::const_iterator iterator = listToPrint.begin(); iterator != listToPrint.end(); iterator++)
     {
       if (counter >= startIndexList)
       {
@@ -241,7 +268,8 @@ namespace Gedim
   }
   /// General print of a list
   template <typename T>
-  ostream& operator<<(ostream& out, const list<T*>& listToPrint)
+  std::ostream& operator<<(std::ostream& out,
+                           const std::list<T*>& listToPrint)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -251,7 +279,7 @@ namespace Gedim
     unsigned int counter = 0, elementPrinted = 0;
 
     out<< "{";
-    for(typename list<T*>::const_iterator iterator = listToPrint.begin(); iterator != listToPrint.end(); iterator++)
+    for(typename std::list<T*>::const_iterator iterator = listToPrint.begin(); iterator != listToPrint.end(); iterator++)
     {
       if (counter >= startIndexList)
       {
@@ -270,7 +298,8 @@ namespace Gedim
   }
   /// General print of a set
   template <typename T>
-  ostream& operator<<(ostream& out, const set<T>& setToPrint)
+  std::ostream& operator<<(std::ostream& out,
+                           const std::set<T>& setToPrint)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -280,7 +309,7 @@ namespace Gedim
     unsigned int counter = 0, elementPrinted = 0;
 
     out<< "{";
-    for(typename set<T>::const_iterator iterator = setToPrint.begin(); iterator != setToPrint.end(); iterator++)
+    for(typename std::set<T>::const_iterator iterator = setToPrint.begin(); iterator != setToPrint.end(); iterator++)
     {
       if (counter >= startIndexList)
       {
@@ -299,7 +328,7 @@ namespace Gedim
   }
   /// General print of a set
   template <typename T>
-  ostream& operator<<(ostream& out, const set<T*>& setToPrint)
+  std::ostream& operator<<(std::ostream& out, const std::set<T*>& setToPrint)
   {
     const int& maxElementToPrint = Output::MaxElementToPrint;
     const int& startingIndex = Output::StartingIndexToPrint;
@@ -309,7 +338,7 @@ namespace Gedim
     unsigned int counter = 0, elementPrinted = 0;
 
     out<< "{";
-    for(typename set<T*>::const_iterator iterator = setToPrint.begin(); iterator != setToPrint.end(); iterator++)
+    for(typename std::set<T*>::const_iterator iterator = setToPrint.begin(); iterator != setToPrint.end(); iterator++)
     {
       if (counter >= startIndexList)
       {
@@ -328,7 +357,8 @@ namespace Gedim
   }
   /// General print of a map
   template<typename map_key, typename map_val>
-  ostream& operator<<(ostream& out, const std::map<map_key, map_val>& mapToPrint)
+  std::ostream& operator<<(std::ostream& out,
+                           const std::map<map_key, map_val>& mapToPrint)
   {
     unsigned int counter = 0;
 
@@ -346,7 +376,8 @@ namespace Gedim
   }
   /// General print of a map
   template<typename map_key, typename map_val>
-  ostream& operator<<(ostream& out, const std::map<map_key, map_val*>& mapToPrint)
+  std::ostream& operator<<(std::ostream& out,
+                           const std::map<map_key, map_val*>& mapToPrint)
   {
     for (typename std::map<map_key, map_val*>::const_iterator it = mapToPrint.begin();
          it != mapToPrint.end();
