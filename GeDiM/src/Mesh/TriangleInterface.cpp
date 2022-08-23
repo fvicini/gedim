@@ -61,15 +61,15 @@ namespace Gedim
       point_list[2 * j] = polygonVertices.col(j).x();
       point_list[2 * j + 1] = polygonVertices.col(j).y();
 
-      point_markerlist[j] = j;
+      point_markerlist[j] = j + 1;
     }
 
-    for (unsigned int j = 0; j < numberOfEdges; j++)
+    for (unsigned int e = 0; e < numberOfEdges; e++)
     {
-      segment_list[2 * j] = j;
-      segment_list[2 * j + 1] = (j+1) % numberOfEdges;
+      segment_list[2 * e] = e;
+      segment_list[2 * e + 1] = (e + 1) % numberOfEdges;
 
-      segment_markerlist[j]= numVertices + numberOfConstrainedPoints + j;
+      segment_markerlist[e]= numVertices + numberOfConstrainedPoints + e + 1;
     }
 
     if(numberOfConstrainedPoints > 0)
@@ -79,7 +79,7 @@ namespace Gedim
         point_list[2 * (numVertices + j)] = constrainedPoints.col(j).x();
         point_list[2 * (numVertices + j) + 1] = constrainedPoints.col(j).y();
 
-        point_markerlist[numVertices + j] = numVertices + j;
+        point_markerlist[numVertices + j] = numVertices + j + 1;
       }
 
       for (unsigned int e = 0; e < numberOfConstrainedSegments; e++)
@@ -87,7 +87,7 @@ namespace Gedim
         segment_list[2 * (numberOfEdges + e)] = constrainedSegments(0, e);
         segment_list[2 * (numberOfEdges + e) + 1] = constrainedSegments(1, e);
 
-        segment_markerlist[numberOfEdges + e] = numVertices + numberOfConstrainedPoints + numberOfEdges + e;
+        segment_markerlist[numberOfEdges + e] = numVertices + numberOfConstrainedPoints + numberOfEdges + e + 1;
       }
     }
   }
