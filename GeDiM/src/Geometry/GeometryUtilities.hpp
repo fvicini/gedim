@@ -543,6 +543,24 @@ namespace Gedim
           std::vector<Eigen::MatrixXi> Faces; ///< faces vertices and edges˝, size numFaces x 2 x numFaceVertices
       };
 
+      struct SplitPolygonWithPlaneResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            Split = 1,
+            Positive = 2,
+            Negative = 3,
+            OnPlane = 4
+          };
+
+          std::vector<unsigned int> PositiveVertices;
+          std::vector<unsigned int> NegativeVertices;
+          std::vector<unsigned int> PointsOnPlane;
+          std::vector<Eigen::Vector3d> NewVertices;
+          Types Type;
+      };
+
     private:
       /// \brief Compare two values according to tolerance
       /// \param first the first value
@@ -940,6 +958,13 @@ namespace Gedim
                                                                     const Eigen::Matrix3d& planeRotationMatrix,
                                                                     const Eigen::Vector3d& planeTranslation) const;
 
+      void SplitPolyhedronByPlane(const Eigen::MatrixXd& polyhedronVertices,
+                                  const Eigen::MatrixXi& polyhedronEdges,
+                                  const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                  const Eigen::MatrixXd& polyhedronEdgeTangents,
+                                  const Eigen::Vector3d& planeNormal,
+                                  const Eigen::Vector3d& planeOrigin) const;
+
       /// \brief Intersection between a Polyhedron and a line
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
       /// \param polyhedronEdges the polyhedron edges, size 2 x numEdges
@@ -1136,6 +1161,11 @@ namespace Gedim
                                                             const unsigned int& subPolygonIndex,
                                                             const Eigen::MatrixXd& polygonVertices,
                                                             const Gedim::GeometryUtilities::IntersectionPolygonCircleResult& polygonCircleIntersections) const;
+
+      SplitPolygonWithPlaneResult SplitPolygonWithPlane(const Eigen::MatrixXd& polygonVertices,
+                                                        const Eigen::MatrixXd& polygonEdgeTangents,
+                                                        const Eigen::Vector3d& planeNormal,
+                                                        const Eigen::Vector3d& planeOrigin) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
