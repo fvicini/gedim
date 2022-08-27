@@ -82,7 +82,6 @@ namespace GedimUnitTesting
             0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00;
 
         ASSERT_EQ(geometryUtility.PolyhedronFaceVertices(cube.Vertices,
-                                                         cube.Edges,
                                                          cube.Faces),
                   expectedFaceVertices);
       }
@@ -110,7 +109,6 @@ namespace GedimUnitTesting
             0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00;
 
         ASSERT_EQ(geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
-                                                         tetrahedron.Edges,
                                                          tetrahedron.Faces),
                   expectedFaceVertices);
 
@@ -139,7 +137,6 @@ namespace GedimUnitTesting
 
         const Eigen::Vector3d barycenter(0.5, 0.5, 0.5);
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
-                                                                                            cube.Edges,
                                                                                             cube.Faces);
 
         vector<Eigen::Vector3d> expectedFaceNormals(6);
@@ -164,7 +161,6 @@ namespace GedimUnitTesting
                                                                                                              Eigen::Vector3d(0.0,1.0,0.0));
         const Eigen::Vector3d barycenter(0.25, 0.25, 0.25);
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
-                                                                                            tetrahedron.Edges,
                                                                                             tetrahedron.Faces);
 
         vector<Eigen::Vector3d> expectedFaceNormals(4);

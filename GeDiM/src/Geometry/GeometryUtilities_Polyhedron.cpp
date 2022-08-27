@@ -138,9 +138,22 @@ namespace Gedim
 
     return parallelpiped;
   }
+
+  MatrixXd GeometryUtilities::PolyhedronEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
+                                                     const Eigen::MatrixXi& polyhedronEdges) const
+  {
+    MatrixXd edgeTangents(3, polyhedronEdges.cols());
+
+    for (unsigned int e = 0; e < polyhedronEdges.cols(); e++)
+    {
+      edgeTangents.col(e) = SegmentTangent(polyhedronVertices.col(polyhedronEdges(0, e)),
+                                           polyhedronVertices.col(polyhedronEdges(1, e)));
+    }
+
+    return edgeTangents;
+  }
   // ***************************************************************************
   vector<MatrixXd> GeometryUtilities::PolyhedronFaceVertices(const Eigen::MatrixXd& polyhedronVertices,
-                                                             const Eigen::MatrixXi& polyhedronEdges,
                                                              const vector<Eigen::MatrixXi> polyhedronFaces) const
   {
     vector<Eigen::MatrixXd> facesVertices(polyhedronFaces.size());
@@ -155,6 +168,25 @@ namespace Gedim
     }
 
     return facesVertices;
+  }
+  // ***************************************************************************
+  vector<MatrixXd> GeometryUtilities::PolyhedronFaceEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
+                                                                 const Eigen::MatrixXi& polyhedronEdges,
+                                                                 const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                 const Eigen::MatrixXd& polyhedronEdgeTangents) const
+  {
+    vector<Eigen::MatrixXd> facesEdgeTangents(polyhedronFaces.size());
+
+    for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
+    {
+      const Eigen::VectorXi& faceEdgesIndices = polyhedronFaces[f].row(1);
+      Eigen::MatrixXd& faceEdgeTangents = facesEdgeTangents[f];
+      faceEdgeTangents.setZero(3, faceEdgesIndices.size());
+      for (unsigned int e = 0; e < faceEdgesIndices.size(); e++)
+        faceEdgeTangents.col(e)<< polyhedronEdgeTangents.col(faceEdgesIndices[e]);
+    }
+
+    return facesEdgeTangents;
   }
   // ***************************************************************************
   vector<Matrix3d> GeometryUtilities::PolyhedronFaceRotationMatrices(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,

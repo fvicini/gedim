@@ -7,6 +7,7 @@
 #include "test_geometry_polygon.hpp"
 #include "test_geometry_polyhedron.hpp"
 #include "test_geometry_split.hpp"
+#include "test_geometry_splitPolyhedron.hpp"
 #include "test_map.hpp"
 #include "test_mesh.hpp"
 #include "test_meshUtilities.hpp"

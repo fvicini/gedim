@@ -6,6 +6,7 @@ list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_geometry_pol
 list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_geometry_polyhedron.hpp)
 list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_geometry_split.hpp)
 list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_map.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_geometry_splitPolyhedron.hpp)
 
 list(APPEND gedim_test_src_includes ${CMAKE_CURRENT_SOURCE_DIR})
 

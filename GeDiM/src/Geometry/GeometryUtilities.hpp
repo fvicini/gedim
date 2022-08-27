@@ -554,11 +554,12 @@ namespace Gedim
             OnPlane = 4
           };
 
-          std::vector<unsigned int> PositiveVertices;
-          std::vector<unsigned int> NegativeVertices;
-          std::vector<unsigned int> PointsOnPlane;
-          std::vector<Eigen::Vector3d> NewVertices;
-          Types Type;
+          std::vector<unsigned int> PositiveVertices; /// vertices indices of the positive sub-polygon
+          std::vector<unsigned int> NegativeVertices; /// vertices indices of the negative sub-polygon
+          std::vector<unsigned int> PointsOnPlane; /// vertices indices of the points on plane
+          std::vector<Eigen::Vector3d> NewVertices; /// new vertices coordinates
+          std::vector<unsigned int> NewVerticesEdgeIndex; /// new vertices edge indices
+          Types Type; /// type of split
       };
 
     private:
@@ -958,12 +959,13 @@ namespace Gedim
                                                                     const Eigen::Matrix3d& planeRotationMatrix,
                                                                     const Eigen::Vector3d& planeTranslation) const;
 
-      void SplitPolyhedronByPlane(const Eigen::MatrixXd& polyhedronVertices,
-                                  const Eigen::MatrixXi& polyhedronEdges,
-                                  const vector<Eigen::MatrixXi>& polyhedronFaces,
-                                  const Eigen::MatrixXd& polyhedronEdgeTangents,
-                                  const Eigen::Vector3d& planeNormal,
-                                  const Eigen::Vector3d& planeOrigin) const;
+      void SplitPolyhedronWithPlane(const Eigen::MatrixXd& polyhedronVertices,
+                                    const Eigen::MatrixXi& polyhedronEdges,
+                                    const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                    const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                    const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
+                                    const Eigen::Vector3d& planeNormal,
+                                    const Eigen::Vector3d& planeOrigin) const;
 
       /// \brief Intersection between a Polyhedron and a line
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
@@ -1482,11 +1484,28 @@ namespace Gedim
       /// \brief Compute Polyhedron Faces Vertices
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges
+      /// \return for each edge the tangent, size 3xnumEdges
+      Eigen::MatrixXd PolyhedronEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
+                                             const Eigen::MatrixXi& polyhedronEdges) const;
+
+      /// \brief Compute Polyhedron Faces Vertices
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
       /// \param polyhedronFaces the polyhedron faces
       /// \return for each face the vertices, size 1xnumFaces
       vector<Eigen::MatrixXd> PolyhedronFaceVertices(const Eigen::MatrixXd& polyhedronVertices,
-                                                     const Eigen::MatrixXi& polyhedronEdges,
                                                      const vector<Eigen::MatrixXi> polyhedronFaces) const;
+
+      /// \brief Compute Polyhedron Faces Edge Tangents
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param polyhedronEdgeTangents for each polyhedron edge the tangent, size 3xnumEdges
+      /// \return for each face the edge tangents, size 1xnumFaces
+      vector<Eigen::MatrixXd> PolyhedronFaceEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
+                                                         const Eigen::MatrixXi& polyhedronEdges,
+                                                         const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                         const Eigen::MatrixXd& polyhedronEdgeTangents) const;
 
       /// \brief Compute Polyhedron Faces Rotation matrix
       /// \param polyhedronFaceVertices the polyhedron faces vertices

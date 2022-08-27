@@ -31,6 +31,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <unordered_map>
 
 namespace Gedim
 {
@@ -383,6 +384,18 @@ namespace Gedim
          it != mapToPrint.end();
          ++it)
       out << it->first << " => " << *(it->second) << '\n';
+
+    return out;
+  }
+  /// General print of a unordered map
+  template<typename map_key, typename map_val>
+  std::ostream& operator<<(std::ostream& out,
+                           const std::unordered_map<map_key, map_val>& mapToPrint)
+  {
+    for (typename std::unordered_map<map_key, map_val>::const_iterator it = mapToPrint.begin();
+         it != mapToPrint.end();
+         ++it)
+      out << it->first << " => " << it->second << '\n';
 
     return out;
   }

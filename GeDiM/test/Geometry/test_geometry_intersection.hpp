@@ -1071,7 +1071,6 @@ namespace GedimUnitTesting {
                                                                                                        width);
 
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1116,7 +1115,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1173,7 +1171,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1239,7 +1236,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1307,7 +1303,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1364,7 +1359,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1435,7 +1429,6 @@ namespace GedimUnitTesting {
                                                                                                        height,
                                                                                                        width);
       const vector<Eigen::MatrixXd> ployhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                    polyhedron.Edges,
                                                                                                     polyhedron.Faces);
       const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
       const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(ployhedronFaceVertices,
@@ -1522,7 +1515,6 @@ namespace GedimUnitTesting {
       for (unsigned int c = 0; c < numCell3Ds; c++)
       {
         cell3DsFaceVertices[c] = geometryUtility.PolyhedronFaceVertices(cell3Ds[c].Vertices,
-                                                                        cell3Ds[c].Edges,
                                                                         cell3Ds[c].Faces);
         cell3DsBarycenters[c] = geometryUtility.PolyhedronBarycenter(cell3Ds[c].Vertices);
         cell3DsFaceNormals[c] = geometryUtility.PolyhedronFaceNormals(cell3DsFaceVertices[c],
