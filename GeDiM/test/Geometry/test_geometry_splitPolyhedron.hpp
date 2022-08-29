@@ -6,6 +6,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "GeometryUtilities.hpp"
+#include "VTPUtilities.hpp"
 
 using namespace testing;
 using namespace std;
@@ -19,7 +20,7 @@ namespace GedimUnitTesting {
       Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
       Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
 
-      // no action
+      // split tetrahedron with plane
       {
         const Gedim::GeometryUtilities::Polyhedron polyhedron =  geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0, 0.0, 0.0),
                                                                                                              Eigen::Vector3d(1.0, 0.0, 0.0),
@@ -52,24 +53,17 @@ namespace GedimUnitTesting {
         const Eigen::Vector3d planeTranslation = geometryUtility.PlaneTranslation(planeNormal,
                                                                                   planeOrigin);
 
-        {
-          using namespace Gedim;
-          cerr<< "polyhedron.Vertices:\n"<< polyhedron.Vertices<< endl;
-          cerr<< "polyhedron.Edges:\n"<< polyhedron.Edges<< endl;
-          cerr<< "polyhedron.Faces:\n"<< polyhedron.Faces<< endl;
-        }
-
-        Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult result = geometryUtility.SplitPolyhedronWithPlane(polyhedron.Vertices,
-                                                                                                                   polyhedron.Edges,
-                                                                                                                   polyhedron.Faces,
-                                                                                                                   polyhedronFaceVertices,
-                                                                                                                   polyhedronFaceEdgesTangents,
-                                                                                                                   polyhedronFaceTranslations,
-                                                                                                                   polyhedronFaceRotationMatrices,
-                                                                                                                   planeNormal,
-                                                                                                                   planeOrigin,
-                                                                                                                   planeRotationMatrix,
-                                                                                                                   planeTranslation);
+        const Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult result = geometryUtility.SplitPolyhedronWithPlane(polyhedron.Vertices,
+                                                                                                                         polyhedron.Edges,
+                                                                                                                         polyhedron.Faces,
+                                                                                                                         polyhedronFaceVertices,
+                                                                                                                         polyhedronFaceEdgesTangents,
+                                                                                                                         polyhedronFaceTranslations,
+                                                                                                                         polyhedronFaceRotationMatrices,
+                                                                                                                         planeNormal,
+                                                                                                                         planeOrigin,
+                                                                                                                         planeRotationMatrix,
+                                                                                                                         planeTranslation);
 
         ASSERT_EQ(result.Type, Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::Types::Split);
         ASSERT_EQ(result.Vertices.Vertices, (Eigen::MatrixXd(3, 7)<<
@@ -113,8 +107,55 @@ namespace GedimUnitTesting {
         ASSERT_EQ(result.PositivePolyhedron.Faces, std::vector<unsigned int>({ 0,1,2,7 }));
 
         ASSERT_EQ(result.NegativePolyhedron.Vertices, std::vector<unsigned int>({ 0,1,2,4,5,6 }));
-        ASSERT_EQ(result.NegativePolyhedron.Edges, std::vector<unsigned int>({ 6,7,8,9,10,11 }));
+        ASSERT_EQ(result.NegativePolyhedron.Edges, std::vector<unsigned int>({ 1,3,5,6,7,8,9,10,11 }));
         ASSERT_EQ(result.NegativePolyhedron.Faces, std::vector<unsigned int>({ 3,4,5,6,7 }));
+
+        const vector<Gedim::GeometryUtilities::Polyhedron> splitPolyhedra = geometryUtility.SplitPolyhedronWithPlaneResultToPolyhedra(result);
+
+        ASSERT_EQ(splitPolyhedra.size(), 2);
+
+        // Export to VTK
+        std::string exportFolder = "./Export/TestSplitPolyhedronWithPlane/Tetra";
+        Gedim::Output::CreateFolder(exportFolder);
+
+        {
+          Gedim::VTKUtilities vtpUtilities;
+
+          //  original polyhedron
+          vtpUtilities.AddPolyhedron(polyhedron.Vertices,
+                                     polyhedron.Edges,
+                                     polyhedron.Faces);
+
+
+          vtpUtilities.Export(exportFolder + "/Original.vtu",
+                              Gedim::VTKUtilities::Ascii);
+        }
+
+        {
+          Gedim::VTKUtilities vtpUtilities;
+
+          //  positive polyhedron
+          vtpUtilities.AddPolyhedron(splitPolyhedra[0].Vertices,
+              splitPolyhedra[0].Edges,
+              splitPolyhedra[0].Faces);
+
+
+          vtpUtilities.Export(exportFolder + "/Positive.vtu",
+                              Gedim::VTKUtilities::Ascii);
+        }
+
+        {
+          Gedim::VTKUtilities vtpUtilities;
+
+          //  positive polyhedron
+          vtpUtilities.AddPolyhedron(splitPolyhedra[1].Vertices,
+              splitPolyhedra[1].Edges,
+              splitPolyhedra[1].Faces);
+
+
+          vtpUtilities.Export(exportFolder + "/Negative.vtu",
+                              Gedim::VTKUtilities::Ascii);
+        }
       }
     }
     catch (const exception& exception)

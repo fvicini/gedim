@@ -1013,6 +1013,8 @@ namespace Gedim
                                                                                  const Eigen::Matrix3d& planeRotationMatrix,
                                                                                  const Eigen::Vector3d& planeTranslation) const;
 
+      vector<GeometryUtilities::Polyhedron> SplitPolyhedronWithPlaneResultToPolyhedra(const GeometryUtilities::SplitPolyhedronWithPlaneResult& result);
+
       /// \brief Intersection between a Polyhedron and a line
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
       /// \param polyhedronEdges the polyhedron edges, size 2 x numEdges

@@ -367,110 +367,64 @@ namespace Gedim
     unordered_map<string, unsigned int> newEdges;
     unordered_map<string, vector<unsigned int>> newEdgesOriginEnd;
     unordered_map<unsigned int, int> newEdgesOriginalEdges;
-    list<unsigned int> positiveEdges;
-    list<unsigned int> negativeEdges;
+    set<unsigned int> positiveEdges;
+    set<unsigned int> negativeEdges;
 
-    for (Eigen::MatrixXi& newFace : positivePolyhedronFaces)
+    for (unsigned int p = 0; p < 2; p++)
     {
-      for (unsigned int v = 0; v < newFace.cols(); v++)
+      list<Eigen::MatrixXi>& polyhedronFaces = (p == 0) ? positivePolyhedronFaces :
+                                                          negativePolyhedronFaces;
+      set<unsigned int>& polyhedronEdges = (p == 0) ? positiveEdges :
+                                                      negativeEdges;
+
+      for (Eigen::MatrixXi& newFace : polyhedronFaces)
       {
-        const unsigned int edgeOrigin = newFace(0, v);
-        const unsigned int edgeEnd = newFace(0, (v + 1) % newFace.cols());
-        const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
-        const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
-
-        unsigned int newEdgeIndex = 0;
-
-        if (newEdges.find(edgeFrom) != newEdges.end())
-          newEdgeIndex = newEdges.at(edgeFrom);
-        else if (newEdges.find(edgeTo) != newEdges.end())
-          newEdgeIndex = newEdges.at(edgeTo);
-        else if (originalEdges.find(edgeFrom) != originalEdges.end())
+        for (unsigned int v = 0; v < newFace.cols(); v++)
         {
-          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
-          newEdgeIndex = newEdges.at(edgeFrom);
-          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
-          positiveEdges.push_back(newEdgeIndex);
-        }
-        else if (originalEdges.find(edgeTo) != originalEdges.end())
-        {
-          newEdges.insert(make_pair(edgeTo, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
-          newEdgeIndex = newEdges.at(edgeTo);
-          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
-          positiveEdges.push_back(newEdgeIndex);
-        }
-        else
-        {
-          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
-          newEdgeIndex = newEdges.at(edgeFrom);
-          positiveEdges.push_back(newEdgeIndex);
+          const unsigned int edgeOrigin = newFace(0, v);
+          const unsigned int edgeEnd = newFace(0, (v + 1) % newFace.cols());
+          const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
+          const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
 
-          if (newVerticesEdgeIndex.find(edgeOrigin) != newVerticesEdgeIndex.end() &&
-              newVerticesEdgeIndex.find(edgeEnd) == newVerticesEdgeIndex.end())
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeOrigin)));
-          else if (newVerticesEdgeIndex.find(edgeOrigin) == newVerticesEdgeIndex.end() &&
-                   newVerticesEdgeIndex.find(edgeEnd) != newVerticesEdgeIndex.end())
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeEnd)));
+          unsigned int newEdgeIndex = 0;
+
+          if (newEdges.find(edgeFrom) != newEdges.end())
+            newEdgeIndex = newEdges.at(edgeFrom);
+          else if (newEdges.find(edgeTo) != newEdges.end())
+            newEdgeIndex = newEdges.at(edgeTo);
+          else if (originalEdges.find(edgeFrom) != originalEdges.end())
+          {
+            newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+            newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+            newEdgeIndex = newEdges.at(edgeFrom);
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
+          }
+          else if (originalEdges.find(edgeTo) != originalEdges.end())
+          {
+            newEdges.insert(make_pair(edgeTo, newEdges.size()));
+            newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
+            newEdgeIndex = newEdges.at(edgeTo);
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
+          }
           else
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
+          {
+            newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+            newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+            newEdgeIndex = newEdges.at(edgeFrom);
+
+            if (newVerticesEdgeIndex.find(edgeOrigin) != newVerticesEdgeIndex.end() &&
+                newVerticesEdgeIndex.find(edgeEnd) == newVerticesEdgeIndex.end())
+              newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeOrigin)));
+            else if (newVerticesEdgeIndex.find(edgeOrigin) == newVerticesEdgeIndex.end() &&
+                     newVerticesEdgeIndex.find(edgeEnd) != newVerticesEdgeIndex.end())
+              newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeEnd)));
+            else
+              newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
+          }
+
+          polyhedronEdges.insert(newEdgeIndex);
+          newFace(1, v) = newEdgeIndex;
         }
-
-        newFace(1, v) = newEdgeIndex;
-      }
-    }
-
-    for (Eigen::MatrixXi& newFace : negativePolyhedronFaces)
-    {
-      for (unsigned int v = 0; v < newFace.cols(); v++)
-      {
-        const unsigned int edgeOrigin = newFace(0, v);
-        const unsigned int edgeEnd = newFace(0, (v + 1) % newFace.cols());
-        const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
-        const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
-
-        unsigned int newEdgeIndex = 0;
-
-        if (newEdges.find(edgeFrom) != newEdges.end())
-          newEdgeIndex = newEdges.at(edgeFrom);
-        else if (newEdges.find(edgeTo) != newEdges.end())
-          newEdgeIndex = newEdges.at(edgeTo);
-        else if (originalEdges.find(edgeFrom) != originalEdges.end())
-        {
-          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
-          newEdgeIndex = newEdges.at(edgeFrom);
-          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
-          negativeEdges.push_back(newEdgeIndex);
-        }
-        else if (originalEdges.find(edgeTo) != originalEdges.end())
-        {
-          newEdges.insert(make_pair(edgeTo, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
-          newEdgeIndex = newEdges.at(edgeTo);
-          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
-          negativeEdges.push_back(newEdgeIndex);
-        }
-        else
-        {
-          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
-          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
-          newEdgeIndex = newEdges.at(edgeFrom);
-          negativeEdges.push_back(newEdgeIndex);
-
-          if (newVerticesEdgeIndex.find(edgeOrigin) != newVerticesEdgeIndex.end() &&
-              newVerticesEdgeIndex.find(edgeEnd) == newVerticesEdgeIndex.end())
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeOrigin)));
-          else if (newVerticesEdgeIndex.find(edgeOrigin) == newVerticesEdgeIndex.end() &&
-                   newVerticesEdgeIndex.find(edgeEnd) != newVerticesEdgeIndex.end())
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeEnd)));
-          else
-            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
-        }
-
-        newFace(1, v) = newEdgeIndex;
       }
     }
 
@@ -570,21 +524,66 @@ namespace Gedim
       }
     }
 
-    cerr<< "RESULT"<< endl;
-    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
-    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
-    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
-    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
-    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
-    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
-    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
-    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
-    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
-    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
-    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
-    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
+    //    cerr<< "RESULT"<< endl;
+    //    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
+    //    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
+    //    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
+    //    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
+    //    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
+    //    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
+    //    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
+    //    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
+    //    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
+    //    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
+    //    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
+    //    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
 
     return result;
+  }
+  // ***************************************************************************
+  vector<GeometryUtilities::Polyhedron> GeometryUtilities::SplitPolyhedronWithPlaneResultToPolyhedra(const SplitPolyhedronWithPlaneResult& result)
+  {
+    vector<GeometryUtilities::Polyhedron> polyhedra(2);
+
+    for (unsigned int p = 0; p < 2; p++)
+    {
+      const SplitPolyhedronWithPlaneResult::NewPolyhedron& polyhedron = (p == 0) ? result.PositivePolyhedron :
+                                                                                   result.NegativePolyhedron;
+
+      unordered_map<unsigned int, unsigned int> mapVertices;
+      polyhedra[p].Vertices = ExtractPoints(result.Vertices.Vertices,
+                                            polyhedron.Vertices);
+      for (unsigned int v = 0; v < polyhedron.Vertices.size(); v++)
+        mapVertices.insert(make_pair(polyhedron.Vertices[v], v));
+
+      unordered_map<unsigned int, unsigned int> mapEdges;
+      polyhedra[p].Edges.resize(2, polyhedron.Edges.size());
+      for (unsigned int e = 0; e < polyhedron.Edges.size(); e++)
+        mapEdges.insert(make_pair(polyhedron.Edges[e], e));
+
+      for (unsigned int e = 0; e < polyhedron.Edges.size(); e++)
+      {
+        const unsigned int edgeOrigin = result.Edges.Edges(0, polyhedron.Edges[e]);
+        const unsigned int edgeEnd = result.Edges.Edges(1, polyhedron.Edges[e]);
+        polyhedra[p].Edges(0, e) = mapVertices.at(edgeOrigin);
+        polyhedra[p].Edges(1, e) = mapVertices.at(edgeEnd);
+      }
+
+      polyhedra[p].Faces.resize(polyhedron.Faces.size());
+      for (unsigned int f = 0; f < polyhedron.Faces.size(); f++)
+      {
+        const Eigen::MatrixXi& face = result.Faces.Faces[polyhedron.Faces[f]];
+        polyhedra[p].Faces[f].resize(2, face.cols());
+
+        for (unsigned int v = 0; v < face.cols(); v++)
+        {
+          polyhedra[p].Faces[f](0, v) = mapVertices.at(face(0, v));
+          polyhedra[p].Faces[f](1, v) = mapEdges.at(face(1, v));
+        }
+      }
+    }
+
+    return polyhedra;
   }
   // ***************************************************************************
 }
