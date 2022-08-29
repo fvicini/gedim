@@ -559,7 +559,50 @@ namespace Gedim
           std::vector<unsigned int> PointsOnPlane; /// vertices indices of the points on plane
           std::vector<Eigen::Vector3d> NewVertices; /// new vertices coordinates
           std::vector<unsigned int> NewVerticesEdgeIndex; /// new vertices edge indices
-          Types Type; /// type of split
+          Types Type = Types::Unknown; /// type of split
+      };
+
+      struct SplitPolyhedronWithPlaneResult
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            Split = 1,
+            None = 2
+          };
+
+          struct NewVertices
+          {
+              Eigen::MatrixXd Vertices; ///< all vertices contained in the new polyhedra
+              std::vector<unsigned int> NewVertices; ///< indices of new vertices in Vertices
+              std::vector<unsigned int> OriginalVertices; ///< indices of original vertices in Vertices
+              std::vector<unsigned int> NewVerticesOriginalEdges; ///< indices of original edges for new vertices
+          };
+
+          struct NewEdges
+          {
+              Eigen::MatrixXi Edges; ///< all edges contained in the new polyhedra
+              std::vector<unsigned int> NewEdgesOriginalEdges; ///< indices of original edges for new edges
+          };
+
+          struct NewFaces
+          {
+              vector<Eigen::MatrixXi> Faces;
+              std::vector<unsigned int> NewFacesOriginalFaces; ///< indices of original faces for new faces
+          };
+
+          struct NewPolyhedron
+          {
+              vector<unsigned int> Vertices;
+              vector<unsigned int> Edges;
+              vector<unsigned int> Faces;
+          };
+
+          NewVertices Vertices;
+          NewEdges Edges;
+          NewEdges Faces;
+          std::vector<NewPolyhedron> NewPolyhedra;
+          Types Type = Types::Unknown; /// type of split
       };
 
     private:
@@ -959,17 +1002,17 @@ namespace Gedim
                                                                     const Eigen::Matrix3d& planeRotationMatrix,
                                                                     const Eigen::Vector3d& planeTranslation) const;
 
-      void SplitPolyhedronWithPlane(const Eigen::MatrixXd& polyhedronVertices,
-                                    const Eigen::MatrixXi& polyhedronEdges,
-                                    const vector<Eigen::MatrixXi>& polyhedronFaces,
-                                    const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                    const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
-                                    const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
-                                    const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
-                                    const Eigen::Vector3d& planeNormal,
-                                    const Eigen::Vector3d& planeOrigin,
-                                    const Eigen::Matrix3d& planeRotationMatrix,
-                                    const Eigen::Vector3d& planeTranslation) const;
+      GeometryUtilities::SplitPolyhedronWithPlaneResult SplitPolyhedronWithPlane(const Eigen::MatrixXd& polyhedronVertices,
+                                                                                 const Eigen::MatrixXi& polyhedronEdges,
+                                                                                 const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                 const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                 const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
+                                                                                 const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                                                 const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
+                                                                                 const Eigen::Vector3d& planeNormal,
+                                                                                 const Eigen::Vector3d& planeOrigin,
+                                                                                 const Eigen::Matrix3d& planeRotationMatrix,
+                                                                                 const Eigen::Vector3d& planeTranslation) const;
 
       /// \brief Intersection between a Polyhedron and a line
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices

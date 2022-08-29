@@ -95,14 +95,6 @@ namespace Gedim
                                    negativeUsed ? SplitPolygonWithPlaneResult::Types::Negative :
                                                   SplitPolygonWithPlaneResult::Types::OnPlane;
 
-    cerr<< "FACE SPLIT"<< endl;
-    cerr<< "**> "<< "positiveVertices:\n"<< positiveVertices<< endl;
-    cerr<< "**> "<< "negativeVertices:\n"<< negativeVertices<< endl;
-    cerr<< "**> "<< "result.PointsOnPlane:\n"<< result.PointsOnPlane<< endl;
-    cerr<< "**> "<< "result.NewVertices:\n"<< result.NewVertices<< endl;
-    cerr<< "**> "<< "result.NewVerticesEdgeIndex:\n"<< result.NewVerticesEdgeIndex<< endl;
-    cerr<< "**> "<< "result.Type:\n"<< (unsigned int)result.Type<< endl;
-
     // sort points with correct order
     Eigen::MatrixXd globalVertices(3, polygonVertices.cols() + result.NewVertices.size());
     globalVertices.block(0, 0, 3, polygonVertices.cols()) = polygonVertices;
@@ -140,33 +132,32 @@ namespace Gedim
         result.NegativeVertices[c] = negativeVertices[convexHull[c]];
     }
 
-    cerr<< "***> "<< "result.PositiveVertices:\n"<< result.PositiveVertices<< endl;
-    cerr<< "***> "<< "result.NegativeVertices:\n"<< result.NegativeVertices<< endl;
-
     return result;
   }
   // ***************************************************************************
-  void GeometryUtilities::SplitPolyhedronWithPlane(const Eigen::MatrixXd& polyhedronVertices,
-                                                   const Eigen::MatrixXi& polyhedronEdges,
-                                                   const vector<Eigen::MatrixXi>& polyhedronFaces,
-                                                   const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                                   const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
-                                                   const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
-                                                   const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
-                                                   const Eigen::Vector3d& planeNormal,
-                                                   const Eigen::Vector3d& planeOrigin,
-                                                   const Eigen::Matrix3d& planeRotationMatrix,
-                                                   const Eigen::Vector3d& planeTranslation) const
+  GeometryUtilities::SplitPolyhedronWithPlaneResult GeometryUtilities::SplitPolyhedronWithPlane(const Eigen::MatrixXd& polyhedronVertices,
+                                                                                                const Eigen::MatrixXi& polyhedronEdges,
+                                                                                                const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                                const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                                const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
+                                                                                                const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                                                                const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
+                                                                                                const Eigen::Vector3d& planeNormal,
+                                                                                                const Eigen::Vector3d& planeOrigin,
+                                                                                                const Eigen::Matrix3d& planeRotationMatrix,
+                                                                                                const Eigen::Vector3d& planeTranslation) const
   {
     std::list<Eigen::Vector3d> newVertices;
     std::unordered_map<unsigned int, unsigned int> newVerticesByEdgeIndex;
-    std::list<unsigned int> pointsOnPlane;
-    std::list<unsigned int> positivePolyhedronVerticesIndices;
-    std::list<unsigned int> negativePolyhedronVerticesIndices;
+    std::set<unsigned int> pointsOnPlaneIndices;
+    std::set<unsigned int> positivePolyhedronVerticesIndices;
+    std::set<unsigned int> negativePolyhedronVerticesIndices;
     std::list<Eigen::MatrixXi> positivePolyhedronFaces;
     std::list<Eigen::MatrixXi> negativePolyhedronFaces;
     bool positiveUsed = false, negativeUsed = false;
     
+    const unsigned int numVertices = polyhedronVertices.cols();
+
     for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
     {
       const unsigned int numFaceVertices = polyhedronFaces[f].cols();
@@ -185,12 +176,15 @@ namespace Gedim
         {
           const unsigned int& positiveFaceVertices = splitFaceByPlane.PositiveVertices.size();
           
-          positivePolyhedronFaces.push_back(Eigen::MatrixXi(2, positiveFaceVertices));
+          positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, positiveFaceVertices));
           Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
           for (unsigned int v = 0; v < positiveFaceVertices; v++)
           {
             const unsigned int polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PositiveVertices[v]);
-            positivePolyhedronVerticesIndices.push_back(polyhedronVertexIndex);
+
+            if (positivePolyhedronVerticesIndices.find(polyhedronVertexIndex) == positivePolyhedronVerticesIndices.end())
+              positivePolyhedronVerticesIndices.insert(polyhedronVertexIndex);
+
             positiveFace(0, v) = polyhedronVertexIndex;
           }
           
@@ -216,81 +210,164 @@ namespace Gedim
             newVerticesIndices[nv] = newVerticesByEdgeIndex.at(polyhedronEdgeIndex);
           }
 
+          for (unsigned int p = 0; p < splitFaceByPlane.PointsOnPlane.size(); p++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
+
+            if (splitFaceByPlane.PointsOnPlane[p] < numFaceVertices)
+              polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PointsOnPlane[p]);
+            else
+              polyhedronVertexIndex = newVerticesIndices[splitFaceByPlane.PointsOnPlane[p] - numFaceVertices];
+
+            if (pointsOnPlaneIndices.find(polyhedronVertexIndex) == pointsOnPlaneIndices.end())
+              pointsOnPlaneIndices.insert(polyhedronVertexIndex);
+          }
+
           const unsigned int& positiveFaceVertices = splitFaceByPlane.PositiveVertices.size();
-          positivePolyhedronFaces.push_back(Eigen::MatrixXi(2, positiveFaceVertices));
+          positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, positiveFaceVertices));
           Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
           for (unsigned int v = 0; v < positiveFaceVertices; v++)
           {
-            const unsigned int polyhedronVertexIndex = splitFaceByPlane.PositiveVertices[v] < numFaceVertices ?
-                                                         polyhedronFaces[f](0, splitFaceByPlane.PositiveVertices[v]) :
-              newVerticesIndices[splitFaceByPlane.PositiveVertices[v] - numFaceVertices];
-              positivePolyhedronVerticesIndices.push_back(polyhedronVertexIndex);
-              positiveFace(0, v) = polyhedronVertexIndex;
-            }
+            unsigned int polyhedronVertexIndex = 0;
 
-            const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
-            negativePolyhedronFaces.push_back(Eigen::MatrixXi(2, negativeFaceVertices));
-            Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
-            for (unsigned int v = 0; v < negativeFaceVertices; v++)
-            {
-              const unsigned int polyhedronVertexIndex = splitFaceByPlane.NegativeVertices[v] < numFaceVertices ?
-                                                           polyhedronFaces[f](0, splitFaceByPlane.NegativeVertices[v]) :
-                newVerticesIndices[splitFaceByPlane.NegativeVertices[v] - numFaceVertices];
-                negativePolyhedronVerticesIndices.push_back(polyhedronVertexIndex);
-                negativeFace(0, v) = polyhedronVertexIndex;
-              }
-            }
-              break;
+            if (splitFaceByPlane.PositiveVertices[v] < numFaceVertices)
+              polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PositiveVertices[v]);
+            else
+              polyhedronVertexIndex = newVerticesIndices[splitFaceByPlane.PositiveVertices[v] - numFaceVertices];
 
-        case SplitPolygonWithPlaneResult::Types::Negative:
-              {
-                const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
-
-                negativePolyhedronFaces.push_back(Eigen::MatrixXi(2, negativeFaceVertices));
-                Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
-                for (unsigned int v = 0; v < negativeFaceVertices; v++)
-                {
-                  const unsigned int polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.NegativeVertices[v]);
-                  negativePolyhedronVerticesIndices.push_back(polyhedronVertexIndex);
-                  negativeFace(0, v) = polyhedronVertexIndex;
-                }
-
-                negativeUsed = true;
-              }
-                break;
-              default:
-                throw runtime_error("Unsupported split polygon with plane type");
-            }
+            if (positivePolyhedronVerticesIndices.find(polyhedronVertexIndex) == positivePolyhedronVerticesIndices.end())
+              positivePolyhedronVerticesIndices.insert(polyhedronVertexIndex);
+            positiveFace(0, v) = polyhedronVertexIndex;
           }
 
-          cerr<< "SPLIT POLYHEDRON:\n"<< endl;
-          cerr<< "*> newVertices:\n"<< newVertices<< endl;
-          cerr<< "*> newVerticesByEdgeIndex:\n"<< newVerticesByEdgeIndex<< endl;
-          cerr<< "*> pointsOnPlane:\n"<< pointsOnPlane<< endl;
-          cerr<< "*> positivePolyhedronVerticesIndices:\n"<< positivePolyhedronVerticesIndices<< endl;
-          cerr<< "*> negativePolyhedronVerticesIndices:\n"<< negativePolyhedronVerticesIndices<< endl;
-          cerr<< "*> positivePolyhedronFaces:\n"<< positivePolyhedronFaces<< endl;
-          cerr<< "*> negativePolyhedronFaces:\n"<< negativePolyhedronFaces<< endl;
-          cerr<< "*> positiveUsed:\n"<< positiveUsed<< endl;
-          cerr<< "*> negativeUsed:\n"<< negativeUsed<< endl;
+          const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
+          negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, negativeFaceVertices));
+          Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
+          for (unsigned int v = 0; v < negativeFaceVertices; v++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
 
-          // TODO: create new polyhedrons
-          //    result.clear();
-          //    if (frontUsed == backUsed)
-          //    {
-          //      // Create polygons to fill in the holes inside the new polyhedra
-          //      frontPolyhedron->m_polygons.push_back(Polygon::fromPoints(pointsOnPlane, plane.normal, frontPolyhedron->m_vertices));
-          //      backPolyhedron->m_polygons.push_back(Polygon::fromPoints(pointsOnPlane, -plane.normal, backPolyhedron->m_vertices));
-          //      result.push_back(frontPolyhedron);
-          //      result.push_back(backPolyhedron);
-          //      return true;
-          //    }
-          //    else
-          //    {
-          //      delete frontPolyhedron;
-          //      delete backPolyhedron;
-          //      return false;
-          //    }
+            if (splitFaceByPlane.NegativeVertices[v] < numFaceVertices)
+              polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.NegativeVertices[v]);
+            else
+              polyhedronVertexIndex = newVerticesIndices[splitFaceByPlane.NegativeVertices[v] - numFaceVertices];
+
+            if (negativePolyhedronVerticesIndices.find(polyhedronVertexIndex) == negativePolyhedronVerticesIndices.end())
+              negativePolyhedronVerticesIndices.insert(polyhedronVertexIndex);
+            negativeFace(0, v) = polyhedronVertexIndex;
+          }
+
+          if (splitFaceByPlane.Type == SplitPolygonWithPlaneResult::Types::Split)
+          {
+            positiveUsed = true;
+            negativeUsed = true;
+          }
         }
-          // ***************************************************************************
+          break;
+
+        case SplitPolygonWithPlaneResult::Types::Negative:
+        {
+          const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
+
+          negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, negativeFaceVertices));
+          Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
+          for (unsigned int v = 0; v < negativeFaceVertices; v++)
+          {
+            const unsigned int polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.NegativeVertices[v]);
+
+            if (negativePolyhedronVerticesIndices.find(polyhedronVertexIndex) == negativePolyhedronVerticesIndices.end())
+              negativePolyhedronVerticesIndices.insert(polyhedronVertexIndex);
+
+            negativeFace(0, v) = polyhedronVertexIndex;
+          }
+
+          negativeUsed = true;
+        }
+          break;
+        default:
+          throw runtime_error("Unsupported split polygon with plane type");
       }
+    }
+
+    SplitPolyhedronWithPlaneResult result;
+
+    // no split is necessary, return original polyhedron
+    if (!positiveUsed || !negativeUsed)
+    {
+      result.Type = SplitPolyhedronWithPlaneResult::Types::None;
+
+      return result;
+    }
+
+    // Split is done, create the last face to fill in the holes inside the new polyhedra
+    // Create the last face to fill in the holes inside the new polyhedra
+    vector<Eigen::Vector3d> newVerticesVector = vector<Eigen::Vector3d>(newVertices.begin(),
+                                                                        newVertices.end());
+    vector<unsigned int> pointsOnPlaneIndicesVector = vector<unsigned int>(pointsOnPlaneIndices.begin(),
+                                                                           pointsOnPlaneIndices.end());
+    Eigen::MatrixXd pointsOnPlane3D(3, pointsOnPlaneIndicesVector.size());
+    unsigned int p = 0;
+    for (unsigned int p = 0; p < pointsOnPlaneIndicesVector.size(); p++)
+    {
+      const unsigned int pointOnPlaneIndex = pointsOnPlaneIndicesVector[p];
+      if (pointOnPlaneIndex < numVertices)
+        pointsOnPlane3D.col(p)<< polyhedronVertices.col(pointOnPlaneIndex);
+      else
+        pointsOnPlane3D.col(p)<< newVerticesVector[pointOnPlaneIndex - numVertices];
+
+      p++;
+    }
+
+    Eigen::MatrixXd pointsOnPlane2D = RotatePointsFrom3DTo2D(pointsOnPlane3D,
+                                                             planeRotationMatrix,
+                                                             planeTranslation);
+
+    vector<unsigned int> convexHull = ConvexHull(pointsOnPlane2D);
+
+
+    positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
+    Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
+    for (unsigned int v = 0; v < convexHull.size(); v++)
+    {
+      const unsigned int polyhedronVertexIndex = pointsOnPlaneIndicesVector[convexHull[v]];
+      positiveFace(0, v) = polyhedronVertexIndex;
+    }
+
+    negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
+    Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
+    for (unsigned int v = 0; v < convexHull.size(); v++)
+    {
+      const unsigned int polyhedronVertexIndex = pointsOnPlaneIndicesVector[convexHull[v]];
+      negativeFace(0, v) = polyhedronVertexIndex;
+    }
+
+    // Create new polyhedrons
+    result.Vertices.Vertices.setZero(3, numVertices + newVerticesVector.size());
+    result.Vertices.NewVertices.resize(newVerticesVector.size());
+
+    result.Vertices.Vertices.block(0, 0, 3, numVertices) = polyhedronVertices;
+    for (unsigned int v = 0; v < newVerticesVector.size(); v++)
+    {
+      result.Vertices.Vertices.col(numVertices + v)<< newVerticesVector[v];
+      result.Vertices.NewVertices[v] = numVertices + v;
+    }
+
+    cerr<< "SPLIT POLYHEDRON"<< endl;
+    cerr<< "*> newVertices:\n"<< newVertices<< endl;
+    cerr<< "*> newVerticesByEdgeIndex:\n"<< newVerticesByEdgeIndex<< endl;
+    cerr<< "*> pointsOnPlane:\n"<< pointsOnPlaneIndices<< endl;
+    cerr<< "*> positivePolyhedronVerticesIndices:\n"<< positivePolyhedronVerticesIndices<< endl;
+    cerr<< "*> negativePolyhedronVerticesIndices:\n"<< negativePolyhedronVerticesIndices<< endl;
+    cerr<< "*> positivePolyhedronFaces:\n"<< positivePolyhedronFaces<< endl;
+    cerr<< "*> negativePolyhedronFaces:\n"<< negativePolyhedronFaces<< endl;
+    cerr<< "*> positiveUsed:\n"<< positiveUsed<< endl;
+    cerr<< "*> negativeUsed:\n"<< negativeUsed<< endl;
+
+    cerr<< "RESULT"<< endl;
+    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
+    cerr<< "**> result.Vertices.NewVertices:\n"<< result.Vertices.NewVertices<< endl;
+
+    return result;
+  }
+  // ***************************************************************************
+}
