@@ -248,7 +248,7 @@ namespace GedimUnitTesting
       Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
       Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
 
-      // check cube face vertices
+      // check cube face edge directions
       {
         const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
                                                                                                          Eigen::Vector3d(1.0,0.0,0.0),
@@ -268,7 +268,7 @@ namespace GedimUnitTesting
                                                                cube.Faces));
       }
 
-      // check tetrahedron face vertices
+      // check tetrahedron face edge directions
       {
         const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
                                                                                                              Eigen::Vector3d(1.0,0.0,0.0),
@@ -285,6 +285,107 @@ namespace GedimUnitTesting
                   geometryUtility.PolyhedronFaceEdgeDirections(tetrahedron.Vertices,
                                                                tetrahedron.Edges,
                                                                tetrahedron.Faces));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceEdgeTangents)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube face edge tangents
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+
+        const Eigen::MatrixXd edgeTangents = geometryUtility.PolyhedronEdgeTangents(cube.Vertices,
+                                                                                    cube.Edges);
+        const vector<vector<bool>> faceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(cube.Vertices,
+                                                                                                     cube.Edges,
+                                                                                                     cube.Faces);
+
+        vector<Eigen::MatrixXd> expectedFaceEdgeTangents(6);
+        expectedFaceEdgeTangents[0] = (Eigen::MatrixXd(3, 4)<<
+                                       1,  0, -1,  0,
+                                       0,  1,  0, -1,
+                                       0,  0,  0,  0).finished();
+        expectedFaceEdgeTangents[1] = (Eigen::MatrixXd(3, 4)<<
+                                       1,  0, -1,  0,
+                                       0,  1,  0, -1,
+                                       0,  0,  0,  0).finished();
+        expectedFaceEdgeTangents[2] = (Eigen::MatrixXd(3, 4)<<
+                                       -0,  0,  0, -0,
+                                       1,  0, -1, -0,
+                                       -0,  1,  0, -1).finished();
+        expectedFaceEdgeTangents[3] = (Eigen::MatrixXd(3, 4)<<
+                                       0,  0, -0, -0,
+                                       1,  0, -1, -0,
+                                       0,  1, -0, -1).finished();
+        expectedFaceEdgeTangents[4] = (Eigen::MatrixXd(3, 4)<<
+                                       1,  0, -1, -0,
+                                       0,  0, -0, -0,
+                                       0,  1, -0, -1).finished();
+        expectedFaceEdgeTangents[5] = (Eigen::MatrixXd(3, 4)<<
+                                       1,  0, -1, -0,
+                                       -0,  0,  0, -0,
+                                       -0,  1,  0, -1).finished();
+
+        ASSERT_EQ(geometryUtility.PolyhedronFaceEdgeTangents(cube.Vertices,
+                                                             cube.Edges,
+                                                             cube.Faces,
+                                                             faceEdgeDirections,
+                                                             edgeTangents),
+                  expectedFaceEdgeTangents);
+
+      }
+
+      // check tetrahedron face edge tangents
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+        const Eigen::MatrixXd edgeTangents = geometryUtility.PolyhedronEdgeTangents(tetrahedron.Vertices,
+                                                                                    tetrahedron.Edges);
+        const vector<vector<bool>> faceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(tetrahedron.Vertices,
+                                                                                                     tetrahedron.Edges,
+                                                                                                     tetrahedron.Faces);
+
+
+        vector<Eigen::MatrixXd> expectedFaceEdgeTangents(4);
+        expectedFaceEdgeTangents[0] = (Eigen::MatrixXd(3, 3)<<
+                                       1, -1, -0,
+                                       0,  1, -1,
+                                       0,  0, -0).finished();
+        expectedFaceEdgeTangents[1] = (Eigen::MatrixXd(3, 3)<<
+                                       1, -1, -0,
+                                       0,  0, -0,
+                                       0,  1, -1).finished();
+        expectedFaceEdgeTangents[2] = (Eigen::MatrixXd(3, 3)<<
+                                       0,  0, -0,
+                                       1, -1, -0,
+                                       0,  1, -1).finished();
+        expectedFaceEdgeTangents[3] = (Eigen::MatrixXd(3, 3)<<
+                                       -1,  0,  1,
+                                       1, -1, -0,
+                                       0,  1, -1).finished();
+
+        ASSERT_EQ(geometryUtility.PolyhedronFaceEdgeTangents(tetrahedron.Vertices,
+                                                             tetrahedron.Edges,
+                                                             tetrahedron.Faces,
+                                                             faceEdgeDirections,
+                                                             edgeTangents),
+                  expectedFaceEdgeTangents);
       }
     }
     catch (const exception& exception)
