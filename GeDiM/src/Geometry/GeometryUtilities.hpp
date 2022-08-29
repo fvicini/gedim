@@ -964,6 +964,8 @@ namespace Gedim
                                     const vector<Eigen::MatrixXi>& polyhedronFaces,
                                     const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                     const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
+                                    const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                    const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
                                     const Eigen::Vector3d& planeNormal,
                                     const Eigen::Vector3d& planeOrigin,
                                     const Eigen::Matrix3d& planeRotationMatrix,
@@ -1171,15 +1173,15 @@ namespace Gedim
       /// \param polygonEdgeTangents the 3D polygon edge tangents
       /// \param planeNormal the plane normal
       /// \param planeOrigin the plane origin
-      /// \param planeRotationMatrix the plane rotation matrix from 2D to 3D
-      /// \param planeTranslation the plane translation vector for rotation
+      /// \param polygonTranslation the polygon translation vector for rotation
+      /// \param polygonRotationMatrix the polygon rotation matrix from 2D to 3D
       /// \return the splitted polygons
       SplitPolygonWithPlaneResult SplitPolygonWithPlane(const Eigen::MatrixXd& polygonVertices,
                                                         const Eigen::MatrixXd& polygonEdgeTangents,
                                                         const Eigen::Vector3d& planeNormal,
                                                         const Eigen::Vector3d& planeOrigin,
-                                                        const Eigen::Matrix3d& planeRotationMatrix,
-                                                        const Eigen::Vector3d& planeTranslation) const;
+                                                        const Eigen::Vector3d& polygonTranslation,
+                                                        const Eigen::Matrix3d& polygonRotationMatrix) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)

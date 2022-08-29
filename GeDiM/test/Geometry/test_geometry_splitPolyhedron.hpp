@@ -25,10 +25,14 @@ namespace GedimUnitTesting {
                                                                                                              Eigen::Vector3d(1.0, 0.0, 0.0),
                                                                                                              Eigen::Vector3d(0.0, 0.0, 1.0),
                                                                                                              Eigen::Vector3d(0.0, 1.0, 0.0));
+
+        const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
         const Eigen::MatrixXd polyhedronEdgeTangents = geometryUtility.PolyhedronEdgeTangents(polyhedron.Vertices,
                                                                                               polyhedron.Edges);
         const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                       polyhedron.Faces);
+        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices,
+                                                                                                    polyhedronBarycenter);
         const vector<vector<bool>> polyhedronFaceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(polyhedron.Vertices,
                                                                                                                polyhedron.Edges,
                                                                                                                polyhedron.Faces);
@@ -37,6 +41,10 @@ namespace GedimUnitTesting {
                                                                                                                polyhedron.Faces,
                                                                                                                polyhedronFaceEdgeDirections,
                                                                                                                polyhedronEdgeTangents);
+        const vector<Eigen::Vector3d> polyhedronFaceTranslations = geometryUtility.PolyhedronFaceTranslations(polyhedronFaceVertices);
+        const vector<Eigen::Matrix3d> polyhedronFaceRotationMatrices = geometryUtility.PolyhedronFaceRotationMatrices(polyhedronFaceVertices,
+                                                                                                                      polyhedronFaceNormals,
+                                                                                                                      polyhedronFaceTranslations);
 
         const Eigen::Vector3d planeOrigin(0.0, 0.0, 0.5);
         const Eigen::Vector3d planeNormal(0.0, 0.0, 1.0);
@@ -56,6 +64,8 @@ namespace GedimUnitTesting {
                                                  polyhedron.Faces,
                                                  polyhedronFaceVertices,
                                                  polyhedronFaceEdgesTangents,
+                                                 polyhedronFaceTranslations,
+                                                 polyhedronFaceRotationMatrices,
                                                  planeNormal,
                                                  planeOrigin,
                                                  planeRotationMatrix,
