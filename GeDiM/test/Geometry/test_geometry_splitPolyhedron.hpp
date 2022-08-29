@@ -59,19 +59,53 @@ namespace GedimUnitTesting {
           cerr<< "polyhedron.Faces:\n"<< polyhedron.Faces<< endl;
         }
 
-        geometryUtility.SplitPolyhedronWithPlane(polyhedron.Vertices,
-                                                 polyhedron.Edges,
-                                                 polyhedron.Faces,
-                                                 polyhedronFaceVertices,
-                                                 polyhedronFaceEdgesTangents,
-                                                 polyhedronFaceTranslations,
-                                                 polyhedronFaceRotationMatrices,
-                                                 planeNormal,
-                                                 planeOrigin,
-                                                 planeRotationMatrix,
-                                                 planeTranslation);
+        Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult result = geometryUtility.SplitPolyhedronWithPlane(polyhedron.Vertices,
+                                                                                                                   polyhedron.Edges,
+                                                                                                                   polyhedron.Faces,
+                                                                                                                   polyhedronFaceVertices,
+                                                                                                                   polyhedronFaceEdgesTangents,
+                                                                                                                   polyhedronFaceTranslations,
+                                                                                                                   polyhedronFaceRotationMatrices,
+                                                                                                                   planeNormal,
+                                                                                                                   planeOrigin,
+                                                                                                                   planeRotationMatrix,
+                                                                                                                   planeTranslation);
 
-        //ASSERT_EQ(result.Type, Gedim::GeometryUtilities::SplitPolygonWithSegmentResult::Types::NoAction);
+        ASSERT_EQ(result.Type, Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::Types::Split);
+        ASSERT_EQ(result.Vertices.Vertices, (Eigen::MatrixXd(3, 7)<<
+                                             0,   1,   0,   0, 0.5,   0,   0,
+                                             0,   0,   1,   0,   0,   0, 0.5,
+                                             0,   0,   0,   1, 0.5, 0.5, 0.5).finished());
+        ASSERT_EQ(result.Vertices.NewVerticesOriginalEdge, std::vector<unsigned int>({ 4, 3, 5 }));
+        ASSERT_EQ(result.Edges.Edges, (Eigen::MatrixXi(2, 12)<<
+                                       3, 5, 4, 5, 6, 4, 0, 1, 0, 1, 5, 2,
+                                       5, 4, 3, 6, 3, 6, 1, 2, 2, 4, 0, 6).finished());
+        ASSERT_EQ(result.Edges.NewEdgesOriginalEdges, std::vector<int>({ 3,-1,4,-1,5,-1,0,2,1,4,3,5 }));
+        ASSERT_EQ(result.Faces.Faces.size(), 8);
+        ASSERT_EQ(result.Faces.Faces[0], (Eigen::MatrixXi(2, 3)<<
+                                          3, 5, 4,
+                                          0, 1, 2).finished());
+        ASSERT_EQ(result.Faces.Faces[1], (Eigen::MatrixXi(2, 3)<<
+                                          3, 5, 6,
+                                          0, 3, 4).finished());
+        ASSERT_EQ(result.Faces.Faces[2], (Eigen::MatrixXi(2, 3)<<
+                                          4, 6, 3,
+                                          5, 4, 2).finished());
+        ASSERT_EQ(result.Faces.Faces[3], (Eigen::MatrixXi(2, 3)<<
+                                          0, 1, 2,
+                                          6, 7, 8).finished());
+        ASSERT_EQ(result.Faces.Faces[4], (Eigen::MatrixXi(2, 4)<<
+                                          0, 1, 4, 5,
+                                          6, 9, 1, 10).finished());
+        ASSERT_EQ(result.Faces.Faces[5], (Eigen::MatrixXi(2, 4)<<
+                                          0, 2, 6 , 5,
+                                          8, 11, 3, 10).finished());
+        ASSERT_EQ(result.Faces.Faces[6], (Eigen::MatrixXi(2, 4)<<
+                                          1, 2, 6, 4,
+                                          7, 11, 5, 9).finished());
+        ASSERT_EQ(result.Faces.Faces[7], (Eigen::MatrixXi(2, 3)<<
+                                          5, 4, 6,
+                                          1, 5, 3).finished());
       }
     }
     catch (const exception& exception)
