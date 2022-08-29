@@ -106,6 +106,15 @@ namespace GedimUnitTesting {
         ASSERT_EQ(result.Faces.Faces[7], (Eigen::MatrixXi(2, 3)<<
                                           5, 4, 6,
                                           1, 5, 3).finished());
+        ASSERT_EQ(result.Faces.NewFacesOriginalFaces, std::vector<int>({ 1,2,3,0,1,2,3,-1 }));
+
+        ASSERT_EQ(result.PositivePolyhedron.Vertices, std::vector<unsigned int>({ 3,4,5,6 }));
+        ASSERT_EQ(result.PositivePolyhedron.Edges, std::vector<unsigned int>({ 0,1,2,3,4,5 }));
+        ASSERT_EQ(result.PositivePolyhedron.Faces, std::vector<unsigned int>({ 0,1,2,7 }));
+
+        ASSERT_EQ(result.NegativePolyhedron.Vertices, std::vector<unsigned int>({ 0,1,2,4,5,6 }));
+        ASSERT_EQ(result.NegativePolyhedron.Edges, std::vector<unsigned int>({ 6,7,8,9,10,11 }));
+        ASSERT_EQ(result.NegativePolyhedron.Faces, std::vector<unsigned int>({ 3,4,5,6,7 }));
       }
     }
     catch (const exception& exception)

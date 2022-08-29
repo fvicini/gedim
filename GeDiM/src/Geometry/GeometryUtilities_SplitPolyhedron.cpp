@@ -524,32 +524,51 @@ namespace Gedim
       result.NegativePolyhedron.Edges.push_back(e);
 
     // Create new polyhedra faces
-    result.Faces.Faces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size());
-    result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size(), -1);
-
-    {
-      unsigned int f = 0;
-      for (const Eigen::MatrixXi& newFace : positivePolyhedronFaces)
-        result.Faces.Faces[f++] = newFace;
-      for (const Eigen::MatrixXi& newFace : negativePolyhedronFaces)
-        result.Faces.Faces[f++] = newFace;
-    }
-
-    {
-      unsigned int f = 0;
-      for (const unsigned int& originalFace : positivePolyhedronOriginalFacesIndices)
-        result.Faces.NewFacesOriginalFaces[f++] = originalFace;
-      for (const unsigned int& originalFace : negativePolyhedronOriginalFacesIndices)
-        result.Faces.NewFacesOriginalFaces[f++] = originalFace;
-    }
-
+    vector<int> positivePolyhedronOriginalFaces = vector<int>(positivePolyhedronOriginalFacesIndices.begin(),
+                                                              positivePolyhedronOriginalFacesIndices.end());
+    vector<int> negativePolyhedronOriginalFaces = vector<int>(negativePolyhedronOriginalFacesIndices.begin(),
+                                                              negativePolyhedronOriginalFacesIndices.end());
+    result.Faces.Faces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1);
+    result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1, -1);
     result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
-    for (unsigned int v = 0; v < positivePolyhedronFaces.size(); v++)
-      result.PositivePolyhedron.Faces[v] = v;
-
     result.NegativePolyhedron.Faces.resize(negativePolyhedronFaces.size());
-    for (unsigned int v = 0; v < negativePolyhedronFaces.size(); v++)
-      result.NegativePolyhedron.Faces[v] = v + positivePolyhedronFaces.size();
+
+    {
+      unsigned int f = 0;
+      unsigned int nf = 0;
+      unsigned int pf = 0;
+      for (const Eigen::MatrixXi& newFace : positivePolyhedronFaces)
+      {
+        if (positivePolyhedronOriginalFaces[pf] < 0)
+        {
+          result.Faces.Faces[positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 2] = newFace;
+          result.PositivePolyhedron.Faces[pf] = positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 2;
+          pf++;
+          continue;
+        }
+
+        result.Faces.Faces[f] = newFace;
+        result.Faces.NewFacesOriginalFaces[f] = positivePolyhedronOriginalFaces[pf];
+        result.PositivePolyhedron.Faces[pf] = f;
+        pf++;
+        f++;
+      }
+      for (const Eigen::MatrixXi& newFace : negativePolyhedronFaces)
+      {
+        if (negativePolyhedronOriginalFaces[nf] < 0)
+        {
+          result.NegativePolyhedron.Faces[nf] = positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 2;
+          nf++;
+          continue;
+        }
+
+        result.Faces.Faces[f] = newFace;
+        result.Faces.NewFacesOriginalFaces[f] = negativePolyhedronOriginalFaces[nf];
+        result.NegativePolyhedron.Faces[nf] = f;
+        nf++;
+        f++;
+      }
+    }
 
     cerr<< "RESULT"<< endl;
     cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
