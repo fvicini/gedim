@@ -394,6 +394,161 @@ namespace GedimUnitTesting
       FAIL();
     }
   }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceTranslations)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube face translations
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
+                                                                                            cube.Faces);
+
+        vector<Eigen::Vector3d> expectedFaceTranslations(6);
+        expectedFaceTranslations[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[1]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +1.0000000000000000e+00;
+        expectedFaceTranslations[2]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[3]<< +1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[4]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[5]<< +0.0000000000000000e+00, +1.0000000000000000e+00, +0.0000000000000000e+00;
+
+        ASSERT_EQ(expectedFaceTranslations,
+                  geometryUtility.PolyhedronFaceTranslations(faceVertices));
+
+      }
+
+      // check tetrahedron face translations
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
+                                                                                            tetrahedron.Faces);
+
+        vector<Eigen::Vector3d> expectedFaceTranslations(4);
+        expectedFaceTranslations[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[1]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[2]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceTranslations[3]<< +1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+
+        ASSERT_EQ(expectedFaceTranslations,
+                  geometryUtility.PolyhedronFaceTranslations(faceVertices));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceRotationMatrices)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube face rotation matrices
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
+                                                                                            cube.Faces);
+        const Eigen::Vector3d barycenter = geometryUtility.PolyhedronBarycenter(cube.Vertices);
+        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices,
+                                                                                          barycenter);
+        const vector<Eigen::Vector3d> faceTranslations = geometryUtility.PolyhedronFaceTranslations(faceVertices);
+
+        vector<Eigen::Matrix3d> expectedFaceRotationMatrices(6);
+        expectedFaceRotationMatrices[0] = (Eigen::Matrix3d()<<
+                                           9.9999999999999978e-01,  0.0000000000000000e+00,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  9.9999999999999978e-01,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[1] = (Eigen::Matrix3d()<<
+                                           9.9999999999999978e-01, 0.0000000000000000e+00, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 9.9999999999999978e-01, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[2] = (Eigen::Matrix3d()<<
+                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00,
+                                           9.9999999999999989e-01, -1.1102230246251565e-16,  0.0000000000000000e+00,
+                                           1.1102230246251565e-16,  9.9999999999999989e-01,  0.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[3] = (Eigen::Matrix3d()<<
+                                           0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00,
+                                           9.9999999999999989e-01, -1.1102230246251565e-16,  0.0000000000000000e+00,
+                                           1.1102230246251565e-16,  9.9999999999999989e-01,  0.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[4] = (Eigen::Matrix3d()<<
+                                           9.9999999999999978e-01,  0.0000000000000000e+00,  4.9650683064945600e-17,
+                                           4.9650683064945576e-17,  2.4825341532472850e-17, -1.0000000000000000e+00,
+                                           0.0000000000000000e+00,  9.9999999999999978e-01,  2.4825341532472825e-17).finished();
+        expectedFaceRotationMatrices[5] = (Eigen::Matrix3d()<<
+                                           9.9999999999999978e-01,  0.0000000000000000e+00, -1.4895204919483651e-16,
+                                           1.4895204919483648e-16,  7.4476024597418302e-17,  1.0000000000000000e+00,
+                                           0.0000000000000000e+00,  9.9999999999999978e-01, -7.4476024597418253e-17).finished();
+
+        ASSERT_EQ(expectedFaceRotationMatrices,
+                  geometryUtility.PolyhedronFaceRotationMatrices(faceVertices,
+                                                                 faceNormals,
+                                                                 faceTranslations));
+
+      }
+
+      // check tetrahedron face rotation matrices
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
+                                                                                            tetrahedron.Faces);
+
+        const Eigen::Vector3d barycenter = geometryUtility.PolyhedronBarycenter(tetrahedron.Vertices);
+        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices,
+                                                                                          barycenter);
+        const vector<Eigen::Vector3d> faceTranslations = geometryUtility.PolyhedronFaceTranslations(faceVertices);
+
+        vector<Eigen::Matrix3d> expectedFaceRotationMatrices(4);
+        expectedFaceRotationMatrices[0] = (Eigen::Matrix3d()<<
+                                           1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[1] = (Eigen::Matrix3d()<<
+                                           1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00,
+                                           0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[2] = (Eigen::Matrix3d()<<
+                                           0.0000000000000000e+00,  0.0000000000000000e+00, -9.9999999999999978e-01,
+                                           1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
+                                           0.0000000000000000e+00,  9.9999999999999978e-01,  0.0000000000000000e+00).finished();
+        expectedFaceRotationMatrices[3] = (Eigen::Matrix3d()<<
+                                           -7.0710678118654724e-01, -4.0824829046386296e-01,  5.7735026918962595e-01,
+                                           7.0710678118654724e-01, -4.0824829046386313e-01,  5.7735026918962573e-01,
+                                           0.0000000000000000e+00,  8.1649658092772581e-01,  5.7735026918962651e-01).finished();
+
+        ASSERT_EQ(expectedFaceRotationMatrices,
+                  geometryUtility.PolyhedronFaceRotationMatrices(faceVertices,
+                                                                 faceNormals,
+                                                                 faceTranslations));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
 }
 
 #endif // __TEST_GEOMETRY_POLYHEDRON_H
