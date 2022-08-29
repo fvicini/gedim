@@ -343,14 +343,16 @@ namespace Gedim
 
     // Create new polyhedrons
     result.Vertices.Vertices.setZero(3, numVertices + newVerticesVector.size());
-    result.Vertices.NewVertices.resize(newVerticesVector.size());
+    result.Vertices.NewVerticesOriginalEdge.resize(newVerticesVector.size());
 
     result.Vertices.Vertices.block(0, 0, 3, numVertices) = polyhedronVertices;
     for (unsigned int v = 0; v < newVerticesVector.size(); v++)
-    {
       result.Vertices.Vertices.col(numVertices + v)<< newVerticesVector[v];
-      result.Vertices.NewVertices[v] = numVertices + v;
-    }
+
+    for (unordered_map<unsigned int, unsigned int>::const_iterator it = newVerticesByEdgeIndex.begin();
+         it != newVerticesByEdgeIndex.end();
+         it++)
+      result.Vertices.NewVerticesOriginalEdge[it->second - numVertices] = it->first;
 
     cerr<< "SPLIT POLYHEDRON"<< endl;
     cerr<< "*> newVertices:\n"<< newVertices<< endl;
@@ -365,7 +367,7 @@ namespace Gedim
 
     cerr<< "RESULT"<< endl;
     cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
-    cerr<< "**> result.Vertices.NewVertices:\n"<< result.Vertices.NewVertices<< endl;
+    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
 
     return result;
   }

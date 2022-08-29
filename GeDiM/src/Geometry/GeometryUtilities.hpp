@@ -574,9 +574,7 @@ namespace Gedim
           struct NewVertices
           {
               Eigen::MatrixXd Vertices; ///< all vertices contained in the new polyhedra
-              std::vector<unsigned int> NewVertices; ///< indices of new vertices in Vertices
-              std::vector<unsigned int> OriginalVertices; ///< indices of original vertices in Vertices
-              std::vector<unsigned int> NewVerticesOriginalEdges; ///< indices of original edges for new vertices
+              std::vector<unsigned int> NewVerticesOriginalEdge; ///< For each new vertex the index of the original edge to which is located
           };
 
           struct NewEdges
