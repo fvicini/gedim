@@ -586,7 +586,7 @@ namespace Gedim
           struct NewFaces
           {
               vector<Eigen::MatrixXi> Faces;
-              std::vector<unsigned int> NewFacesOriginalFaces; ///< indices of original faces for new faces
+              std::vector<int> NewFacesOriginalFaces; ///< indices of original faces for new faces, -1 means no original face
           };
 
           struct NewPolyhedron
@@ -598,8 +598,9 @@ namespace Gedim
 
           NewVertices Vertices;
           NewEdges Edges;
-          NewEdges Faces;
-          std::vector<NewPolyhedron> NewPolyhedra;
+          NewFaces Faces;
+          NewPolyhedron PositivePolyhedron;
+          NewPolyhedron NegativePolyhedron;
           Types Type = Types::Unknown; /// type of split
       };
 

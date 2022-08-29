@@ -154,6 +154,8 @@ namespace Gedim
     std::set<unsigned int> negativePolyhedronVerticesIndices;
     std::list<Eigen::MatrixXi> positivePolyhedronFaces;
     std::list<Eigen::MatrixXi> negativePolyhedronFaces;
+    std::list<int> positivePolyhedronOriginalFacesIndices;
+    std::list<int> negativePolyhedronOriginalFacesIndices;
     bool positiveUsed = false, negativeUsed = false;
     
     const unsigned int numVertices = polyhedronVertices.cols();
@@ -177,6 +179,8 @@ namespace Gedim
           const unsigned int& positiveFaceVertices = splitFaceByPlane.PositiveVertices.size();
           
           positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, positiveFaceVertices));
+          positivePolyhedronOriginalFacesIndices.push_back(f);
+
           Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
           for (unsigned int v = 0; v < positiveFaceVertices; v++)
           {
@@ -225,6 +229,8 @@ namespace Gedim
 
           const unsigned int& positiveFaceVertices = splitFaceByPlane.PositiveVertices.size();
           positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, positiveFaceVertices));
+          positivePolyhedronOriginalFacesIndices.push_back(f);
+
           Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
           for (unsigned int v = 0; v < positiveFaceVertices; v++)
           {
@@ -242,6 +248,8 @@ namespace Gedim
 
           const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
           negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, negativeFaceVertices));
+          negativePolyhedronOriginalFacesIndices.push_back(f);
+
           Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
           for (unsigned int v = 0; v < negativeFaceVertices; v++)
           {
@@ -270,6 +278,8 @@ namespace Gedim
           const unsigned int& negativeFaceVertices = splitFaceByPlane.NegativeVertices.size();
 
           negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, negativeFaceVertices));
+          negativePolyhedronOriginalFacesIndices.push_back(f);
+
           Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
           for (unsigned int v = 0; v < negativeFaceVertices; v++)
           {
@@ -326,6 +336,7 @@ namespace Gedim
 
 
     positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
+    positivePolyhedronOriginalFacesIndices.push_back(-1);
     Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
     for (unsigned int v = 0; v < convexHull.size(); v++)
     {
@@ -334,6 +345,7 @@ namespace Gedim
     }
 
     negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
+    negativePolyhedronOriginalFacesIndices.push_back(-1);
     Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
     for (unsigned int v = 0; v < convexHull.size(); v++)
     {
@@ -341,7 +353,7 @@ namespace Gedim
       negativeFace(0, v) = polyhedronVertexIndex;
     }
 
-    // Create new polyhedrons
+    // Create new polyhedra vertices
     result.Vertices.Vertices.setZero(3, numVertices + newVerticesVector.size());
     result.Vertices.NewVerticesOriginalEdge.resize(newVerticesVector.size());
 
@@ -354,6 +366,34 @@ namespace Gedim
          it++)
       result.Vertices.NewVerticesOriginalEdge[it->second - numVertices] = it->first;
 
+    result.PositivePolyhedron.Vertices.reserve(positivePolyhedronVerticesIndices.size());
+    for (const unsigned int& v : positivePolyhedronVerticesIndices)
+      result.PositivePolyhedron.Vertices.push_back(v);
+
+    result.NegativePolyhedron.Vertices.reserve(negativePolyhedronVerticesIndices.size());
+    for (const unsigned int& v : negativePolyhedronVerticesIndices)
+      result.NegativePolyhedron.Vertices.push_back(v);
+
+    // Create new polyhedra faces
+    result.Faces.Faces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size());
+    result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size());
+
+    {
+      unsigned int f = 0;
+      for (const Eigen::MatrixXi& newFace : positivePolyhedronFaces)
+        result.Faces.Faces[f++] = newFace;
+      for (const Eigen::MatrixXi& newFace : negativePolyhedronFaces)
+        result.Faces.Faces[f++] = newFace;
+    }
+
+    {
+      unsigned int f = 0;
+      for (const unsigned int& originalFace : positivePolyhedronOriginalFacesIndices)
+        result.Faces.NewFacesOriginalFaces[f++] = originalFace;
+      for (const unsigned int& originalFace : negativePolyhedronOriginalFacesIndices)
+        result.Faces.NewFacesOriginalFaces[f++] = originalFace;
+    }
+
     cerr<< "SPLIT POLYHEDRON"<< endl;
     cerr<< "*> newVertices:\n"<< newVertices<< endl;
     cerr<< "*> newVerticesByEdgeIndex:\n"<< newVerticesByEdgeIndex<< endl;
@@ -361,13 +401,19 @@ namespace Gedim
     cerr<< "*> positivePolyhedronVerticesIndices:\n"<< positivePolyhedronVerticesIndices<< endl;
     cerr<< "*> negativePolyhedronVerticesIndices:\n"<< negativePolyhedronVerticesIndices<< endl;
     cerr<< "*> positivePolyhedronFaces:\n"<< positivePolyhedronFaces<< endl;
+    cerr<< "*> positivePolyhedronOriginalFacesIndices:\n"<< positivePolyhedronOriginalFacesIndices<< endl;
     cerr<< "*> negativePolyhedronFaces:\n"<< negativePolyhedronFaces<< endl;
+    cerr<< "*> negativePolyhedronOriginalFacesIndices:\n"<< negativePolyhedronOriginalFacesIndices<< endl;
     cerr<< "*> positiveUsed:\n"<< positiveUsed<< endl;
     cerr<< "*> negativeUsed:\n"<< negativeUsed<< endl;
 
     cerr<< "RESULT"<< endl;
     cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
     cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
+    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
+    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
+    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
+    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
 
     return result;
   }
