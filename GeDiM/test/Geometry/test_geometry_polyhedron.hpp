@@ -48,6 +48,66 @@ namespace GedimUnitTesting
     }
   }
 
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronEdgeTangents)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube edge tangents
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+        Eigen::MatrixXd expectedEdgeTangents(3, 12);
+        expectedEdgeTangents.col(0)<<   1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(1)<<   0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(2)<<  -1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(3)<<   0.0000000000000000e+00, -1.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(4)<<   1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(5)<<   0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(6)<<  -1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(7)<<   0.0000000000000000e+00, -1.0000000000000000e+00,  0.0000000000000000e+00;
+        expectedEdgeTangents.col(8)<<   0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00;
+        expectedEdgeTangents.col(9)<<   0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00;
+        expectedEdgeTangents.col(10)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00;
+        expectedEdgeTangents.col(11)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00;
+
+        ASSERT_EQ(geometryUtility.PolyhedronEdgeTangents(cube.Vertices,
+                                                         cube.Edges),
+                  expectedEdgeTangents);
+      }
+
+      // check tetrahedron face vertices
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+
+        Eigen::MatrixXd expectedEdgeTangents(3, 6);
+        expectedEdgeTangents.col(0)<<  1.0000000000000000e+00,  0.0000000000000000e+00, 0.0000000000000000e+00;
+        expectedEdgeTangents.col(1)<<  0.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        expectedEdgeTangents.col(2)<< -1.0000000000000000e+00,  1.0000000000000000e+00, 0.0000000000000000e+00;
+        expectedEdgeTangents.col(3)<<  0.0000000000000000e+00,  0.0000000000000000e+00, 1.0000000000000000e+00;
+        expectedEdgeTangents.col(4)<< -1.0000000000000000e+00,  0.0000000000000000e+00, 1.0000000000000000e+00;
+        expectedEdgeTangents.col(5)<<  0.0000000000000000e+00, -1.0000000000000000e+00, 1.0000000000000000e+00;
+
+        ASSERT_EQ(geometryUtility.PolyhedronEdgeTangents(tetrahedron.Vertices,
+                                                         tetrahedron.Edges),
+                  expectedEdgeTangents);;
+
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
   TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceVertices)
   {
     try
@@ -86,7 +146,7 @@ namespace GedimUnitTesting
                   expectedFaceVertices);
       }
 
-      // check tetrahedron face normals
+      // check tetrahedron face vertices
       {
         const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
                                                                                                              Eigen::Vector3d(1.0,0.0,0.0),
@@ -172,6 +232,59 @@ namespace GedimUnitTesting
         ASSERT_EQ(geometryUtility.PolyhedronFaceNormals(faceVertices,
                                                         barycenter),
                   expectedFaceNormals);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceEdgeDirections)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube face vertices
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+        vector<vector<bool>> expectedFaceEdgeDirections(6);
+        expectedFaceEdgeDirections[0] = vector<bool>({ true, true, true, true });
+        expectedFaceEdgeDirections[1] = vector<bool>({ true, true, true, true });
+        expectedFaceEdgeDirections[2] = vector<bool>({ false, true, true, false });
+        expectedFaceEdgeDirections[3] = vector<bool>({ true, true, false, false });
+        expectedFaceEdgeDirections[4] = vector<bool>({ true, true, false, false });
+        expectedFaceEdgeDirections[5] = vector<bool>({ false, true, true, false });
+
+        ASSERT_EQ(expectedFaceEdgeDirections,
+                  geometryUtility.PolyhedronFaceEdgeDirections(cube.Vertices,
+                                                               cube.Edges,
+                                                               cube.Faces));
+      }
+
+      // check tetrahedron face vertices
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+
+        vector<vector<bool>> expectedFaceEdgeDirections(4);
+        expectedFaceEdgeDirections[0] = vector<bool>({ true, true, false });
+        expectedFaceEdgeDirections[1] = vector<bool>({ true, true, false });
+        expectedFaceEdgeDirections[2] = vector<bool>({ true, true, false });
+        expectedFaceEdgeDirections[3] = vector<bool>({ true, true, false });
+
+        ASSERT_EQ(expectedFaceEdgeDirections,
+                  geometryUtility.PolyhedronFaceEdgeDirections(tetrahedron.Vertices,
+                                                               tetrahedron.Edges,
+                                                               tetrahedron.Faces));
       }
     }
     catch (const exception& exception)

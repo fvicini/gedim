@@ -170,9 +170,27 @@ namespace Gedim
     return facesVertices;
   }
   // ***************************************************************************
+  vector<vector<bool>> GeometryUtilities::PolyhedronFaceEdgeDirections(const Eigen::MatrixXd& polyhedronVertices,
+                                                                       const Eigen::MatrixXi& polyhedronEdges,
+                                                                       const vector<Eigen::MatrixXi> polyhedronFaces) const
+  {
+    vector<vector<bool>> facesEdgeDirections(polyhedronFaces.size());
+
+    for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
+    {
+      const Eigen::VectorXi& faceEdgesIndices = polyhedronFaces[f].row(1);
+      facesEdgeDirections[f].resize(faceEdgesIndices.size(), true);
+      for (unsigned int e = 0; e < faceEdgesIndices.size(); e++)
+        facesEdgeDirections[f][e] = (polyhedronEdges(0, faceEdgesIndices[e]) == polyhedronFaces[f](0, e));
+    }
+
+    return facesEdgeDirections;
+  }
+  // ***************************************************************************
   vector<MatrixXd> GeometryUtilities::PolyhedronFaceEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
                                                                  const Eigen::MatrixXi& polyhedronEdges,
                                                                  const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                 const vector<vector<bool>> polyhedronFaceEdgeDirections,
                                                                  const Eigen::MatrixXd& polyhedronEdgeTangents) const
   {
     vector<Eigen::MatrixXd> facesEdgeTangents(polyhedronFaces.size());
@@ -183,7 +201,8 @@ namespace Gedim
       Eigen::MatrixXd& faceEdgeTangents = facesEdgeTangents[f];
       faceEdgeTangents.setZero(3, faceEdgesIndices.size());
       for (unsigned int e = 0; e < faceEdgesIndices.size(); e++)
-        faceEdgeTangents.col(e)<< polyhedronEdgeTangents.col(faceEdgesIndices[e]);
+        faceEdgeTangents.col(e)<< (polyhedronFaceEdgeDirections[f][e] ? 1.0 : -1.0) *
+                                  polyhedronEdgeTangents.col(faceEdgesIndices[e]);
     }
 
     return facesEdgeTangents;

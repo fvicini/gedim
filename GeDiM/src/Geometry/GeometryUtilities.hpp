@@ -965,7 +965,9 @@ namespace Gedim
                                     const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                     const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
                                     const Eigen::Vector3d& planeNormal,
-                                    const Eigen::Vector3d& planeOrigin) const;
+                                    const Eigen::Vector3d& planeOrigin,
+                                    const Eigen::Matrix3d& planeRotationMatrix,
+                                    const Eigen::Vector3d& planeTranslation) const;
 
       /// \brief Intersection between a Polyhedron and a line
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
@@ -1164,10 +1166,20 @@ namespace Gedim
                                                             const Eigen::MatrixXd& polygonVertices,
                                                             const Gedim::GeometryUtilities::IntersectionPolygonCircleResult& polygonCircleIntersections) const;
 
+      /// \brief Split 3d Polygon With Plane
+      /// \param polygonVertices the 3D polygon vertices
+      /// \param polygonEdgeTangents the 3D polygon edge tangents
+      /// \param planeNormal the plane normal
+      /// \param planeOrigin the plane origin
+      /// \param planeRotationMatrix the plane rotation matrix from 2D to 3D
+      /// \param planeTranslation the plane translation vector for rotation
+      /// \return the splitted polygons
       SplitPolygonWithPlaneResult SplitPolygonWithPlane(const Eigen::MatrixXd& polygonVertices,
                                                         const Eigen::MatrixXd& polygonEdgeTangents,
                                                         const Eigen::Vector3d& planeNormal,
-                                                        const Eigen::Vector3d& planeOrigin) const;
+                                                        const Eigen::Vector3d& planeOrigin,
+                                                        const Eigen::Matrix3d& planeRotationMatrix,
+                                                        const Eigen::Vector3d& planeTranslation) const;
 
       /// \brief Compute the Polygon tridimensional normalized Normal
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
@@ -1496,6 +1508,15 @@ namespace Gedim
       vector<Eigen::MatrixXd> PolyhedronFaceVertices(const Eigen::MatrixXd& polyhedronVertices,
                                                      const vector<Eigen::MatrixXi> polyhedronFaces) const;
 
+      /// \brief Compute Polyhedron Faces Edge Direction
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
+      /// \param polyhedronFaces the polyhedron faces
+      /// \return for each face the edge direction compare to polyhedron edge directions, size 1xnumFaces
+      vector<vector<bool>> PolyhedronFaceEdgeDirections(const Eigen::MatrixXd& polyhedronVertices,
+                                                        const Eigen::MatrixXi& polyhedronEdges,
+                                                        const vector<Eigen::MatrixXi> polyhedronFaces) const;
+
       /// \brief Compute Polyhedron Faces Edge Tangents
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges
@@ -1505,6 +1526,7 @@ namespace Gedim
       vector<Eigen::MatrixXd> PolyhedronFaceEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
                                                          const Eigen::MatrixXi& polyhedronEdges,
                                                          const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                         const vector<vector<bool>> polyhedronFaceEdgeDirections,
                                                          const Eigen::MatrixXd& polyhedronEdgeTangents) const;
 
       /// \brief Compute Polyhedron Faces Rotation matrix

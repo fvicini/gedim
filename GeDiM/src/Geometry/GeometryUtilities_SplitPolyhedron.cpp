@@ -10,16 +10,18 @@ namespace Gedim
   GeometryUtilities::SplitPolygonWithPlaneResult GeometryUtilities::SplitPolygonWithPlane(const Eigen::MatrixXd& polygonVertices,
                                                                                           const Eigen::MatrixXd& polygonEdgeTangents,
                                                                                           const Eigen::Vector3d& planeNormal,
-                                                                                          const Eigen::Vector3d& planeOrigin) const
+                                                                                          const Eigen::Vector3d& planeOrigin,
+                                                                                          const Eigen::Matrix3d& planeRotationMatrix,
+                                                                                          const Eigen::Vector3d& planeTranslation) const
   {
     SplitPolygonWithPlaneResult result;
     
     bool positiveUsed = false;
     bool negativeUsed = false;
     
-    std::list<unsigned int> positiveVertices;
-    std::list<unsigned int> negativeVertices;
-    std::list<unsigned int> pointsOnPlane;
+    std::list<unsigned int> positiveVerticesIndex;
+    std::list<unsigned int> negativeVerticesIndex;
+    std::list<unsigned int> pointsOnPlaneIndex;
     std::list<Eigen::Vector3d> newVertices;
     std::list<unsigned int> newVerticesEdgeIndex;
     
@@ -34,18 +36,18 @@ namespace Gedim
       switch (vertexPlanePosition)
       {
         case PointPlanePositionTypes::Positive:
-          positiveVertices.push_back(vertexIndex);
+          positiveVerticesIndex.push_back(vertexIndex);
           positiveUsed = true;
           break;
           
         case PointPlanePositionTypes::OnPlane:
-          positiveVertices.push_back(vertexIndex);
-          negativeVertices.push_back(vertexIndex);
-          pointsOnPlane.push_back(vertexIndex);
+          positiveVerticesIndex.push_back(vertexIndex);
+          negativeVerticesIndex.push_back(vertexIndex);
+          pointsOnPlaneIndex.push_back(vertexIndex);
           break;
           
         case PointPlanePositionTypes::Negative:
-          negativeVertices.push_back(vertexIndex);
+          negativeVerticesIndex.push_back(vertexIndex);
           negativeUsed = true;
           break;
         default:
@@ -71,28 +73,66 @@ namespace Gedim
                        edgePlaneIntersection.SingleIntersection.Type == PointSegmentPositionTypes::InsideSegment);
         
         const unsigned int newVertexIndex = polygonVertices.cols() +
-                                            pointsOnPlane.size();
+                                            pointsOnPlaneIndex.size();
         
         newVertices.push_back(polygonVertices.col(vertexIndex) +
                               edgePlaneIntersection.SingleIntersection.CurvilinearCoordinate *
                               polygonEdgeTangents.col(vertexIndex));
         newVerticesEdgeIndex.push_back(vertexIndex);
-        pointsOnPlane.push_back(newVertexIndex);
-        positiveVertices.push_back(newVertexIndex);
-        negativeVertices.push_back(newVertexIndex);
+        pointsOnPlaneIndex.push_back(newVertexIndex);
+        positiveVerticesIndex.push_back(newVertexIndex);
+        negativeVerticesIndex.push_back(newVertexIndex);
       }
     }
     
-    result.PositiveVertices = vector<unsigned int>(positiveVertices.begin(), positiveVertices.end());
-    result.NegativeVertices = vector<unsigned int>(negativeVertices.begin(), negativeVertices.end());
-    result.PointsOnPlane = vector<unsigned int>(pointsOnPlane.begin(), pointsOnPlane.end());
+    result.PositiveVertices = vector<unsigned int>(positiveVerticesIndex.begin(), positiveVerticesIndex.end());
+    result.NegativeVertices = vector<unsigned int>(negativeVerticesIndex.begin(), negativeVerticesIndex.end());
+    result.PointsOnPlane = vector<unsigned int>(pointsOnPlaneIndex.begin(), pointsOnPlaneIndex.end());
     result.NewVertices = vector<Eigen::Vector3d>(newVertices.begin(), newVertices.end());
     result.NewVerticesEdgeIndex = vector<unsigned int>(newVerticesEdgeIndex.begin(), newVerticesEdgeIndex.end());
     result.Type = (positiveUsed) ? (negativeUsed ? SplitPolygonWithPlaneResult::Types::Split :
                                                    SplitPolygonWithPlaneResult::Types::Positive) :
                                    negativeUsed ? SplitPolygonWithPlaneResult::Types::Negative :
                                                   SplitPolygonWithPlaneResult::Types::OnPlane;
-    
+
+    cerr<< "FACE SPLIT"<< endl;
+    cerr<< "**> "<< "result.PositiveVertices:\n"<< result.PositiveVertices<< endl;
+    cerr<< "**> "<< "result.NegativeVertices:\n"<< result.NegativeVertices<< endl;
+    cerr<< "**> "<< "result.PointsOnPlane:\n"<< result.PointsOnPlane<< endl;
+    cerr<< "**> "<< "result.NewVertices:\n"<< result.NewVertices<< endl;
+    cerr<< "**> "<< "result.NewVerticesEdgeIndex:\n"<< result.NewVerticesEdgeIndex<< endl;
+    cerr<< "**> "<< "result.Type:\n"<< (unsigned int)result.Type<< endl;
+
+    // sort points with correct order
+    Eigen::MatrixXd globalVertices(3, polygonVertices.cols() + result.NewVertices.size());
+    globalVertices.block(0, 0, 3, polygonVertices.cols()) = polygonVertices;
+    for (unsigned int v = 0; v < result.NewVertices.size(); v++)
+      globalVertices.col(polygonVertices.cols() + v)<< result.NewVertices[v];
+
+    if (result.PositiveVertices.size() > 0)
+    {
+      const Eigen::MatrixXd positive3DVertices = ExtractPoints(globalVertices,
+                                                               result.PositiveVertices);
+      const Eigen::MatrixXd positive2DVertices = RotatePointsFrom3DTo2D(positive3DVertices,
+                                                                        planeRotationMatrix.transpose(),
+                                                                        planeTranslation);
+      result.PositiveVertices = ConvexHull(positive2DVertices);
+    }
+
+    if (result.NegativeVertices.size() > 0)
+    {
+      const Eigen::MatrixXd negative3DVertices = ExtractPoints(globalVertices,
+                                                               result.NegativeVertices);
+      const Eigen::MatrixXd negative2DVertices = RotatePointsFrom3DTo2D(negative3DVertices,
+                                                                        planeRotationMatrix.transpose(),
+                                                                        planeTranslation);
+
+      result.NegativeVertices = ConvexHull(negative2DVertices);
+    }
+
+    cerr<< "***> "<< "result.PositiveVertices:\n"<< result.PositiveVertices<< endl;
+    cerr<< "***> "<< "result.NegativeVertices:\n"<< result.NegativeVertices<< endl;
+
     return result;
   }
   // ***************************************************************************
@@ -102,7 +142,9 @@ namespace Gedim
                                                    const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                    const vector<Eigen::MatrixXd>& polyhedronFaceEdgeTangents,
                                                    const Eigen::Vector3d& planeNormal,
-                                                   const Eigen::Vector3d& planeOrigin) const
+                                                   const Eigen::Vector3d& planeOrigin,
+                                                   const Eigen::Matrix3d& planeRotationMatrix,
+                                                   const Eigen::Vector3d& planeTranslation) const
   {
     std::list<Eigen::Vector3d> newVertices;
     std::unordered_map<unsigned int, unsigned int> newVerticesByEdgeIndex;
@@ -121,7 +163,9 @@ namespace Gedim
       SplitPolygonWithPlaneResult splitFaceByPlane = SplitPolygonWithPlane(faceVertices,
                                                                            faceEdgeTangents,
                                                                            planeNormal,
-                                                                           planeOrigin);
+                                                                           planeOrigin,
+                                                                           planeRotationMatrix,
+                                                                           planeTranslation);
       
       switch (splitFaceByPlane.Type)
       {
@@ -207,16 +251,16 @@ namespace Gedim
             }
           }
 
-          cerr<< "SPLIT POLYHEDRON: "<< endl;
-          cerr<< "=> newVertices: "<< newVertices<< endl;
-          cerr<< "=> newVerticesByEdgeIndex: "<< newVerticesByEdgeIndex<< endl;
-          cerr<< "=> pointsOnPlane: "<< pointsOnPlane<< endl;
-          cerr<< "=> positivePolyhedronVerticesIndices: "<< positivePolyhedronVerticesIndices<< endl;
-          cerr<< "=> negativePolyhedronVerticesIndices: "<< negativePolyhedronVerticesIndices<< endl;
-          cerr<< "=> positivePolyhedronFaces: "<< positivePolyhedronFaces<< endl;
-          cerr<< "=> negativePolyhedronFaces: "<< negativePolyhedronFaces<< endl;
-          cerr<< "=> positiveUsed: "<< positiveUsed<< endl;
-          cerr<< "=> negativeUsed: "<< negativeUsed<< endl;
+          cerr<< "SPLIT POLYHEDRON:\n"<< endl;
+          cerr<< "*> newVertices:\n"<< newVertices<< endl;
+          cerr<< "*> newVerticesByEdgeIndex:\n"<< newVerticesByEdgeIndex<< endl;
+          cerr<< "*> pointsOnPlane:\n"<< pointsOnPlane<< endl;
+          cerr<< "*> positivePolyhedronVerticesIndices:\n"<< positivePolyhedronVerticesIndices<< endl;
+          cerr<< "*> negativePolyhedronVerticesIndices:\n"<< negativePolyhedronVerticesIndices<< endl;
+          cerr<< "*> positivePolyhedronFaces:\n"<< positivePolyhedronFaces<< endl;
+          cerr<< "*> negativePolyhedronFaces:\n"<< negativePolyhedronFaces<< endl;
+          cerr<< "*> positiveUsed:\n"<< positiveUsed<< endl;
+          cerr<< "*> negativeUsed:\n"<< negativeUsed<< endl;
 
           // TODO: create new polyhedrons
           //    result.clear();
