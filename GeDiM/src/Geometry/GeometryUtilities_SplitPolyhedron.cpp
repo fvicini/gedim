@@ -149,6 +149,7 @@ namespace Gedim
   {
     std::list<Eigen::Vector3d> newVertices;
     std::unordered_map<unsigned int, unsigned int> newVerticesByEdgeIndex;
+    std::unordered_map<unsigned int, unsigned int> newVerticesEdgeIndex;
     std::set<unsigned int> pointsOnPlaneIndices;
     std::set<unsigned int> positivePolyhedronVerticesIndices;
     std::set<unsigned int> negativePolyhedronVerticesIndices;
@@ -209,6 +210,7 @@ namespace Gedim
               const unsigned int polyhedronNewVertexIndex = polyhedronVertices.cols() + newVertices.size();
               newVertices.push_back(splitFaceByPlane.NewVertices[nv]);
               newVerticesByEdgeIndex.insert(make_pair(polyhedronEdgeIndex, polyhedronNewVertexIndex));
+              newVerticesEdgeIndex.insert(make_pair(polyhedronNewVertexIndex, polyhedronEdgeIndex));
             }
 
             newVerticesIndices[nv] = newVerticesByEdgeIndex.at(polyhedronEdgeIndex);
@@ -310,6 +312,8 @@ namespace Gedim
     }
 
     // Split is done, create the last face to fill in the holes inside the new polyhedra
+    result.Type = SplitPolyhedronWithPlaneResult::Types::Split;
+
     // Create the last face to fill in the holes inside the new polyhedra
     vector<Eigen::Vector3d> newVerticesVector = vector<Eigen::Vector3d>(newVertices.begin(),
                                                                         newVertices.end());
@@ -353,6 +357,123 @@ namespace Gedim
       negativeFace(0, v) = polyhedronVertexIndex;
     }
 
+    // Craete new edges
+    unordered_map<string, unsigned int> originalEdges;
+    for (unsigned int e = 0; e < polyhedronEdges.cols(); e++)
+      originalEdges.insert(make_pair(to_string(polyhedronEdges(0, e)) + "-" +
+                                     to_string(polyhedronEdges(1, e)),
+                                     e));
+
+    unordered_map<string, unsigned int> newEdges;
+    unordered_map<string, vector<unsigned int>> newEdgesOriginEnd;
+    unordered_map<unsigned int, int> newEdgesOriginalEdges;
+    list<unsigned int> positiveEdges;
+    list<unsigned int> negativeEdges;
+
+    for (Eigen::MatrixXi& newFace : positivePolyhedronFaces)
+    {
+      for (unsigned int v = 0; v < newFace.cols(); v++)
+      {
+        const unsigned int edgeOrigin = newFace(0, v);
+        const unsigned int edgeEnd = newFace(0, (v + 1) % newFace.cols());
+        const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
+        const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
+
+        unsigned int newEdgeIndex = 0;
+
+        if (newEdges.find(edgeFrom) != newEdges.end())
+          newEdgeIndex = newEdges.at(edgeFrom);
+        else if (newEdges.find(edgeTo) != newEdges.end())
+          newEdgeIndex = newEdges.at(edgeTo);
+        else if (originalEdges.find(edgeFrom) != originalEdges.end())
+        {
+          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+          newEdgeIndex = newEdges.at(edgeFrom);
+          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
+          positiveEdges.push_back(newEdgeIndex);
+        }
+        else if (originalEdges.find(edgeTo) != originalEdges.end())
+        {
+          newEdges.insert(make_pair(edgeTo, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
+          newEdgeIndex = newEdges.at(edgeTo);
+          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
+          positiveEdges.push_back(newEdgeIndex);
+        }
+        else
+        {
+          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+          newEdgeIndex = newEdges.at(edgeFrom);
+          positiveEdges.push_back(newEdgeIndex);
+
+          if (newVerticesEdgeIndex.find(edgeOrigin) != newVerticesEdgeIndex.end() &&
+              newVerticesEdgeIndex.find(edgeEnd) == newVerticesEdgeIndex.end())
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeOrigin)));
+          else if (newVerticesEdgeIndex.find(edgeOrigin) == newVerticesEdgeIndex.end() &&
+                   newVerticesEdgeIndex.find(edgeEnd) != newVerticesEdgeIndex.end())
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeEnd)));
+          else
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
+        }
+
+        newFace(1, v) = newEdgeIndex;
+      }
+    }
+
+    for (Eigen::MatrixXi& newFace : negativePolyhedronFaces)
+    {
+      for (unsigned int v = 0; v < newFace.cols(); v++)
+      {
+        const unsigned int edgeOrigin = newFace(0, v);
+        const unsigned int edgeEnd = newFace(0, (v + 1) % newFace.cols());
+        const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
+        const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
+
+        unsigned int newEdgeIndex = 0;
+
+        if (newEdges.find(edgeFrom) != newEdges.end())
+          newEdgeIndex = newEdges.at(edgeFrom);
+        else if (newEdges.find(edgeTo) != newEdges.end())
+          newEdgeIndex = newEdges.at(edgeTo);
+        else if (originalEdges.find(edgeFrom) != originalEdges.end())
+        {
+          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+          newEdgeIndex = newEdges.at(edgeFrom);
+          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
+          negativeEdges.push_back(newEdgeIndex);
+        }
+        else if (originalEdges.find(edgeTo) != originalEdges.end())
+        {
+          newEdges.insert(make_pair(edgeTo, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
+          newEdgeIndex = newEdges.at(edgeTo);
+          newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
+          negativeEdges.push_back(newEdgeIndex);
+        }
+        else
+        {
+          newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+          newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+          newEdgeIndex = newEdges.at(edgeFrom);
+          negativeEdges.push_back(newEdgeIndex);
+
+          if (newVerticesEdgeIndex.find(edgeOrigin) != newVerticesEdgeIndex.end() &&
+              newVerticesEdgeIndex.find(edgeEnd) == newVerticesEdgeIndex.end())
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeOrigin)));
+          else if (newVerticesEdgeIndex.find(edgeOrigin) == newVerticesEdgeIndex.end() &&
+                   newVerticesEdgeIndex.find(edgeEnd) != newVerticesEdgeIndex.end())
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, newVerticesEdgeIndex.at(edgeEnd)));
+          else
+            newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
+        }
+
+        newFace(1, v) = newEdgeIndex;
+      }
+    }
+
     // Create new polyhedra vertices
     result.Vertices.Vertices.setZero(3, numVertices + newVerticesVector.size());
     result.Vertices.NewVerticesOriginalEdge.resize(newVerticesVector.size());
@@ -374,9 +495,37 @@ namespace Gedim
     for (const unsigned int& v : negativePolyhedronVerticesIndices)
       result.NegativePolyhedron.Vertices.push_back(v);
 
+    // Create new polyhedra edges
+    result.Edges.Edges.resize(2, newEdges.size());
+    result.Edges.NewEdgesOriginalEdges.resize(newEdges.size(), -1);
+
+    {
+      for (unordered_map<string, unsigned int>::const_iterator it = newEdges.begin();
+           it != newEdges.end();
+           it++)
+      {
+        const string& newEdgeKey = it->first;
+        const unsigned int& newEdgeIndex = it->second;
+        const vector<unsigned int>& newEdgeOriginEnd = newEdgesOriginEnd.at(newEdgeKey);
+        const int& originalEdge = newEdgesOriginalEdges.at(newEdgeIndex);
+
+        result.Edges.Edges(0, newEdgeIndex) = newEdgeOriginEnd[0];
+        result.Edges.Edges(1, newEdgeIndex) = newEdgeOriginEnd[1];
+        result.Edges.NewEdgesOriginalEdges[newEdgeIndex] = originalEdge;
+      }
+    }
+
+    result.PositivePolyhedron.Edges.reserve(positiveEdges.size());
+    for (const unsigned int& e : positiveEdges)
+      result.PositivePolyhedron.Edges.push_back(e);
+
+    result.NegativePolyhedron.Edges.reserve(negativeEdges.size());
+    for (const unsigned int& e : negativeEdges)
+      result.NegativePolyhedron.Edges.push_back(e);
+
     // Create new polyhedra faces
     result.Faces.Faces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size());
-    result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size());
+    result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size(), -1);
 
     {
       unsigned int f = 0;
@@ -394,26 +543,27 @@ namespace Gedim
         result.Faces.NewFacesOriginalFaces[f++] = originalFace;
     }
 
-    cerr<< "SPLIT POLYHEDRON"<< endl;
-    cerr<< "*> newVertices:\n"<< newVertices<< endl;
-    cerr<< "*> newVerticesByEdgeIndex:\n"<< newVerticesByEdgeIndex<< endl;
-    cerr<< "*> pointsOnPlane:\n"<< pointsOnPlaneIndices<< endl;
-    cerr<< "*> positivePolyhedronVerticesIndices:\n"<< positivePolyhedronVerticesIndices<< endl;
-    cerr<< "*> negativePolyhedronVerticesIndices:\n"<< negativePolyhedronVerticesIndices<< endl;
-    cerr<< "*> positivePolyhedronFaces:\n"<< positivePolyhedronFaces<< endl;
-    cerr<< "*> positivePolyhedronOriginalFacesIndices:\n"<< positivePolyhedronOriginalFacesIndices<< endl;
-    cerr<< "*> negativePolyhedronFaces:\n"<< negativePolyhedronFaces<< endl;
-    cerr<< "*> negativePolyhedronOriginalFacesIndices:\n"<< negativePolyhedronOriginalFacesIndices<< endl;
-    cerr<< "*> positiveUsed:\n"<< positiveUsed<< endl;
-    cerr<< "*> negativeUsed:\n"<< negativeUsed<< endl;
+    result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
+    for (unsigned int v = 0; v < positivePolyhedronFaces.size(); v++)
+      result.PositivePolyhedron.Faces[v] = v;
+
+    result.NegativePolyhedron.Faces.resize(negativePolyhedronFaces.size());
+    for (unsigned int v = 0; v < negativePolyhedronFaces.size(); v++)
+      result.NegativePolyhedron.Faces[v] = v + positivePolyhedronFaces.size();
 
     cerr<< "RESULT"<< endl;
     cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
     cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
+    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
+    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
     cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
     cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
     cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
+    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
+    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
     cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
+    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
+    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
 
     return result;
   }

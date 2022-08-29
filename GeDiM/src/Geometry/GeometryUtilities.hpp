@@ -580,7 +580,7 @@ namespace Gedim
           struct NewEdges
           {
               Eigen::MatrixXi Edges; ///< all edges contained in the new polyhedra
-              std::vector<unsigned int> NewEdgesOriginalEdges; ///< indices of original edges for new edges
+              std::vector<int> NewEdgesOriginalEdges; ///< indices of original edges for new edges, -1 means no original edge
           };
 
           struct NewFaces
