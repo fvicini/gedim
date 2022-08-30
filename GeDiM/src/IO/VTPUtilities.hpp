@@ -138,6 +138,9 @@ namespace Gedim
 
       void AddPoint(const Eigen::Vector3d& point,
                     const std::vector<VTPProperty>& properties = {});
+      void AddSegment(const Eigen::Vector3d& origin,
+                      const Eigen::Vector3d& end,
+                      const std::vector<VTPProperty>& properties = {});
       void AddSegment(const Eigen::MatrixXd& vertices,
                       const std::vector<VTPProperty>& properties = {});
       void AddSegment(const Eigen::MatrixXd& vertices,

@@ -4,6 +4,7 @@ add_subdirectory(IO)
 add_subdirectory(Mesh)
 add_subdirectory(MpiTools)
 add_subdirectory(Geometry)
+add_subdirectory(Quadrature)
 
 list(APPEND gedim_src_includes ${CMAKE_CURRENT_SOURCE_DIR})
 

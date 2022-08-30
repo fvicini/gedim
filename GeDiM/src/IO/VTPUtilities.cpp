@@ -51,6 +51,21 @@ namespace Gedim
 #endif
   }
   // ***************************************************************************
+  void VTKUtilities::AddSegment(const Eigen::Vector3d& origin,
+                                const Eigen::Vector3d& end,
+                                const std::vector<VTPProperty>& properties)
+  {
+#if ENABLE_VTK == 1
+    Eigen::MatrixXd vertices =  (Eigen::MatrixXd(3, 2)<< origin, end).finished();
+    Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
+    VTPSegment vtpSegment(vertices,
+                          edge);
+    GeometryToPolyData<VTPSegment> polyData(vtpSegment);
+    AddToExportData(polyData,
+                    properties);
+#endif
+  }
+  // ***************************************************************************
   void VTKUtilities::AddSegment(const Eigen::MatrixXd& vertices,
                                 const std::vector<VTPProperty>& properties)
   {

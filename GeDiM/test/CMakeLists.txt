@@ -65,6 +65,7 @@ endif()
 add_subdirectory(Geometry)
 add_subdirectory(Mesh)
 add_subdirectory(IO)
+add_subdirectory(Quadrature)
 
 list(APPEND ${GEDIM_LIBRARY_TEST_SOURCES} ${gedim_test_src_sources})
 list(APPEND ${GEDIM_LIBRARY_TEST_HEADERS} ${gedim_test_src_headers})
