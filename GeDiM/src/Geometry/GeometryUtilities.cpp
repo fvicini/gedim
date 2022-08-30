@@ -116,9 +116,6 @@ namespace Gedim
     }
     while (pointOnHull != convexHull.front());
 
-    vector<unsigned int> temp(convexHull.begin(), convexHull.end());
-    cerr<< (Vector3d(points.col(temp[1]) - points.col(temp[0])).cross(Vector3d(points.col(temp[2]) - points.col(temp[0])))).transpose()<< endl;
-
     return vector<unsigned int>(convexHull.begin(), convexHull.end());
   }
   // ***************************************************************************
@@ -178,7 +175,7 @@ namespace Gedim
 
     return vertices;
   }
-// ***************************************************************************
+  // ***************************************************************************
   MatrixXd GeometryUtilities::CreateParallelogram(const Eigen::Vector3d& origin,
                                                   const Eigen::Vector3d& lengthVector,
                                                   const Eigen::Vector3d& widthVector) const
