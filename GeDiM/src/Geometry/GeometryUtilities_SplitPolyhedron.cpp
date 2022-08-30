@@ -73,7 +73,7 @@ namespace Gedim
                        edgePlaneIntersection.SingleIntersection.Type == PointSegmentPositionTypes::InsideSegment);
         
         const unsigned int newVertexIndex = polygonVertices.cols() +
-                                            pointsOnPlaneIndex.size();
+                                            newVertices.size();
         
         newVertices.push_back(polygonVertices.col(vertexIndex) +
                               edgePlaneIntersection.SingleIntersection.CurvilinearCoordinate *
@@ -101,7 +101,8 @@ namespace Gedim
     for (unsigned int v = 0; v < result.NewVertices.size(); v++)
       globalVertices.col(polygonVertices.cols() + v)<< result.NewVertices[v];
 
-    if (positiveVertices.size() > 0)
+    if (result.Type == SplitPolygonWithPlaneResult::Types::Split ||
+        result.Type == SplitPolygonWithPlaneResult::Types::Positive)
     {
       const Eigen::MatrixXd positive3DVertices = ExtractPoints(globalVertices,
                                                                positiveVertices);
@@ -116,7 +117,8 @@ namespace Gedim
         result.PositiveVertices[c] = positiveVertices[convexHull[c]];
     }
 
-    if (negativeVertices.size() > 0)
+    if (result.Type == SplitPolygonWithPlaneResult::Types::Split ||
+        result.Type == SplitPolygonWithPlaneResult::Types::Negative)
     {
       const Eigen::MatrixXd negative3DVertices = ExtractPoints(globalVertices,
                                                                negativeVertices);
@@ -328,33 +330,32 @@ namespace Gedim
         pointsOnPlane3D.col(p)<< polyhedronVertices.col(pointOnPlaneIndex);
       else
         pointsOnPlane3D.col(p)<< newVerticesVector[pointOnPlaneIndex - numVertices];
-
-      p++;
     }
 
     Eigen::MatrixXd pointsOnPlane2D = RotatePointsFrom3DTo2D(pointsOnPlane3D,
                                                              planeRotationMatrix,
                                                              planeTranslation);
 
+    cerr<< "HERE"<< endl;
     vector<unsigned int> convexHull = ConvexHull(pointsOnPlane2D);
 
 
     positivePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
     positivePolyhedronOriginalFacesIndices.push_back(-1);
-    Eigen::MatrixXi& positiveFace = positivePolyhedronFaces.back();
+    Eigen::MatrixXi& positiveNewFace = positivePolyhedronFaces.back();
     for (unsigned int v = 0; v < convexHull.size(); v++)
     {
       const unsigned int polyhedronVertexIndex = pointsOnPlaneIndicesVector[convexHull[v]];
-      positiveFace(0, v) = polyhedronVertexIndex;
+      positiveNewFace(0, v) = polyhedronVertexIndex;
     }
 
     negativePolyhedronFaces.push_back(Eigen::MatrixXi::Zero(2, convexHull.size()));
     negativePolyhedronOriginalFacesIndices.push_back(-1);
-    Eigen::MatrixXi& negativeFace = negativePolyhedronFaces.back();
+    Eigen::MatrixXi& negativeNewFace = negativePolyhedronFaces.back();
     for (unsigned int v = 0; v < convexHull.size(); v++)
     {
       const unsigned int polyhedronVertexIndex = pointsOnPlaneIndicesVector[convexHull[v]];
-      negativeFace(0, v) = polyhedronVertexIndex;
+      negativeNewFace(0, v) = polyhedronVertexIndex;
     }
 
     // Craete new edges
@@ -370,6 +371,37 @@ namespace Gedim
     set<unsigned int> positiveEdges;
     set<unsigned int> negativeEdges;
 
+    // create edges of the new face first
+    for (unsigned int v = 0; v < positiveNewFace.cols(); v++)
+    {
+      const unsigned int edgeOrigin = positiveNewFace(0, v);
+      const unsigned int edgeEnd = positiveNewFace(0, (v + 1) % positiveNewFace.cols());
+      const string edgeFrom = to_string(edgeOrigin) + "-" + to_string(edgeEnd);
+      const string edgeTo = to_string(edgeEnd) + "-" + to_string(edgeOrigin);
+
+      unsigned int newEdgeIndex = newEdges.size();
+
+      if (originalEdges.find(edgeFrom) != originalEdges.end())
+      {
+        newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+        newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+        newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeFrom)));
+      }
+      else if (originalEdges.find(edgeTo) != originalEdges.end())
+      {
+        newEdges.insert(make_pair(edgeTo, newEdges.size()));
+        newEdgesOriginEnd.insert(make_pair(edgeTo, vector<unsigned int>({ edgeEnd, edgeOrigin })));
+        newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, originalEdges.at(edgeTo)));
+      }
+      else
+      {
+        newEdges.insert(make_pair(edgeFrom, newEdges.size()));
+        newEdgesOriginEnd.insert(make_pair(edgeFrom, vector<unsigned int>({ edgeOrigin, edgeEnd })));
+        newEdgesOriginalEdges.insert(make_pair(newEdgeIndex, -1));
+      }
+    }
+
+    // crate all the other edges
     for (unsigned int p = 0; p < 2; p++)
     {
       list<Eigen::MatrixXi>& polyhedronFaces = (p == 0) ? positivePolyhedronFaces :
@@ -482,6 +514,7 @@ namespace Gedim
                                                               positivePolyhedronOriginalFacesIndices.end());
     vector<int> negativePolyhedronOriginalFaces = vector<int>(negativePolyhedronOriginalFacesIndices.begin(),
                                                               negativePolyhedronOriginalFacesIndices.end());
+
     result.Faces.Faces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1);
     result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1, -1);
     result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
@@ -524,25 +557,27 @@ namespace Gedim
       }
     }
 
-    //    cerr<< "RESULT"<< endl;
-    //    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
-    //    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
-    //    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
-    //    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
-    //    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
-    //    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
+    cerr<< "RESULT"<< endl;
+    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
+    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
+    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
+    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
+    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
+    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
+    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
+    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
+    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
+    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
+    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
+    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
 
     return result;
   }
   // ***************************************************************************
   vector<GeometryUtilities::Polyhedron> GeometryUtilities::SplitPolyhedronWithPlaneResultToPolyhedra(const SplitPolyhedronWithPlaneResult& result)
   {
+    Output::Assert(result.Type == SplitPolyhedronWithPlaneResult::Types::Split);
+
     vector<GeometryUtilities::Polyhedron> polyhedra(2);
 
     for (unsigned int p = 0; p < 2; p++)

@@ -88,7 +88,8 @@ namespace Gedim
     //     pointOnHull = endpoint
     // until endpoint = P[0]      // wrapped around to first hull point
 
-    Output::Assert(points.rows() == 3 && points.cols() > 0 && PointsAre2D(points));
+    Output::Assert(points.rows() == 3 && points.cols() > 2 && PointsAre2D(points));
+
     const unsigned int numPoints = points.cols();
     unsigned int leftMost = 0;
     for (unsigned int p = 1; p < numPoints; p++)
@@ -114,6 +115,9 @@ namespace Gedim
       pointOnHull = endpoint;
     }
     while (pointOnHull != convexHull.front());
+
+    vector<unsigned int> temp(convexHull.begin(), convexHull.end());
+    cerr<< (Vector3d(points.col(temp[1]) - points.col(temp[0])).cross(Vector3d(points.col(temp[2]) - points.col(temp[0])))).transpose()<< endl;
 
     return vector<unsigned int>(convexHull.begin(), convexHull.end());
   }

@@ -96,8 +96,11 @@ namespace Gedim
                                                                                    const Eigen::Vector3d& planeNormal,
                                                                                    const Eigen::Vector3d& planeOrigin) const
   {
+    const double distancePoint = (point - planeOrigin).norm();
+    if (IsValue1DZero(distancePoint))
+      return PointPlanePositionTypes::OnPlane;
 
-    const double position = planeNormal.dot(point - planeOrigin) / (point - planeOrigin).norm();
+    const double position = planeNormal.dot(point - planeOrigin) / distancePoint;
 
     if (IsValue1DZero(position))
       return PointPlanePositionTypes::OnPlane;
