@@ -33,8 +33,10 @@ namespace GedimUnitTesting {
                                                                                               polyhedron.Edges);
         const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                       polyhedron.Faces);
-        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices,
-                                                                                                    polyhedronBarycenter);
+        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices);
+        const vector<bool> polyhedronFaceNormalDirections = geometryUtility.PolyhedronFaceNormalDirections(polyhedronFaceVertices,
+                                                                                                           polyhedronBarycenter,
+                                                                                                           polyhedronFaceNormals);
         const vector<vector<bool>> polyhedronFaceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(polyhedron.Vertices,
                                                                                                                polyhedron.Edges,
                                                                                                                polyhedron.Faces);
@@ -186,8 +188,10 @@ namespace GedimUnitTesting {
                                                                                               polyhedron.Edges);
         const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                       polyhedron.Faces);
-        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices,
-                                                                                                    polyhedronBarycenter);
+        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices);
+        const vector<bool> polyhedronFaceNormalDirections = geometryUtility.PolyhedronFaceNormalDirections(polyhedronFaceVertices,
+                                                                                                           polyhedronBarycenter,
+                                                                                                           polyhedronFaceNormals);
         const vector<vector<bool>> polyhedronFaceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(polyhedron.Vertices,
                                                                                                                polyhedron.Edges,
                                                                                                                polyhedron.Faces);
@@ -335,8 +339,10 @@ namespace GedimUnitTesting {
                                                                                               polyhedron.Edges);
         const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                       polyhedron.Faces);
-        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices,
-                                                                                                    polyhedronBarycenter);
+        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices);
+        const vector<bool> polyhedronFaceNormalDirections = geometryUtility.PolyhedronFaceNormalDirections(polyhedronFaceVertices,
+                                                                                                           polyhedronBarycenter,
+                                                                                                           polyhedronFaceNormals);
         const vector<vector<bool>> polyhedronFaceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(polyhedron.Vertices,
                                                                                                                polyhedron.Edges,
                                                                                                                polyhedron.Faces);
@@ -490,8 +496,10 @@ namespace GedimUnitTesting {
                                                                                               polyhedron.Edges);
         const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
                                                                                                       polyhedron.Faces);
-        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices,
-                                                                                                    polyhedronBarycenter);
+        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices);
+        const vector<bool> polyhedronFaceNormalDirections = geometryUtility.PolyhedronFaceNormalDirections(polyhedronFaceVertices,
+                                                                                                           polyhedronBarycenter,
+                                                                                                           polyhedronFaceNormals);
         const vector<vector<bool>> polyhedronFaceEdgeDirections = geometryUtility.PolyhedronFaceEdgeDirections(polyhedron.Vertices,
                                                                                                                polyhedron.Edges,
                                                                                                                polyhedron.Faces);

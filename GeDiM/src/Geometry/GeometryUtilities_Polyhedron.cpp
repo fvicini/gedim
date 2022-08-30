@@ -235,28 +235,37 @@ namespace Gedim
     return translations;
   }
   // ***************************************************************************
-  vector<Vector3d> GeometryUtilities::PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                                            const Eigen::Vector3d& pointInsidePolyhedron) const
+  vector<Vector3d> GeometryUtilities::PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const
   {
     vector<Vector3d> faceNormals;
     faceNormals.reserve(polyhedronFaceVertices.size());
 
     for (unsigned int f = 0; f < polyhedronFaceVertices.size(); f++)
+      faceNormals.push_back(PolygonNormal(polyhedronFaceVertices[f]));
+
+    return faceNormals;
+  }
+  // ***************************************************************************
+  vector<bool> GeometryUtilities::PolyhedronFaceNormalDirections(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                 const Eigen::Vector3d& pointInsidePolyhedron,
+                                                                 const vector<Vector3d>& polyhedronFaceNormals) const
+  {
+    vector<bool> faceDirections;
+    faceDirections.reserve(polyhedronFaceVertices.size());
+
+    for (unsigned int f = 0; f < polyhedronFaceVertices.size(); f++)
     {
-      const Eigen::Vector3d normal = PolygonNormal(polyhedronFaceVertices[f]);
+      const Eigen::Vector3d& normal = polyhedronFaceNormals[f];
       const PointPlanePositionTypes pointFacePosition = PointPlanePosition(pointInsidePolyhedron,
                                                                            normal,
                                                                            polyhedronFaceVertices[f].col(0));
       Output::Assert(pointFacePosition == PointPlanePositionTypes::Negative ||
                      pointFacePosition == PointPlanePositionTypes::Positive);
 
-      const double normalOutgoingDirection = (pointFacePosition == PointPlanePositionTypes::Positive) ? -1.0 :
-                                                                                                        1.0;
-
-      faceNormals.push_back(normalOutgoingDirection * normal);
+      faceDirections.push_back(!(pointFacePosition == PointPlanePositionTypes::Positive));
     }
 
-    return faceNormals;
+    return faceDirections;
   }
   // ***************************************************************************
 }

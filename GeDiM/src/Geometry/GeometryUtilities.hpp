@@ -1026,6 +1026,7 @@ namespace Gedim
                                                                   const Eigen::MatrixXi& polyhedronEdges,
                                                                   const vector<Eigen::MatrixXi> polyhedronFaces,
                                                                   const vector<Eigen::Vector3d> polyhedronFaceNormals,
+                                                                  const vector<bool>& polyhedronFaceNormalDirections,
                                                                   const Eigen::Vector3d& lineTangent,
                                                                   const Eigen::Vector3d& lineOrigin) const;
 
@@ -1055,6 +1056,7 @@ namespace Gedim
       /// \return the intersection result
       IntersectionPolyhedronsSegmentResult IntersectionPolyhedronsSegment(const vector<Polyhedron>& polyhedrons,
                                                                           const vector<vector<Eigen::Vector3d>> polyhedronFaceNormals,
+                                                                          const vector<vector<bool>> polyhedronFaceNormalDirections,
                                                                           const Eigen::Vector3d& segmentOrigin,
                                                                           const Eigen::Vector3d& segmentEnd,
                                                                           const Eigen::Vector3d& segmentTangent) const;
@@ -1589,10 +1591,17 @@ namespace Gedim
 
       /// \brief Compute Polyhedron Faces Normals
       /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \return for each polyhedron face the normal
+      vector<Eigen::Vector3d> PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const;
+
+      /// \brief Compute Polyhedron Face Normal Directions
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
       /// \param pointInsidePolyhedron a point inside polyhedron
-      /// \return for each polyhedron face the outgoing normal
-      vector<Eigen::Vector3d> PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                                    const Eigen::Vector3d& pointInsidePolyhedron) const;
+      /// \param polyhedronFaceNormals the normal of each face
+      /// \return true if the face has normal outgoing
+      vector<bool> PolyhedronFaceNormalDirections(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                  const Eigen::Vector3d& pointInsidePolyhedron,
+                                                  const vector<Eigen::Vector3d>& polyhedronFaceNormals) const;
   };
 }
 

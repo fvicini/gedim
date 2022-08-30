@@ -200,16 +200,19 @@ namespace GedimUnitTesting
                                                                                             cube.Faces);
 
         vector<Eigen::Vector3d> expectedFaceNormals(6);
-        expectedFaceNormals[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, -1.0000000000000000e+00;
+        expectedFaceNormals[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +1.0000000000000000e+00;
         expectedFaceNormals[1]<< +0.0000000000000000e+00, +0.0000000000000000e+00, +1.0000000000000000e+00;
-        expectedFaceNormals[2]<< -1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceNormals[2]<< +1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
         expectedFaceNormals[3]<< +1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
         expectedFaceNormals[4]<< +0.0000000000000000e+00, -1.0000000000000000e+00, +0.0000000000000000e+00;
-        expectedFaceNormals[5]<< +0.0000000000000000e+00, +1.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceNormals[5]<< +0.0000000000000000e+00, -1.0000000000000000e+00, +0.0000000000000000e+00;
 
-        ASSERT_EQ(geometryUtility.PolyhedronFaceNormals(faceVertices,
-                                                        barycenter),
+        ASSERT_EQ(geometryUtility.PolyhedronFaceNormals(faceVertices),
                   expectedFaceNormals);
+        ASSERT_EQ(geometryUtility.PolyhedronFaceNormalDirections(faceVertices,
+                                                                 barycenter,
+                                                                 expectedFaceNormals),
+                  vector<bool>({ false, true, false, true, true, false }));
 
       }
 
@@ -224,14 +227,17 @@ namespace GedimUnitTesting
                                                                                             tetrahedron.Faces);
 
         vector<Eigen::Vector3d> expectedFaceNormals(4);
-        expectedFaceNormals[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, -1.0000000000000000e+00;
+        expectedFaceNormals[0]<< +0.0000000000000000e+00, +0.0000000000000000e+00, 1.0000000000000000e+00;
         expectedFaceNormals[1]<< +0.0000000000000000e+00, -1.0000000000000000e+00, +0.0000000000000000e+00;
-        expectedFaceNormals[2]<< -1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
+        expectedFaceNormals[2]<< +1.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00;
         expectedFaceNormals[3]<< +5.7735026918962584e-01, +5.7735026918962584e-01, +5.7735026918962584e-01;
 
-        ASSERT_EQ(geometryUtility.PolyhedronFaceNormals(faceVertices,
-                                                        barycenter),
+        ASSERT_EQ(geometryUtility.PolyhedronFaceNormals(faceVertices),
                   expectedFaceNormals);
+        ASSERT_EQ(geometryUtility.PolyhedronFaceNormalDirections(faceVertices,
+                                                                 barycenter,
+                                                                 expectedFaceNormals),
+                  vector<bool>({ false, true, false, true }));
       }
     }
     catch (const exception& exception)
@@ -468,21 +474,20 @@ namespace GedimUnitTesting
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
                                                                                             cube.Faces);
         const Eigen::Vector3d barycenter = geometryUtility.PolyhedronBarycenter(cube.Vertices);
-        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices,
-                                                                                          barycenter);
+        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices);
         const vector<Eigen::Vector3d> faceTranslations = geometryUtility.PolyhedronFaceTranslations(faceVertices);
 
         vector<Eigen::Matrix3d> expectedFaceRotationMatrices(6);
         expectedFaceRotationMatrices[0] = (Eigen::Matrix3d()<<
-                                           9.9999999999999978e-01,  0.0000000000000000e+00,  0.0000000000000000e+00,
-                                           0.0000000000000000e+00,  9.9999999999999978e-01,  0.0000000000000000e+00,
-                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00).finished();
+                                           9.9999999999999978e-01, 0.0000000000000000e+00, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 9.9999999999999978e-01, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[1] = (Eigen::Matrix3d()<<
                                            9.9999999999999978e-01, 0.0000000000000000e+00, 0.0000000000000000e+00,
                                            0.0000000000000000e+00, 9.9999999999999978e-01, 0.0000000000000000e+00,
                                            0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[2] = (Eigen::Matrix3d()<<
-                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00,
+                                           0.0000000000000000e+00,  0.0000000000000000e+00,  1.0000000000000000e+00,
                                            9.9999999999999989e-01, -1.1102230246251565e-16,  0.0000000000000000e+00,
                                            1.1102230246251565e-16,  9.9999999999999989e-01,  0.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[3] = (Eigen::Matrix3d()<<
@@ -494,9 +499,9 @@ namespace GedimUnitTesting
                                            4.9650683064945576e-17,  2.4825341532472850e-17, -1.0000000000000000e+00,
                                            0.0000000000000000e+00,  9.9999999999999978e-01,  2.4825341532472825e-17).finished();
         expectedFaceRotationMatrices[5] = (Eigen::Matrix3d()<<
-                                           9.9999999999999978e-01,  0.0000000000000000e+00, -1.4895204919483651e-16,
-                                           1.4895204919483648e-16,  7.4476024597418302e-17,  1.0000000000000000e+00,
-                                           0.0000000000000000e+00,  9.9999999999999978e-01, -7.4476024597418253e-17).finished();
+                                           9.9999999999999978e-01,  0.0000000000000000e+00,  4.9650683064945600e-17,
+                                           4.9650683064945576e-17,  2.4825341532472850e-17, -1.0000000000000000e+00,
+                                           0.0000000000000000e+00,  9.9999999999999978e-01,  2.4825341532472825e-17).finished();
 
         ASSERT_EQ(expectedFaceRotationMatrices,
                   geometryUtility.PolyhedronFaceRotationMatrices(faceVertices,
@@ -515,23 +520,22 @@ namespace GedimUnitTesting
                                                                                             tetrahedron.Faces);
 
         const Eigen::Vector3d barycenter = geometryUtility.PolyhedronBarycenter(tetrahedron.Vertices);
-        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices,
-                                                                                          barycenter);
+        const vector<Eigen::Vector3d> faceNormals = geometryUtility.PolyhedronFaceNormals(faceVertices);
         const vector<Eigen::Vector3d> faceTranslations = geometryUtility.PolyhedronFaceTranslations(faceVertices);
 
         vector<Eigen::Matrix3d> expectedFaceRotationMatrices(4);
         expectedFaceRotationMatrices[0] = (Eigen::Matrix3d()<<
-                                           1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
-                                           0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00,
-                                           0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00).finished();
+                                           1.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[1] = (Eigen::Matrix3d()<<
                                            1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
                                            0.0000000000000000e+00,  0.0000000000000000e+00, -1.0000000000000000e+00,
                                            0.0000000000000000e+00,  1.0000000000000000e+00,  0.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[2] = (Eigen::Matrix3d()<<
-                                           0.0000000000000000e+00,  0.0000000000000000e+00, -9.9999999999999978e-01,
-                                           1.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,
-                                           0.0000000000000000e+00,  9.9999999999999978e-01,  0.0000000000000000e+00).finished();
+                                           0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00,
+                                           1.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00,
+                                           0.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00).finished();
         expectedFaceRotationMatrices[3] = (Eigen::Matrix3d()<<
                                            -7.0710678118654724e-01, -4.0824829046386296e-01,  5.7735026918962595e-01,
                                            7.0710678118654724e-01, -4.0824829046386313e-01,  5.7735026918962573e-01,

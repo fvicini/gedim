@@ -498,6 +498,7 @@ namespace Gedim
                                                                                                     const Eigen::MatrixXi& polyhedronEdges,
                                                                                                     const vector<Eigen::MatrixXi> polyhedronFaces,
                                                                                                     const vector<Eigen::Vector3d> polyhedronFaceNormals,
+                                                                                                    const vector<bool>& polyhedronFaceNormalDirections,
                                                                                                     const Eigen::Vector3d& lineTangent,
                                                                                                     const Eigen::Vector3d& lineOrigin) const
   {
@@ -542,24 +543,24 @@ namespace Gedim
 
       if (IsPointOnLine(f, lineOrigin, lineTangent, lineTangent.norm()))
       {
-          result.PolyhedronVertexIntersections[i].Type = IntersectionPolyhedronLineResult::PolyhedronVertexIntersection::Types::Intersection;
-          result.PolyhedronVertexIntersections[i].LineIntersectionIndex = numberOfIntersections;
+        result.PolyhedronVertexIntersections[i].Type = IntersectionPolyhedronLineResult::PolyhedronVertexIntersection::Types::Intersection;
+        result.PolyhedronVertexIntersections[i].LineIntersectionIndex = numberOfIntersections;
 
-          // calcolo la coordinata curvilinea come rapporto tra la distanza del vertice dall'origine della retta, e la lunghezza della tangente alla retta
-          Vector3d origin;
-          origin << 0.0, 0.0, 0.0;
-          VectorXd distanceVertex = PointDistances(polyhedronVertices.col(i), lineOrigin);
-          VectorXd tangent = PointDistances(lineTangent, origin);
-          double c = distanceVertex(0)/tangent(0);
+        // calcolo la coordinata curvilinea come rapporto tra la distanza del vertice dall'origine della retta, e la lunghezza della tangente alla retta
+        Vector3d origin;
+        origin << 0.0, 0.0, 0.0;
+        VectorXd distanceVertex = PointDistances(polyhedronVertices.col(i), lineOrigin);
+        VectorXd tangent = PointDistances(lineTangent, origin);
+        double c = distanceVertex(0)/tangent(0);
 
-          // aggiorno le informazioni dal punto di vista della retta
-          result.LineIntersections[numberOfIntersections].CurvilinearCoordinate = c;
-          coordCurv.push_back(c);
-          result.LineIntersections[numberOfIntersections].PolyhedronType = IntersectionPolyhedronLineResult::LineIntersection::Types::OnVertex;
-          result.LineIntersections[numberOfIntersections].PolyhedronIndex = i;
+        // aggiorno le informazioni dal punto di vista della retta
+        result.LineIntersections[numberOfIntersections].CurvilinearCoordinate = c;
+        coordCurv.push_back(c);
+        result.LineIntersections[numberOfIntersections].PolyhedronType = IntersectionPolyhedronLineResult::LineIntersection::Types::OnVertex;
+        result.LineIntersections[numberOfIntersections].PolyhedronIndex = i;
 
-          numberOfIntersections++;
-          flag = false;
+        numberOfIntersections++;
+        flag = false;
       }
     }
 
@@ -615,9 +616,12 @@ namespace Gedim
       //prendo il primo vertice della faccia come origine del piano
       const int a = polyhedronFaces[i](0,0); //contiene il primo indice della faccia
       const Vector3d& planeOrigin = polyhedronVertices.col(a);
+      const Vector3d planeNormal = polyhedronFaceNormalDirections[i] ? polyhedronFaceNormals[i] :
+                                                                       - polyhedronFaceNormals[i];
 
       IntersectionSegmentPlaneResult r = IntersectionSegmentPlane(lineOrigin, s2,
-                                                                  polyhedronFaceNormals[i], planeOrigin);
+                                                                  planeNormal,
+                                                                  planeOrigin);
       // se c'è intersezione con il piano contenente la faccia
       if (r.Type == IntersectionSegmentPlaneResult::Types::SingleIntersection || r.Type == IntersectionSegmentPlaneResult::Types::MultipleIntersections)
       {
@@ -639,7 +643,9 @@ namespace Gedim
         // controllo se l'intersezione è interna alla faccia
         flag = false; //se è interna diventa true
 
-        PointPlanePositionTypes type = PointPlanePosition(inters, polyhedronFaceNormals[i], planeOrigin);
+        PointPlanePositionTypes type = PointPlanePosition(inters,
+                                                          planeNormal,
+                                                          planeOrigin);
         if (type == PointPlanePositionTypes::OnPlane)
         {
           if ((Compare1DValues(inters(0),polyhedronVertices(0,0)) == CompareTypes::SecondBeforeFirst || Compare1DValues(inters(0),polyhedronVertices(0,0)) == CompareTypes::Coincident) && (Compare1DValues(inters(0),polyhedronVertices(0,1)) == CompareTypes::FirstBeforeSecond || Compare1DValues(inters(0),polyhedronVertices(0,1)) == CompareTypes::Coincident) &&
@@ -766,6 +772,7 @@ namespace Gedim
   // ***************************************************************************
   GeometryUtilities::IntersectionPolyhedronsSegmentResult GeometryUtilities::IntersectionPolyhedronsSegment(const vector<GeometryUtilities::Polyhedron>& polyhedrons,
                                                                                                             const vector<vector<Eigen::Vector3d>> polyhedronFaceNormals,
+                                                                                                            const vector<vector<bool>> polyhedronFaceNormalDirections,
                                                                                                             const Eigen::Vector3d& segmentOrigin,
                                                                                                             const Eigen::Vector3d& segmentEnd,
                                                                                                             const Eigen::Vector3d& segmentTangent) const
@@ -790,10 +797,19 @@ namespace Gedim
 
     for (int i=0; i<numCelle; i++)
     {
-      IntersectionPolyhedronLineResult rl = IntersectionPolyhedronLine(polyhedrons[i].Vertices, polyhedrons[i].Edges, polyhedrons[i].Faces, polyhedronFaceNormals[i],
-                                                                       segmentTangent, segmentOrigin);
-      IntersectionPolyhedronLineResult rs = IntersectionPolyhedronSegment(polyhedrons[i].Vertices, polyhedrons[i].Edges, polyhedrons[i].Faces,
-                                                                          segmentOrigin, segmentEnd, segmentTangent, rl);
+      IntersectionPolyhedronLineResult rl = IntersectionPolyhedronLine(polyhedrons[i].Vertices,
+                                                                       polyhedrons[i].Edges,
+                                                                       polyhedrons[i].Faces,
+                                                                       polyhedronFaceNormals[i],
+                                                                       polyhedronFaceNormalDirections[i],
+                                                                       segmentTangent,
+                                                                       segmentOrigin);
+      IntersectionPolyhedronLineResult rs = IntersectionPolyhedronSegment(polyhedrons[i].Vertices,
+                                                                          polyhedrons[i].Edges,
+                                                                          polyhedrons[i].Faces,
+                                                                          segmentOrigin,
+                                                                          segmentEnd,
+                                                                          segmentTangent, rl);
       if (rs.Type == IntersectionPolyhedronLineResult::Types::OneIntersection)
         inters = 1;
       else if (rs.Type == IntersectionPolyhedronLineResult::Types::TwoIntersections)
