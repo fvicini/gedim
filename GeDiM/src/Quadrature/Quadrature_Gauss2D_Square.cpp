@@ -11,7 +11,7 @@ namespace Gedim
       case 0:
       case 1:
       {
-        points.resize(2,1);
+        points.setZero(3,1);
         points(0,0) = 5.0000000000000000e-01;
         points(1,0) = 5.0000000000000000e-01;
         weights.resize(1);
@@ -21,7 +21,7 @@ namespace Gedim
       case 2:
       case 3:
       {
-        points.resize(2,4);
+        points.setZero(3,4);
         points(0,0) = 2.1132486540518713e-01;
         points(1,0) = 2.1132486540518713e-01;
         points(0,1) = 7.8867513459481287e-01;
@@ -40,7 +40,7 @@ namespace Gedim
       case 4:
       case 5:
       {
-        points.resize(2,9);
+        points.setZero(3,9);
         points(0,0) = 1.1270166537925830e-01;
         points(1,0) = 1.1270166537925830e-01;
         points(0,1) = 5.0000000000000000e-01;
@@ -74,7 +74,7 @@ namespace Gedim
       case 6:
       case 7:
       {
-        points.resize(2,16);
+        points.setZero(3,16);
         points(0,0) = 6.9431844202973714e-02;
         points(1,0) = 6.9431844202973714e-02;
         points(0,1) = 3.3000947820757187e-01;
@@ -129,7 +129,7 @@ namespace Gedim
       case 8:
       case 9:
       {
-        points.resize(2,25);
+        points.setZero(3,25);
         points(0,0) = 4.6910077030668018e-02;
         points(1,0) = 4.6910077030668018e-02;
         points(0,1) = 2.3076534494715845e-01;
@@ -211,7 +211,7 @@ namespace Gedim
       case 10:
       case 11:
       {
-        points.resize(2,36);
+        points.setZero(3,36);
         points(0,0) = 3.3765242898423975e-02;
         points(1,0) = 3.3765242898423975e-02;
         points(0,1) = 1.6939530676686776e-01;
@@ -326,7 +326,7 @@ namespace Gedim
       case 12:
       case 13:
       {
-        points.resize(2,49);
+        points.setZero(3,49);
         points(0,0) = 2.5446043828620757e-02;
         points(1,0) = 2.5446043828620757e-02;
         points(0,1) = 1.2923440720030277e-01;
@@ -480,7 +480,7 @@ namespace Gedim
       case 14:
       case 15:
       {
-        points.resize(2,64);
+        points.setZero(3,64);
         points(0,0) = 1.9855071751231912e-02;
         points(1,0) = 1.9855071751231912e-02;
         points(0,1) = 1.0166676129318664e-01;
@@ -679,7 +679,7 @@ namespace Gedim
       case 16:
       case 17:
       {
-        points.resize(2,81);
+        points.setZero(3,81);
         points(0,0) = 1.5919880246186957e-02;
         points(1,0) = 1.5919880246186957e-02;
         points(0,1) = 8.1984446336682115e-02;
@@ -929,7 +929,7 @@ namespace Gedim
       case 18:
       case 19:
       {
-        points.resize(2,100);
+        points.setZero(3,100);
         points(0,0) = 1.3046735741414128e-02;
         points(1,0) = 1.3046735741414128e-02;
         points(0,1) = 6.7468316655507732e-02;
@@ -1236,7 +1236,7 @@ namespace Gedim
       case 20:
       case 21:
       {
-        points.resize(2,121);
+        points.setZero(3,121);
         points(0,0) = 1.0885670926971514e-02;
         points(1,0) = 1.0885670926971514e-02;
         points(0,1) = 5.6468700115952342e-02;
@@ -1606,7 +1606,7 @@ namespace Gedim
       case 22:
       case 23:
       {
-        points.resize(2,144);
+        points.setZero(3,144);
         points(0,0) = 9.2196828766403782e-03;
         points(1,0) = 9.2196828766403782e-03;
         points(0,1) = 4.7941371814762546e-02;
@@ -2045,7 +2045,7 @@ namespace Gedim
       case 24:
       case 25:
       {
-        points.resize(2,169);
+        points.setZero(3,169);
         points(0,0) = 7.9084726407059325e-03;
         points(1,0) = 7.9084726407059325e-03;
         points(0,1) = 4.1200800388511039e-02;
@@ -2559,7 +2559,7 @@ namespace Gedim
       case 26:
       case 27:
       {
-        points.resize(2,196);
+        points.setZero(3,196);
         points(0,0) = 6.8580956515938429e-03;
         points(1,0) = 6.8580956515938429e-03;
         points(0,1) = 3.5782558168213241e-02;
@@ -3154,7 +3154,7 @@ namespace Gedim
       case 28:
       case 29:
       {
-        points.resize(2,225);
+        points.setZero(3,225);
         points(0,0) = 6.0037409897573113e-03;
         points(1,0) = 6.0037409897573113e-03;
         points(0,1) = 3.1363303799647024e-02;
@@ -3836,7 +3836,7 @@ namespace Gedim
       case 30:
       case 31:
       {
-        points.resize(2,256);
+        points.setZero(3,256);
         points(0,0) = 5.2995325041750307e-03;
         points(1,0) = 5.2995325041750307e-03;
         points(0,1) = 2.7712488463383700e-02;
