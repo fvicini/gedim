@@ -8,7 +8,9 @@
 #include "MapQuadrilateral.hpp"
 #include "MapTriangle.hpp"
 #include "MapTetrahedron.hpp"
+#include "MapHexahedron.hpp"
 #include "Eigen/Eigen"
+#include "VTPUtilities.hpp"
 
 using namespace testing;
 using namespace std;
@@ -203,6 +205,92 @@ namespace GedimUnitTesting
 
     ASSERT_TRUE(geometryUtilities.IsValue1DZero((expectedWeights - mappedWeights).norm()));
     ASSERT_TRUE(geometryUtilities.IsValue1DZero(abs((mappedWeights).sum() - 308.0)));
+  }
+
+  TEST(TestQuadratureMap, TestMapHexahedron)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance = 1.0e-14;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    Eigen::MatrixXd vertices;
+    vertices.setZero(3, 8);
+    vertices.row(0) << +5.0, +16.0, 8.0, -7.0, +0.0, +11.0, +3.0, -12.0;
+    vertices.row(1) << +3.0, -12.0, -14.0, +3.0, +0.0, -15.0, -17.0, +0.0;
+    vertices.row(2) << +0.0, +0.0, +3.0, +0.0, +8.0, +8.0, +8.0, +8.0;
+
+    Gedim::GeometryUtilities::Polyhedron hexa = geometryUtilities.CreateParallelepipedWithOrigin(vertices.col(0),
+                                                                                                 vertices.col(1) - vertices.col(0),
+                                                                                                 vertices.col(4) - vertices.col(0),
+                                                                                                 vertices.col(3) - vertices.col(0));
+    Gedim::VTKUtilities vtkExporter;
+    vtkExporter.AddPolyhedron(hexa.Vertices,
+                              hexa.Edges,
+                              hexa.Faces);
+    vtkExporter.Export("./temp.vtu");
+
+    Gedim::MapHexahedron mapping(geometryUtilities);
+
+    Eigen::MatrixXd points;
+    points.resize(3,8);
+    points(0,0) = 2.1132486540518713e-01;
+    points(1,0) = 2.1132486540518713e-01;
+    points(2,0) = 2.1132486540518713e-01;
+    points(0,1) = 2.1132486540518713e-01;
+    points(1,1) = 2.1132486540518713e-01;
+    points(2,1) = 7.8867513459481287e-01;
+    points(0,2) = 7.8867513459481287e-01;
+    points(1,2) = 2.1132486540518713e-01;
+    points(2,2) = 2.1132486540518713e-01;
+    points(0,3) = 7.8867513459481287e-01;
+    points(1,3) = 2.1132486540518713e-01;
+    points(2,3) = 7.8867513459481287e-01;
+    points(0,4) = 2.1132486540518713e-01;
+    points(1,4) = 7.8867513459481287e-01;
+    points(2,4) = 2.1132486540518713e-01;
+    points(0,5) = 2.1132486540518713e-01;
+    points(1,5) = 7.8867513459481287e-01;
+    points(2,5) = 7.8867513459481287e-01;
+    points(0,6) = 7.8867513459481287e-01;
+    points(1,6) = 7.8867513459481287e-01;
+    points(2,6) = 2.1132486540518713e-01;
+    points(0,7) = 7.8867513459481287e-01;
+    points(1,7) = 7.8867513459481287e-01;
+    points(2,7) = 7.8867513459481287e-01;
+
+    const Gedim::MapHexahedron::MapHexahedronData mapData = mapping.Compute(hexa.Vertices,
+                                                                            hexa.Edges);
+
+    Eigen::MatrixXd mappedPoints = mapping.F(mapData,
+                                             points);
+
+    Eigen::MatrixXd expectedPoints;
+    expectedPoints.setZero(3, 8);
+    expectedPoints.row(0)<<  3.7320508075688776e+00,  8.4529946162074854e-01,  1.0082903768654761e+01,  7.1961524227066320e+00, -3.1961524227066302e+00, -6.0829037686547593e+00,  3.1547005383792532e+00,  2.6794919243112414e-01;
+    expectedPoints.row(1)<< -8.0384757729336886e-01, -2.5358983848622456e+00, -9.4641016151377535e+00, -1.1196152422706632e+01, -8.0384757729336886e-01, -2.5358983848622456e+00, -9.4641016151377535e+00, -1.1196152422706632e+01;
+    expectedPoints.row(2)<<  1.6905989232414971e+00,  6.3094010767585029e+00,  1.6905989232414971e+00,  6.3094010767585029e+00,  1.6905989232414971e+00,  6.3094010767585029e+00,  1.6905989232414971e+00,  6.3094010767585029e+00;
+
+    ASSERT_TRUE((expectedPoints - mappedPoints).norm() < 1e-14);
+
+    Eigen::VectorXd weights;
+    weights.resize(8);
+    weights[0] = 1.2500000000000000e-01;
+    weights[1] = 1.2500000000000000e-01;
+    weights[2] = 1.2500000000000000e-01;
+    weights[3] = 1.2500000000000000e-01;
+    weights[4] = 1.2500000000000000e-01;
+    weights[5] = 1.2500000000000000e-01;
+    weights[6] = 1.2500000000000000e-01;
+    weights[7] = 1.2500000000000000e-01;
+
+    Eigen::VectorXd mappedWeights = weights.array() * mapping.DetJ(mapData,
+                                                                   points).array().abs();
+
+    Eigen::VectorXd expectedWeights(8);
+    expectedWeights<< 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02, 1.8000000000000000e+02;
+
+    ASSERT_TRUE(geometryUtilities.IsValue1DZero((expectedWeights - mappedWeights).norm()));
+    ASSERT_TRUE(geometryUtilities.IsValue1DZero(abs((mappedWeights).sum() - 1440.0)));
   }
 }
 
