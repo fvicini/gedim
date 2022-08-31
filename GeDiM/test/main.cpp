@@ -18,6 +18,7 @@
 #include "test_VTPUtilities.hpp"
 #include "test_Quadrature1D.hpp"
 #include "test_Quadrature2D.hpp"
+#include "test_Quadrature3D.hpp"
 
 #include <gtest/gtest.h>
 
