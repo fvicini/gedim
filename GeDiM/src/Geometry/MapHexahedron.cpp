@@ -36,17 +36,18 @@ namespace Gedim
   }
   // ***************************************************************************
   bool MapHexahedron::TestMapConfiguration(const Eigen::MatrixXd& vertices,
+                                           const Eigen::MatrixXd& fourVertices,
                                            const Eigen::MatrixXd& referencePoints,
                                            const unsigned int& secondVertexIndex,
                                            const unsigned int& thirdVertexIndex,
                                            const unsigned int& fourthVertexIndex,
                                            MapHexahedron::MapHexahedronData& result) const
   {
-    result.Q = Q(vertices.col(0),
-                 vertices.col(secondVertexIndex),
-                 vertices.col(thirdVertexIndex),
-                 vertices.col(fourthVertexIndex));
-    result.b = b(vertices.col(0));
+    result.Q = Q(fourVertices.col(0),
+                 fourVertices.col(secondVertexIndex),
+                 fourVertices.col(thirdVertexIndex),
+                 fourVertices.col(fourthVertexIndex));
+    result.b = b(fourVertices.col(0));
 
     return (geometryUtility.IsValue1DZero((vertices -
                                            F(result,
@@ -72,37 +73,43 @@ namespace Gedim
     Eigen::MatrixXd fourVertices = ComputeFourVertices(vertices,
                                                        edges);
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              1, 2, 3,
                              result))
       return result;
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              1, 3, 2,
                              result))
       return result;
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              2, 1, 3,
                              result))
       return result;
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              2, 3, 1,
                              result))
       return result;
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              3, 1, 2,
                              result))
       return result;
 
-    if (TestMapConfiguration(fourVertices,
+    if (TestMapConfiguration(vertices,
+                             fourVertices,
                              referencePoints,
                              3, 2, 1,
                              result))

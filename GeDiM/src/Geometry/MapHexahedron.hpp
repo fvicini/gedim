@@ -22,6 +22,7 @@ namespace Gedim
                                           const Eigen::MatrixXi& edges) const;
 
       bool TestMapConfiguration(const Eigen::MatrixXd& vertices,
+                                const Eigen::MatrixXd& fourVertices,
                                 const Eigen::MatrixXd& referencePoints,
                                 const unsigned int& secondVertexIndex,
                                 const unsigned int& thirdVertexIndex,
