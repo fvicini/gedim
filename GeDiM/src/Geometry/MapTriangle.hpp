@@ -3,8 +3,6 @@
 
 #include "Eigen/Eigen"
 
-using namespace std;
-
 namespace Gedim
 {
   class MapTriangle

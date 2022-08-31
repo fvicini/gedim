@@ -1,4 +1,5 @@
-#include "MapTriangle.hpp"
+#include "MapTetrahedron.hpp"
+#include <iostream>
 
 using namespace Eigen;
 using namespace std;
@@ -6,14 +7,14 @@ using namespace std;
 namespace Gedim
 {
   // ***************************************************************************
-  MatrixXd MapTriangle::F(const Matrix3d& vertices,
-                          const MatrixXd& x) const
+  MatrixXd MapTetrahedron::F(const MatrixXd& vertices,
+                             const MatrixXd& x) const
   {
     return (Q(vertices) * x).colwise() + b(vertices);
   }
   // ***************************************************************************
-  MatrixXd MapTriangle::J(const Matrix3d& vertices,
-                          const MatrixXd& x) const
+  MatrixXd MapTetrahedron::J(const MatrixXd& vertices,
+                             const MatrixXd& x) const
   {
     const unsigned int numPoints = x.cols();
     MatrixXd jacb(3, 3 * numPoints);
@@ -25,8 +26,8 @@ namespace Gedim
     return jacb;
   }
   // ***************************************************************************
-  VectorXd MapTriangle::DetJ(const Matrix3d& vertices,
-                             const MatrixXd& x) const
+  VectorXd MapTetrahedron::DetJ(const MatrixXd& vertices,
+                                const MatrixXd& x) const
   {
     MatrixXd jacb = J(vertices,
                       x);

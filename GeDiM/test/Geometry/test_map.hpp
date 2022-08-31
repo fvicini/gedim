@@ -7,6 +7,7 @@
 
 #include "MapQuadrilateral.hpp"
 #include "MapTriangle.hpp"
+#include "MapTetrahedron.hpp"
 #include "Eigen/Eigen"
 
 using namespace testing;
@@ -143,6 +144,59 @@ namespace GedimUnitTesting
 
     ASSERT_TRUE((expectedWeights - mappedWeights).norm() < 1e-14);
     ASSERT_TRUE(abs((mappedWeights).sum() - 1.850000000000000e+01) < 1e-14);
+  }
+
+  TEST(TestQuadratureMap, TestMapTetrahedron)
+  {
+    Eigen::MatrixXd vertices;
+    vertices.setZero(3, 4);
+    vertices.row(0) << +5.0, +0.0, -8.0, +0.0;
+    vertices.row(1) << -5.0, +8.0, -4.0, +0.0;
+    vertices.row(2) << +0.0, +0.0, +3.0, +12.0;
+
+    Gedim::MapTetrahedron mapping;
+
+    Eigen::MatrixXd points;
+    points.resize(3,4);
+    points(0,0) = 5.8541019662496896e-01;
+    points(1,0) = 1.3819660112501100e-01;
+    points(2,0) = 1.3819660112501100e-01;
+    points(0,1) = 1.3819660112501100e-01;
+    points(1,1) = 5.8541019662496896e-01;
+    points(2,1) = 1.3819660112501100e-01;
+    points(0,2) = 1.3819660112501100e-01;
+    points(1,2) = 1.3819660112501100e-01;
+    points(2,2) = 5.8541019662496896e-01;
+    points(0,3) = 1.3819660112501100e-01;
+    points(1,3) = 1.3819660112501100e-01;
+    points(2,3) = 1.3819660112501100e-01;
+
+    Eigen::MatrixXd mappedPoints = mapping.F(vertices,
+                                             points);
+
+    Eigen::MatrixXd expectedPoints;
+    expectedPoints.setZero(3, 4);
+    expectedPoints.row(0)<< -4.1458980337504325e-01, -3.9922985673747071e+00, -4.1458980337504325e-01,  1.8214781741247466e+00;
+    expectedPoints.row(1)<<  3.4395121628746619e+00, -1.9270509831248326e+00, -1.3819660112500110e-01, -2.3742645786247909e+00;
+    expectedPoints.row(2)<<  2.0729490168751652e+00,  3.4145898033750388e+00,  7.4395121628746601e+00,  2.0729490168751652e+00;
+
+    ASSERT_TRUE((expectedPoints - mappedPoints).norm() < 1e-14);
+
+    Eigen::VectorXd weights;
+    weights.resize(4);
+    weights[0] = 4.1666666666666664e-02;
+    weights[1] = 4.1666666666666664e-02;
+    weights[2] = 4.1666666666666664e-02;
+    weights[3] = 4.1666666666666664e-02;
+
+    Eigen::VectorXd mappedWeights = weights.array() * mapping.DetJ(vertices,
+                                                                   points).array().abs();
+
+    Eigen::VectorXd expectedWeights(4);
+    expectedWeights<< 7.7000000000000000e+01, 7.7000000000000000e+01, 7.7000000000000000e+01, 7.7000000000000000e+01;
+
+    ASSERT_TRUE((expectedWeights - mappedWeights).norm() < 1e-14);
+    ASSERT_TRUE(abs((mappedWeights).sum() - 308.0) < 1e-14);
   }
 }
 

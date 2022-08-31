@@ -1,6 +1,7 @@
 #include "MapQuadrilateral.hpp"
 
 using namespace Eigen;
+using namespace std;
 
 namespace Gedim
 {
