@@ -171,7 +171,9 @@ namespace GedimUnitTesting
     points(1,3) = 1.3819660112501100e-01;
     points(2,3) = 1.3819660112501100e-01;
 
-    Eigen::MatrixXd mappedPoints = mapping.F(vertices,
+    const Gedim::MapTetrahedron::MapTetrahedronData mapData = mapping.Compute(vertices);
+
+    Eigen::MatrixXd mappedPoints = mapping.F(mapData,
                                              points);
 
     Eigen::MatrixXd expectedPoints;
@@ -189,7 +191,7 @@ namespace GedimUnitTesting
     weights[2] = 4.1666666666666664e-02;
     weights[3] = 4.1666666666666664e-02;
 
-    Eigen::VectorXd mappedWeights = weights.array() * mapping.DetJ(vertices,
+    Eigen::VectorXd mappedWeights = weights.array() * mapping.DetJ(mapData,
                                                                    points).array().abs();
 
     Eigen::VectorXd expectedWeights(4);

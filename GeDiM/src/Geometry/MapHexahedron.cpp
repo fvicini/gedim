@@ -1,4 +1,4 @@
-#include "MapTetrahedron.hpp"
+#include "MapHexahedron.hpp"
 #include <iostream>
 
 using namespace Eigen;
@@ -7,32 +7,29 @@ using namespace std;
 namespace Gedim
 {
   // ***************************************************************************
-  MapTetrahedron::MapTetrahedronData MapTetrahedron::Compute(const Eigen::MatrixXd& vertices) const
+  MatrixXd MapHexahedron::F(const MatrixXd& vertices,
+                            const MatrixXd& x) const
   {
-    MapTetrahedronData result;
-
-    result.Q = Q(vertices);
-    result.b = b(vertices);
-
-    return result;
+    return (Q(vertices) * x).colwise() + b(vertices);
   }
   // ***************************************************************************
-  MatrixXd MapTetrahedron::J(const MapTetrahedronData& mapData,
-                             const MatrixXd& x) const
+  MatrixXd MapHexahedron::J(const MatrixXd& vertices,
+                            const MatrixXd& x) const
   {
     const unsigned int numPoints = x.cols();
     MatrixXd jacb(3, 3 * numPoints);
+    Matrix3d q = Q(vertices);
 
     for (unsigned int p = 0; p < numPoints; p++)
-      jacb.block(0, 3 * p, 3, 3) = mapData.Q;
+      jacb.block(0, 3 * p, 3, 3) = q;
 
     return jacb;
   }
   // ***************************************************************************
-  VectorXd MapTetrahedron::DetJ(const MapTetrahedronData& mapData,
-                                const MatrixXd& x) const
+  VectorXd MapHexahedron::DetJ(const MatrixXd& vertices,
+                               const MatrixXd& x) const
   {
-    MatrixXd jacb = J(mapData,
+    MatrixXd jacb = J(vertices,
                       x);
 
     const unsigned int numPoints = x.cols();
