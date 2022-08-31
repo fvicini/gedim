@@ -7,6 +7,7 @@
 
 #include "GeometryUtilities.hpp"
 #include "Quadrature_Gauss2D_Triangle.hpp"
+#include "Quadrature_Gauss2D_Square.hpp"
 
 namespace UnitTesting
 {
@@ -21,8 +22,8 @@ namespace UnitTesting
       unsigned int minOrder = 0;
       unsigned int maxOrder = 30;
 
-      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
-      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
+      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
+      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
 
       for (unsigned int numOrd = 0; numOrd < orderMax.size(); numOrd++)
       {
@@ -64,8 +65,8 @@ namespace UnitTesting
       unsigned int minOrder = 0;
       unsigned int maxOrder = 30;
 
-      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
-      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
+      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
+      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
 
       for (unsigned int numOrd = 0; numOrd < orderMax.size(); numOrd++)
       {
@@ -107,8 +108,8 @@ namespace UnitTesting
       unsigned int minOrder = 0;
       unsigned int maxOrder = 30;
 
-      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
-      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1,minOrder,maxOrder);
+      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
+      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
 
       for (unsigned int numOrd = 0; numOrd < orderMax.size(); numOrd++)
       {
@@ -128,6 +129,51 @@ namespace UnitTesting
           Eigen::VectorXd cwiseProd = pointsX.cwiseProduct(pointsY);
           double result = cwiseProd.dot(weights);
           double expectedResult	= 1.0 / ((ord + 1) * (ord + 2) * (ord + 3));
+
+          ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(expectedResult, result));
+        }
+      }
+    }
+    catch (const std::exception& exception)
+    {
+      std::cerr<< exception.what()<< std::endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestQuadrature2D, TestQuadrature_Gauss2D_Square_XToNYToN)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      geometryUtilitiesConfig.Tolerance = 1.0e-14;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      unsigned int minOrder = 0;
+      unsigned int maxOrder = 30;
+
+      Eigen::VectorXi quadratureOrders = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
+      Eigen::VectorXi orderMax = Eigen::VectorXi::LinSpaced(maxOrder + 1, minOrder, maxOrder);
+
+      for (unsigned int numOrd = 0; numOrd < orderMax.size(); numOrd++)
+      {
+        Eigen::MatrixXd points;
+        Eigen::VectorXd weights;
+
+        Gedim::Quadrature_Gauss2D_Square::FillPointsAndWeights(quadratureOrders[numOrd],
+                                                               points,
+                                                               weights);
+
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(1.0, weights.sum()));
+
+        for(unsigned int ord = 0; ord < orderMax[numOrd]; ord++)
+        {
+          Eigen::VectorXd pointsX = points.row(0).array().pow(ord);
+          Eigen::VectorXd pointsY = points.row(1).array().pow(ord);
+          Eigen::VectorXd cwiseProd = pointsX.cwiseProduct(pointsY);
+          double result = cwiseProd.dot(weights);
+
+          double expectedResult	= 1.0/ ((ord+1)*(ord+1));
 
           ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(expectedResult, result));
         }
