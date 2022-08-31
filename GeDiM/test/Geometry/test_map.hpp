@@ -223,12 +223,6 @@ namespace GedimUnitTesting
                                                                                                  vertices.col(1) - vertices.col(0),
                                                                                                  vertices.col(4) - vertices.col(0),
                                                                                                  vertices.col(3) - vertices.col(0));
-    Gedim::VTKUtilities vtkExporter;
-    vtkExporter.AddPolyhedron(hexa.Vertices,
-                              hexa.Edges,
-                              hexa.Faces);
-    vtkExporter.Export("./temp.vtu");
-
     Gedim::MapHexahedron mapping(geometryUtilities);
 
     Eigen::MatrixXd points;
