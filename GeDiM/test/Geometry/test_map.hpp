@@ -148,13 +148,17 @@ namespace GedimUnitTesting
 
   TEST(TestQuadratureMap, TestMapTetrahedron)
   {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance = 1.0e-14;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
     Eigen::MatrixXd vertices;
     vertices.setZero(3, 4);
     vertices.row(0) << +5.0, +0.0, -8.0, +0.0;
     vertices.row(1) << -5.0, +8.0, -4.0, +0.0;
     vertices.row(2) << +0.0, +0.0, +3.0, +12.0;
 
-    Gedim::MapTetrahedron mapping;
+    Gedim::MapTetrahedron mapping(geometryUtilities);
 
     Eigen::MatrixXd points;
     points.resize(3,4);
@@ -197,8 +201,8 @@ namespace GedimUnitTesting
     Eigen::VectorXd expectedWeights(4);
     expectedWeights<< 7.7000000000000000e+01, 7.7000000000000000e+01, 7.7000000000000000e+01, 7.7000000000000000e+01;
 
-    ASSERT_TRUE((expectedWeights - mappedWeights).norm() < 1e-14);
-    ASSERT_TRUE(abs((mappedWeights).sum() - 308.0) < 1e-14);
+    ASSERT_TRUE(geometryUtilities.IsValue1DZero((expectedWeights - mappedWeights).norm()));
+    ASSERT_TRUE(geometryUtilities.IsValue1DZero(abs((mappedWeights).sum() - 308.0)));
   }
 }
 
