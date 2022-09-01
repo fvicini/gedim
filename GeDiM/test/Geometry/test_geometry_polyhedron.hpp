@@ -778,29 +778,32 @@ namespace GedimUnitTesting
                                                                                                              Eigen::Vector3d(0.0,0.0,1.0),
                                                                                                              Eigen::Vector3d(0.0,1.0,0.0));
 
+        const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(tetrahedron.Vertices);
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
                                                                                             tetrahedron.Faces);
         const vector<Eigen::Vector3d> faceBarycenters = geometryUtility.PolyhedronFaceBarycenter(faceVertices);
+        const vector<vector<unsigned int>> faceTriangulations = geometryUtility.PolyhedronFaceTriangulationsByFirstVertex(tetrahedron.Faces,
+                                                                                                                          faceVertices);
+        const vector<vector<unsigned int>> faceTriangulationsByInternalPoint = geometryUtility.PolyhedronFaceTriangulationsByInternalPoint(tetrahedron.Vertices,
+                                                                                                                                           tetrahedron.Faces,
+                                                                                                                                           faceVertices,
+                                                                                                                                           faceBarycenters);
 
-        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByFirstVertex(tetrahedron.Faces,
-                                                                            faceVertices),
-                  vector<vector<unsigned int>>({
-                                                 vector<unsigned int>({ 0,1,2 }),
-                                                 vector<unsigned int>({ 0,1,3 }),
-                                                 vector<unsigned int>({ 0,2,3 }),
-                                                 vector<unsigned int>({ 1,2,3 })
-                                               }));
-        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByInternalPoint(tetrahedron.Vertices,
-                                                                              tetrahedron.Faces,
-                                                                              faceVertices,
-                                                                              faceBarycenters),
-                  vector<vector<unsigned int>>({
-                                                 vector<unsigned int>({ 4,0,1,4,1,2,4,2,0 }),
-                                                 vector<unsigned int>({ 5,0,1,5,1,3,5,3,0 }),
-                                                 vector<unsigned int>({ 6,0,2,6,2,3,6,3,0 }),
-                                                 vector<unsigned int>({ 7,1,2,7,2,3,7,3,1 })
-                                               }));
-
+        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulations(tetrahedron.Vertices,
+                                                                             faceTriangulations,
+                                                                             polyhedronBarycenter),
+                  vector<unsigned int>({ 0,1,2,4,
+                                         0,1,3,4,
+                                         0,2,3,4,
+                                         1,2,3,4 }));
+        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulationsByInternalPoint(tetrahedron.Vertices,
+                                                                                            faceTriangulationsByInternalPoint,
+                                                                                            faceBarycenters,
+                                                                                            polyhedronBarycenter),
+                  vector<unsigned int>({ 4,0,1,8,4,1,2,8,4,2,0,8,
+                                         5,0,1,8,5,1,3,8,5,3,0,8,
+                                         6,0,2,8,6,2,3,8,6,3,0,8,
+                                         7,1,2,8,7,2,3,8,7,3,1,8 }));
       }
     }
     catch (const exception& exception)
