@@ -229,7 +229,7 @@ namespace Gedim
   }
   // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolygonTriangulationByInternalPoint(const Eigen::MatrixXd& polygonVertices,
-                                                                              const Eigen::Vector3d& point) const
+                                                                              const Eigen::Vector3d& internalPoint) const
   {
     Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
 

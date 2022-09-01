@@ -1024,8 +1024,8 @@ namespace Gedim
       /// \return the intersection result
       IntersectionPolyhedronLineResult IntersectionPolyhedronLine(const Eigen::MatrixXd& polyhedronVertices,
                                                                   const Eigen::MatrixXi& polyhedronEdges,
-                                                                  const vector<Eigen::MatrixXi> polyhedronFaces,
-                                                                  const vector<Eigen::Vector3d> polyhedronFaceNormals,
+                                                                  const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                  const vector<Eigen::Vector3d>& polyhedronFaceNormals,
                                                                   const vector<bool>& polyhedronFaceNormalDirections,
                                                                   const Eigen::Vector3d& lineTangent,
                                                                   const Eigen::Vector3d& lineOrigin) const;
@@ -1041,7 +1041,7 @@ namespace Gedim
       /// \return the intersection result
       IntersectionPolyhedronLineResult IntersectionPolyhedronSegment(const Eigen::MatrixXd& polyhedronVertices,
                                                                      const Eigen::MatrixXi& polyhedronEdges,
-                                                                     const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                     const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                      const Eigen::Vector3d& segmentOrigin,
                                                                      const Eigen::Vector3d& segmentEnd,
                                                                      const Eigen::Vector3d& segmentTangent,
@@ -1055,8 +1055,8 @@ namespace Gedim
       /// \param segmentTangent the segment tangent
       /// \return the intersection result
       IntersectionPolyhedronsSegmentResult IntersectionPolyhedronsSegment(const vector<Polyhedron>& polyhedrons,
-                                                                          const vector<vector<Eigen::Vector3d>> polyhedronFaceNormals,
-                                                                          const vector<vector<bool>> polyhedronFaceNormalDirections,
+                                                                          const vector<vector<Eigen::Vector3d>>& polyhedronFaceNormals,
+                                                                          const vector<vector<bool>>& polyhedronFaceNormalDirections,
                                                                           const Eigen::Vector3d& segmentOrigin,
                                                                           const Eigen::Vector3d& segmentEnd,
                                                                           const Eigen::Vector3d& segmentTangent) const;
@@ -1119,9 +1119,10 @@ namespace Gedim
       /// \brief Convex Polygon simple Triangulation from an internal point
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
       /// \param point internal polygon point
-      /// \return the sub-division triangulation, size 1 x 3 * numPolygonVertices, the point index is numPolygonVertices
+      /// \return the sub-division triangulation, size 1 x 3 * numPolygonVertices,
+      /// \note the internal point index is numPolygonVertices
       vector<unsigned int> PolygonTriangulationByInternalPoint(const Eigen::MatrixXd& polygonVertices,
-                                                               const Eigen::Vector3d& point) const;
+                                                               const Eigen::Vector3d& internalPoint) const;
 
       /// \brief Convex Polygon sub division by angle quadrant which intersects a polygon in a curved edge
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
@@ -1554,7 +1555,7 @@ namespace Gedim
       /// \param polyhedronFaces the polyhedron faces
       /// \return for each face the vertices, size 1xnumFaces
       vector<Eigen::MatrixXd> PolyhedronFaceVertices(const Eigen::MatrixXd& polyhedronVertices,
-                                                     const vector<Eigen::MatrixXi> polyhedronFaces) const;
+                                                     const vector<Eigen::MatrixXi>& polyhedronFaces) const;
 
       /// \brief Compute Polyhedron Faces Edge Direction
       /// \param polyhedronVertices the polyhedron vertices
@@ -1563,7 +1564,7 @@ namespace Gedim
       /// \return for each face the edge direction compare to polyhedron edge directions, size 1xnumFaces
       vector<vector<bool>> PolyhedronFaceEdgeDirections(const Eigen::MatrixXd& polyhedronVertices,
                                                         const Eigen::MatrixXi& polyhedronEdges,
-                                                        const vector<Eigen::MatrixXi> polyhedronFaces) const;
+                                                        const vector<Eigen::MatrixXi>& polyhedronFaces) const;
 
       /// \brief Compute Polyhedron Faces Edge Tangents
       /// \param polyhedronVertices the polyhedron vertices
@@ -1573,8 +1574,8 @@ namespace Gedim
       /// \return for each face the edge tangents, size 1xnumFaces
       vector<Eigen::MatrixXd> PolyhedronFaceEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
                                                          const Eigen::MatrixXi& polyhedronEdges,
-                                                         const vector<Eigen::MatrixXi> polyhedronFaces,
-                                                         const vector<vector<bool>> polyhedronFaceEdgeDirections,
+                                                         const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                         const vector<vector<bool>>& polyhedronFaceEdgeDirections,
                                                          const Eigen::MatrixXd& polyhedronEdgeTangents) const;
 
       /// \brief Compute Polyhedron Faces Rotation matrix
@@ -1594,6 +1595,11 @@ namespace Gedim
       /// \return for each polyhedron face the normal
       vector<Eigen::Vector3d> PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const;
 
+      /// \brief Compute Polyhedron Faces barycenters
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \return for each polyhedron face the barycenter
+      vector<Eigen::Vector3d> PolyhedronFaceBarycenter(const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const;
+
       /// \brief Compute Polyhedron Face Normal Directions
       /// \param polyhedronFaceVertices the polyhedron faces vertices
       /// \param pointInsidePolyhedron a point inside polyhedron
@@ -1606,8 +1612,26 @@ namespace Gedim
       /// \param polyhedronFaces the polyhedron faces
       /// \param localFaceTriangulations the local faces triangulations indices, size 1xnumFaces x (3xnumTriangles)
       /// \return for each face the triangulation indices by first vertex, size 1xnumFaces x (3xnumTriangles)
-      vector<vector<unsigned int>> PolyhedronFaceTriangulations(const vector<Eigen::MatrixXi> polyhedronFaces,
+      vector<vector<unsigned int>> PolyhedronFaceTriangulations(const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                 const vector<vector<unsigned int>>& localFaceTriangulations) const;
+      /// \brief Polyhedron Face Triangulations by first vertex of each face
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \return for each face the triangulation indices by first vertex, size 1xnumFaces x (3xnumTriangles)
+      vector<vector<unsigned int>> PolyhedronFaceTriangulationsByFirstVertex(const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                             const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const;
+
+      /// \brief Polyhedron Face Triangulations by internal point of each face
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \return for each face the triangulation indices by first vertex, size 1xnumFaces x (3xnumTriangles)
+      /// \note the internal point index is polyhedronVertices.size()
+      vector<vector<unsigned int>> PolyhedronFaceTriangulationsByInternalPoint(const Eigen::MatrixXd& polyhedronVertices,
+                                                                               const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                               const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                               const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints) const;
+
+
       /// \brief Get Polyhedron Coordinate System
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges

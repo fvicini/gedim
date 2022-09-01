@@ -496,8 +496,8 @@ namespace Gedim
   // ***************************************************************************
   GeometryUtilities::IntersectionPolyhedronLineResult GeometryUtilities::IntersectionPolyhedronLine(const Eigen::MatrixXd& polyhedronVertices,
                                                                                                     const Eigen::MatrixXi& polyhedronEdges,
-                                                                                                    const vector<Eigen::MatrixXi> polyhedronFaces,
-                                                                                                    const vector<Eigen::Vector3d> polyhedronFaceNormals,
+                                                                                                    const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                                    const vector<Eigen::Vector3d>& polyhedronFaceNormals,
                                                                                                     const vector<bool>& polyhedronFaceNormalDirections,
                                                                                                     const Eigen::Vector3d& lineTangent,
                                                                                                     const Eigen::Vector3d& lineOrigin) const
@@ -689,8 +689,12 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
-  GeometryUtilities::IntersectionPolyhedronLineResult GeometryUtilities::IntersectionPolyhedronSegment(const Eigen::MatrixXd& polyhedronVertices, const Eigen::MatrixXi& polyhedronEdges, const vector<Eigen::MatrixXi> polyhedronFaces,
-                                                                                                       const Eigen::Vector3d& segmentOrigin, const Eigen::Vector3d& segmentEnd, const Eigen::Vector3d& segmentTangent,
+  GeometryUtilities::IntersectionPolyhedronLineResult GeometryUtilities::IntersectionPolyhedronSegment(const Eigen::MatrixXd& polyhedronVertices,
+                                                                                                       const Eigen::MatrixXi& polyhedronEdges,
+                                                                                                       const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                                       const Eigen::Vector3d& segmentOrigin,
+                                                                                                       const Eigen::Vector3d& segmentEnd,
+                                                                                                       const Eigen::Vector3d& segmentTangent,
                                                                                                        const IntersectionPolyhedronLineResult& polyhedronLineIntersections) const
   {
     IntersectionPolyhedronLineResult result;
@@ -771,8 +775,8 @@ namespace Gedim
   }
   // ***************************************************************************
   GeometryUtilities::IntersectionPolyhedronsSegmentResult GeometryUtilities::IntersectionPolyhedronsSegment(const vector<GeometryUtilities::Polyhedron>& polyhedrons,
-                                                                                                            const vector<vector<Eigen::Vector3d>> polyhedronFaceNormals,
-                                                                                                            const vector<vector<bool>> polyhedronFaceNormalDirections,
+                                                                                                            const vector<vector<Eigen::Vector3d>>& polyhedronFaceNormals,
+                                                                                                            const vector<vector<bool>>& polyhedronFaceNormalDirections,
                                                                                                             const Eigen::Vector3d& segmentOrigin,
                                                                                                             const Eigen::Vector3d& segmentEnd,
                                                                                                             const Eigen::Vector3d& segmentTangent) const
