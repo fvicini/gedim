@@ -289,6 +289,8 @@ namespace Gedim
         break;
     }
 
+    Output::Assert(vertexIndex == 4);
+
     return coordinateSystem;
   }
   // ***************************************************************************

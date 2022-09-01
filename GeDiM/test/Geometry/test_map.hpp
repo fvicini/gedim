@@ -252,8 +252,10 @@ namespace GedimUnitTesting
     points(1,7) = 7.8867513459481287e-01;
     points(2,7) = 7.8867513459481287e-01;
 
+    const vector<unsigned int> polyhedronCoordinateSystem = geometryUtilities.PolyhedronCoordinateSystem(hexa.Vertices,
+                                                                                                         hexa.Edges);
     const Gedim::MapHexahedron::MapHexahedronData mapData = mapping.Compute(hexa.Vertices,
-                                                                            hexa.Edges);
+                                                                            polyhedronCoordinateSystem);
 
     Eigen::MatrixXd mappedPoints = mapping.F(mapData,
                                              points);

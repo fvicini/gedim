@@ -6,48 +6,20 @@ using namespace std;
 
 namespace Gedim
 {
-  Eigen::MatrixXd MapHexahedron::ComputeFourVertices(const Eigen::MatrixXd& vertices,
-                                                     const Eigen::MatrixXi& edges) const
-  {
-    Eigen::MatrixXd fourVertices(3, 4);
-
-    fourVertices.col(0)<< vertices.col(0);
-    unsigned int vertexIndex = 1;
-    for(unsigned int e = 0; e < edges.cols(); e++)
-    {
-      const unsigned int& originId = edges(0, e);
-      const unsigned int& endId = edges(1, e);
-
-      bool first = (originId == 0);
-      bool second = (endId == 0);
-      if (first || second)
-      {
-        if (first)
-          fourVertices.col(vertexIndex++)<< vertices.col(endId);
-        else
-          fourVertices.col(vertexIndex++)<< vertices.col(originId);
-      }
-    }
-
-    if (vertexIndex != 4)
-      throw runtime_error("Hexaedron connectivity is not correct");
-
-    return fourVertices;
-  }
   // ***************************************************************************
   bool MapHexahedron::TestMapConfiguration(const Eigen::MatrixXd& vertices,
-                                           const Eigen::MatrixXd& fourVertices,
+                                           const vector<unsigned int>& coordinateSystem,
                                            const Eigen::MatrixXd& referencePoints,
                                            const unsigned int& secondVertexIndex,
                                            const unsigned int& thirdVertexIndex,
                                            const unsigned int& fourthVertexIndex,
                                            MapHexahedron::MapHexahedronData& result) const
   {
-    result.Q = Q(fourVertices.col(0),
-                 fourVertices.col(secondVertexIndex),
-                 fourVertices.col(thirdVertexIndex),
-                 fourVertices.col(fourthVertexIndex));
-    result.b = b(fourVertices.col(0));
+    result.Q = Q(vertices.col(coordinateSystem[0]),
+        vertices.col(coordinateSystem[secondVertexIndex]),
+        vertices.col(coordinateSystem[thirdVertexIndex]),
+        vertices.col(coordinateSystem[fourthVertexIndex]));
+    result.b = b(vertices.col(coordinateSystem[0]));
 
     return (geometryUtility.IsValue1DZero((vertices -
                                            F(result,
@@ -55,7 +27,7 @@ namespace Gedim
   }
   // ***************************************************************************
   MapHexahedron::MapHexahedronData MapHexahedron::Compute(const Eigen::MatrixXd& vertices,
-                                                          const Eigen::MatrixXi& edges) const
+                                                          const vector<unsigned int>& coordinateSystem) const
   {
     MapHexahedronData result;
 
@@ -70,58 +42,49 @@ namespace Gedim
     referencePoints.col(6)<< 1.0, 1.0, 1.0;
     referencePoints.col(7)<< 0.0, 1.0, 1.0;
 
-    Eigen::MatrixXd fourVertices = ComputeFourVertices(vertices,
-                                                       edges);
-
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              1, 2, 3,
                              result))
       return result;
 
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              1, 3, 2,
                              result))
       return result;
 
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              2, 1, 3,
                              result))
       return result;
 
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              2, 3, 1,
                              result))
       return result;
 
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              3, 1, 2,
                              result))
       return result;
 
     if (TestMapConfiguration(vertices,
-                             fourVertices,
+                             coordinateSystem,
                              referencePoints,
                              3, 2, 1,
                              result))
       return result;
 
     throw runtime_error("Hexahedron cannot be mapped");
-  }
-  // ***************************************************************************
-  MatrixXd MapHexahedron::F(const MapHexahedronData& mapData,
-                            const MatrixXd& x) const
-  {
-    return (mapData.Q * x).colwise() + mapData.b;
   }
   // ***************************************************************************
   MatrixXd MapHexahedron::J(const MapHexahedronData& mapData,

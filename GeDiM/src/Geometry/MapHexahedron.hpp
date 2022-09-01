@@ -18,11 +18,8 @@ namespace Gedim
     private:
       const GeometryUtilities& geometryUtility;
 
-      Eigen::MatrixXd ComputeFourVertices(const Eigen::MatrixXd& vertices,
-                                          const Eigen::MatrixXi& edges) const;
-
       bool TestMapConfiguration(const Eigen::MatrixXd& vertices,
-                                const Eigen::MatrixXd& fourVertices,
+                                const vector<unsigned int>& coordinateSystem,
                                 const Eigen::MatrixXd& referencePoints,
                                 const unsigned int& secondVertexIndex,
                                 const unsigned int& thirdVertexIndex,
@@ -63,14 +60,15 @@ namespace Gedim
       /// \param edges the hexahedron edges
       /// \return the map data
       MapHexahedronData Compute(const Eigen::MatrixXd& vertices,
-                                const Eigen::MatrixXi& edges) const;
+                                const vector<unsigned int>& coordinateSystem) const;
 
       /// Map from the Hexahedron reference element [0,1]x[0,1]x[0,1] to the polygon x = F(x_r) = Q * x_r + b
       /// \param mapData the map data computed
       /// \param x points in reference Hexahedron, size 3 x numPoints
       /// \return the mapped points, size 3 x numPoints
-      Eigen::MatrixXd F(const MapHexahedronData& mapData,
-                        const Eigen::MatrixXd& x) const;
+      inline Eigen::MatrixXd F(const MapHexahedronData& mapData,
+                               const Eigen::MatrixXd& x) const
+      { return (mapData.Q * x).colwise() + mapData.b; }
       /// Compute the jacobian matrix of the transformation F
       /// \param mapData the map data computed
       /// \param x points in reference Hexahedron, size 3 x numPoints
