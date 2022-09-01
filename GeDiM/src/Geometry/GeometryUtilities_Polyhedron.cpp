@@ -356,10 +356,10 @@ namespace Gedim
     return vector<unsigned int>(tetrahedronList.begin(), tetrahedronList.end());
   }
   // ***************************************************************************
-  vector<unsigned int> GeometryUtilities::PolyhedronTetrahedronsByFaceTriangulationsByInternalPoint(const Eigen::MatrixXd& polyhedronVertices,
-                                                                                                    const vector<vector<unsigned int> >& faceTriangulations,
-                                                                                                    const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
-                                                                                                    const Eigen::Vector3d& polyhedronInternalPoint)
+  vector<unsigned int> GeometryUtilities::PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
+                                                                                     const vector<vector<unsigned int> >& faceTriangulations,
+                                                                                     const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
+                                                                                     const Eigen::Vector3d& polyhedronInternalPoint)
   {
     list<unsigned int> tetrahedronList;
 
@@ -379,6 +379,45 @@ namespace Gedim
     Output::Assert(tetrahedronList.size() % 4 == 0);
 
     return vector<unsigned int>(tetrahedronList.begin(), tetrahedronList.end());
+  }
+  // ***************************************************************************
+  vector<MatrixXd> GeometryUtilities::ExtractTetrahedronPoints(const Eigen::MatrixXd& polyhedronVertices,
+                                                               const Eigen::Vector3d& polyhedronInternalPoint,
+                                                               const vector<unsigned int>& pointTetrahedrons) const
+  {
+    const unsigned int numTetra = pointTetrahedrons.size() / 4;
+    vector<MatrixXd> tetra(numTetra, Eigen::MatrixXd::Zero(3, 4));
+
+    for (unsigned int t = 0; t < numTetra; t++)
+    {
+      Eigen::MatrixXd& tetraVertices = tetra[t];
+      tetraVertices.col(0)<< polyhedronVertices.col(pointTetrahedrons[4 * t]);
+      tetraVertices.col(1)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 1]);
+      tetraVertices.col(2)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 2]);
+      tetraVertices.col(3)<< polyhedronInternalPoint;
+    }
+
+    return tetra;
+  }
+  // ***************************************************************************
+  vector<MatrixXd> GeometryUtilities::ExtractTetrahedronPoints(const Eigen::MatrixXd& polyhedronVertices,
+                                                               const Eigen::Vector3d& polyhedronInternalPoint,
+                                                               const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
+                                                               const vector<unsigned int>& pointTetrahedrons) const
+  {
+    const unsigned int numTetra = pointTetrahedrons.size() / 4;
+    vector<MatrixXd> tetra(numTetra, Eigen::MatrixXd::Zero(3, 4));
+
+    for (unsigned int t = 0; t < numTetra; t++)
+    {
+      Eigen::MatrixXd& tetraVertices = tetra[t];
+      tetraVertices.col(0)<< polyhedronFaceInternalPoints[pointTetrahedrons[4 * t] - polyhedronVertices.size()];
+      tetraVertices.col(1)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 1]);
+      tetraVertices.col(2)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 2]);
+      tetraVertices.col(3)<< polyhedronInternalPoint;
+    }
+
+    return tetra;
   }
   // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolyhedronCoordinateSystem(const Eigen::MatrixXd& polyhedronVertices,

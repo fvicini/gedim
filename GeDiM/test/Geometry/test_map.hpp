@@ -10,7 +10,7 @@
 #include "MapTetrahedron.hpp"
 #include "MapHexahedron.hpp"
 #include "Eigen/Eigen"
-#include "VTPUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 using namespace testing;
 using namespace std;

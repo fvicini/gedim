@@ -15,7 +15,7 @@
 #include "test_unionMeshSegment.hpp"
 #include "test_conformMesh.hpp"
 #include "test_export_conformMesh.hpp"
-#include "test_VTPUtilities.hpp"
+#include "test_VTKUtilities.hpp"
 #include "test_Quadrature1D.hpp"
 #include "test_Quadrature2D.hpp"
 #include "test_Quadrature3D.hpp"

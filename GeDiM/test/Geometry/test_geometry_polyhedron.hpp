@@ -6,6 +6,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "GeometryUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 using namespace testing;
 using namespace std;
@@ -747,20 +748,21 @@ namespace GedimUnitTesting
                                                                                                                                            cube.Faces,
                                                                                                                                            faceVertices,
                                                                                                                                            faceBarycenters);
-
-        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulations(cube.Vertices,
-                                                                             faceTriangulations,
-                                                                             polyhedronBarycenter),
+        const vector<unsigned int> tetrahedronList = geometryUtility.PolyhedronTetrahedronsByFaceTriangulations(cube.Vertices,
+                                                                                                                faceTriangulations,
+                                                                                                                polyhedronBarycenter);
+        const vector<unsigned int> tetrahedronByInternalPointsList = geometryUtility.PolyhedronTetrahedronsByFaceTriangulations(cube.Vertices,
+                                                                                                                                faceTriangulationsByInternalPoint,
+                                                                                                                                faceBarycenters,
+                                                                                                                                polyhedronBarycenter);
+        ASSERT_EQ(tetrahedronList,
                   vector<unsigned int>({ 0,1,2,8,0,2,3,8,
                                          4,5,6,8,4,6,7,8,
                                          0,3,7,8,0,7,4,8,
                                          1,2,6,8,1,6,5,8,
                                          0,1,5,8,0,5,4,8,
                                          3,2,6,8,3,6,7,8 }));
-        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulationsByInternalPoint(cube.Vertices,
-                                                                                            faceTriangulationsByInternalPoint,
-                                                                                            faceBarycenters,
-                                                                                            polyhedronBarycenter),
+        ASSERT_EQ(tetrahedronByInternalPointsList,
                   vector<unsigned int>({
                                          8 ,0,1,14,8 ,1,2,14,8 ,2,3,14,8 ,3,0,14,
                                          9 ,4,5,14,9 ,5,6,14,9 ,6,7,14,9 ,7,4,14,
@@ -769,6 +771,73 @@ namespace GedimUnitTesting
                                          12,0,1,14,12,1,5,14,12,5,4,14,12,4,0,14,
                                          13,3,2,14,13,2,6,14,13,6,7,14,13,7,3,14
                                        }));
+        // Export tetrahedrons
+        std::string exportFolder = "./Export/TestPolyhedronTetrahedrons";
+        Gedim::Output::CreateFolder(exportFolder);
+
+        {
+          vector<Eigen::MatrixXd> tetrahedrons = geometryUtility.ExtractTetrahedronPoints(cube.Vertices,
+                                                                                          polyhedronBarycenter,
+                                                                                          tetrahedronList);
+
+          Gedim::VTKUtilities vtkExperter;
+          for (unsigned int t = 0; t < tetrahedrons.size(); t++)
+          {
+            Gedim::GeometryUtilities::Polyhedron subTetra = geometryUtility.CreateTetrahedronWithVertices(tetrahedrons[t].col(0),
+                                                                                                          tetrahedrons[t].col(1),
+                                                                                                          tetrahedrons[t].col(2),
+                                                                                                          tetrahedrons[t].col(3));
+            vector<double> id(subTetra.Faces.size(), t);
+
+            vtkExperter.AddPolyhedron(subTetra.Vertices,
+                                      subTetra.Edges,
+                                      subTetra.Faces,
+                                      {
+                                        {
+                                          "Id",
+                                          Gedim::VTPProperty::Formats::Cells,
+                                          static_cast<unsigned int>(id.size()),
+                                          id.data()
+                                        }
+                                      });
+          }
+
+          vtkExperter.Export(exportFolder + "/Cube_Tetra_1.vtu",
+                             Gedim::VTKUtilities::Ascii);
+        }
+
+        {
+          vector<Eigen::MatrixXd> tetrahedrons = geometryUtility.ExtractTetrahedronPoints(cube.Vertices,
+                                                                                          polyhedronBarycenter,
+                                                                                          faceBarycenters,
+                                                                                          tetrahedronList);
+
+          Gedim::VTKUtilities vtkExperter;
+          for (unsigned int t = 0; t < tetrahedrons.size(); t++)
+          {
+            Gedim::GeometryUtilities::Polyhedron subTetra = geometryUtility.CreateTetrahedronWithVertices(tetrahedrons[t].col(0),
+                                                                                                          tetrahedrons[t].col(1),
+                                                                                                          tetrahedrons[t].col(2),
+                                                                                                          tetrahedrons[t].col(3));
+            vector<double> id(subTetra.Faces.size(), t);
+
+            vtkExperter.AddPolyhedron(subTetra.Vertices,
+                                      subTetra.Edges,
+                                      subTetra.Faces,
+                                      {
+                                        {
+                                          "Id",
+                                          Gedim::VTPProperty::Formats::Cells,
+                                          static_cast<unsigned int>(id.size()),
+                                          id.data()
+                                        }
+                                      });
+          }
+
+          vtkExperter.Export(exportFolder + "/Cube_Tetra_2.vtu",
+                             Gedim::VTKUtilities::Ascii);
+        }
+
       }
 
       // check tetrahedron face triangulations
@@ -796,10 +865,10 @@ namespace GedimUnitTesting
                                          0,1,3,4,
                                          0,2,3,4,
                                          1,2,3,4 }));
-        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulationsByInternalPoint(tetrahedron.Vertices,
-                                                                                            faceTriangulationsByInternalPoint,
-                                                                                            faceBarycenters,
-                                                                                            polyhedronBarycenter),
+        ASSERT_EQ(geometryUtility.PolyhedronTetrahedronsByFaceTriangulations(tetrahedron.Vertices,
+                                                                             faceTriangulationsByInternalPoint,
+                                                                             faceBarycenters,
+                                                                             polyhedronBarycenter),
                   vector<unsigned int>({ 4,0,1,8,4,1,2,8,4,2,0,8,
                                          5,0,1,8,5,1,3,8,5,3,0,8,
                                          6,0,2,8,6,2,3,8,6,3,0,8,

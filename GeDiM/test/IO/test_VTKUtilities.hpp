@@ -10,7 +10,7 @@
 #include "GeometryUtilities.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "IOUtilities.hpp"
-#include "VTPUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 namespace GedimUnitTesting
 {

@@ -1,7 +1,7 @@
 #include "MeshUtilities.hpp"
 
 #include "TriangleInterface.hpp"
-#include "VTPUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 using namespace Eigen;
 
@@ -330,8 +330,7 @@ namespace Gedim
       for (unsigned int cct = 0; cct < numConvexCell2DTriangulation; cct++)
       {
         convexCell2DTriangulationAreas[cct] = geometryUtilities.PolygonArea(convexCell2DTriangulationPoints[cct]);
-        convexCell2DTriangulationCentroids.col(cct) = geometryUtilities.PolygonCentroid(convexCell2DTriangulationPoints[cct],
-                                                                                        convexCell2DTriangulationAreas[cct]);
+        convexCell2DTriangulationCentroids.col(cct) = geometryUtilities.PolygonBarycenter(convexCell2DTriangulationPoints[cct]);
       }
 
       convexCell2DArea = convexCell2DTriangulationAreas.sum();

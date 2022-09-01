@@ -1,4 +1,4 @@
-#include "VTPUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 #include "IOUtilities.hpp"
 #include "CommonUtilities.hpp"

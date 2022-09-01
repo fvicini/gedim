@@ -6,7 +6,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "GeometryUtilities.hpp"
-#include "VTPUtilities.hpp"
+#include "VTKUtilities.hpp"
 
 using namespace testing;
 using namespace std;
