@@ -408,13 +408,21 @@ namespace Gedim
     const unsigned int numTetra = pointTetrahedrons.size() / 4;
     vector<MatrixXd> tetra(numTetra, Eigen::MatrixXd::Zero(3, 4));
 
+    const unsigned int numPolyhedronVertices = polyhedronVertices.cols();
     for (unsigned int t = 0; t < numTetra; t++)
     {
       Eigen::MatrixXd& tetraVertices = tetra[t];
-      tetraVertices.col(0)<< polyhedronFaceInternalPoints[pointTetrahedrons[4 * t] - polyhedronVertices.size()];
+
+      tetraVertices.col(0)<< polyhedronFaceInternalPoints[pointTetrahedrons[4 * t] - numPolyhedronVertices];
       tetraVertices.col(1)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 1]);
       tetraVertices.col(2)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 2]);
       tetraVertices.col(3)<< polyhedronInternalPoint;
+
+      cerr.precision(4);
+      cerr<< scientific<< tetraVertices.col(0).transpose()<< endl;
+      cerr<< scientific<< tetraVertices.col(1).transpose()<< endl;
+      cerr<< scientific<< tetraVertices.col(2).transpose()<< endl;
+      cerr<< scientific<< tetraVertices.col(3).transpose()<< endl;
     }
 
     return tetra;
