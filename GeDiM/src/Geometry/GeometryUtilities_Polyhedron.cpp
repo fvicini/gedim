@@ -268,4 +268,28 @@ namespace Gedim
     return faceDirections;
   }
   // ***************************************************************************
+  vector<unsigned int> GeometryUtilities::PolyhedronCoordinateSystem(const Eigen::MatrixXd& polyhedronVertices,
+                                                                     const Eigen::MatrixXi& polyhedronEdges)
+  {
+    vector<unsigned int> coordinateSystem(4);
+
+    coordinateSystem[0] = 0;
+    unsigned int vertexIndex = 1;
+    for(unsigned int e = 0; e < polyhedronEdges.cols(); e++)
+    {
+      const unsigned int& originId = polyhedronEdges(0, e);
+      const unsigned int& endId = polyhedronEdges(1, e);
+
+      bool first = (originId == 0);
+      bool second = (endId == 0);
+      if (first || second)
+        coordinateSystem[vertexIndex++] = first ? endId : originId;
+
+      if (vertexIndex == 4)
+        break;
+    }
+
+    return coordinateSystem;
+  }
+  // ***************************************************************************
 }

@@ -1602,6 +1602,13 @@ namespace Gedim
       vector<bool> PolyhedronFaceNormalDirections(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                   const Eigen::Vector3d& pointInsidePolyhedron,
                                                   const vector<Eigen::Vector3d>& polyhedronFaceNormals) const;
+
+      /// \brief Get Polyhedron Coordinate System
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
+      /// \return the four vertices indices forming a coordinate system for the polyhedron, size 1x4
+      vector<unsigned int> PolyhedronCoordinateSystem(const Eigen::MatrixXd& polyhedronVertices,
+                                                      const Eigen::MatrixXi& polyhedronEdges);
   };
 }
 

@@ -553,6 +553,43 @@ namespace GedimUnitTesting
       FAIL();
     }
   }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronCoordinateSystem)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube coordinate system
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+
+        ASSERT_EQ(geometryUtility.PolyhedronCoordinateSystem(cube.Vertices,
+                                                             cube.Edges),
+                  vector<unsigned int>({ 0, 1, 3, 4 }));
+      }
+
+      // check tetrahedron face normals
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+        ASSERT_EQ(geometryUtility.PolyhedronCoordinateSystem(tetrahedron.Vertices,
+                                                             tetrahedron.Edges),
+                  vector<unsigned int>({ 0, 1, 2, 3 }));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
 }
 
 #endif // __TEST_GEOMETRY_POLYHEDRON_H
