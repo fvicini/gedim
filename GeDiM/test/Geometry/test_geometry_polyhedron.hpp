@@ -651,7 +651,7 @@ namespace GedimUnitTesting
       Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
       Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
 
-      // check cube coordinate system
+      // check cube face triangulations
       {
         const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
                                                                                                          Eigen::Vector3d(1.0,0.0,0.0),
@@ -659,6 +659,8 @@ namespace GedimUnitTesting
                                                                                                          Eigen::Vector3d(0.0,1.0,0.0));
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
                                                                                             cube.Faces);
+        const vector<Eigen::Vector3d> faceBarycenters = geometryUtility.PolyhedronFaceBarycenter(faceVertices);
+
         ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByFirstVertex(cube.Faces,
                                                                             faceVertices),
                   vector<vector<unsigned int>>({
@@ -669,9 +671,21 @@ namespace GedimUnitTesting
                                                  vector<unsigned int>({ 0,1,5,0,5,4 }),
                                                  vector<unsigned int>({ 3,2,6,3,6,7 })
                                                }));
+        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByInternalPoint(cube.Vertices,
+                                                                              cube.Faces,
+                                                                              faceVertices,
+                                                                              faceBarycenters),
+                  vector<vector<unsigned int>>({
+                                                 vector<unsigned int>({ 8,0,1,8,1,2,8,2,3,8,3,0 }),
+                                                 vector<unsigned int>({ 8,4,5,8,5,6,8,6,7,8,7,4 }),
+                                                 vector<unsigned int>({ 8,0,3,8,3,7,8,7,4,8,4,0 }),
+                                                 vector<unsigned int>({ 8,1,2,8,2,6,8,6,5,8,5,1 }),
+                                                 vector<unsigned int>({ 8,0,1,8,1,5,8,5,4,8,4,0 }),
+                                                 vector<unsigned int>({ 8,3,2,8,2,6,8,6,7,8,7,3 })
+                                               }));
       }
 
-      // check tetrahedron face normals
+      // check tetrahedron face triangulations
       {
         const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
                                                                                                              Eigen::Vector3d(1.0,0.0,0.0),
@@ -680,6 +694,7 @@ namespace GedimUnitTesting
 
         const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
                                                                                             tetrahedron.Faces);
+        const vector<Eigen::Vector3d> faceBarycenters = geometryUtility.PolyhedronFaceBarycenter(faceVertices);
 
         ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByFirstVertex(tetrahedron.Faces,
                                                                             faceVertices),
@@ -688,6 +703,16 @@ namespace GedimUnitTesting
                                                  vector<unsigned int>({ 0,1,3 }),
                                                  vector<unsigned int>({ 0,2,3 }),
                                                  vector<unsigned int>({ 1,2,3 })
+                                               }));
+        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulationsByInternalPoint(tetrahedron.Vertices,
+                                                                              tetrahedron.Faces,
+                                                                              faceVertices,
+                                                                              faceBarycenters),
+                  vector<vector<unsigned int>>({
+                                                 vector<unsigned int>({ 4,0,1,4,1,2,4,2,0 }),
+                                                 vector<unsigned int>({ 4,0,1,4,1,3,4,3,0 }),
+                                                 vector<unsigned int>({ 4,0,2,4,2,3,4,3,0 }),
+                                                 vector<unsigned int>({ 4,1,2,4,2,3,4,3,1 })
                                                }));
 
       }
