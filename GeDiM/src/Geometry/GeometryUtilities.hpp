@@ -1630,7 +1630,25 @@ namespace Gedim
                                                                                const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                                const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                                                const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints) const;
+      /// \brief Polyhedron Tetrahedrons By Face Triangulations
+      /// \param faceTriangulations the triangulation on face vertices
+      /// \param polyhedronInternalPoint a polyhedron internal point
+      /// \return the polyhedron tetrahedrons indices, size 1x(4*numTetrahedrons)
+      /// \note the polyhedron internal point index is polyhedronVertices.size() + f
+      vector<unsigned int> PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
+                                                                      const vector<vector<unsigned int>>& faceTriangulations,
+                                                                      const Eigen::Vector3d& polyhedronInternalPoint);
 
+      /// \brief Polyhedron Tetrahedrons By Face Triangulations
+      /// \param faceTriangulations the triangulation on face vertices by internal points
+      /// \param polyhedronInternalPoint a polyhedron internal point
+      /// \return the polyhedron tetrahedrons indices, size 1x(4*numTetrahedrons)
+      /// \note the polyhedron face internal points are polyhedronVertices.size() + f
+      /// \note the polyhedron internal point index is polyhedronVertices.size() + polyhedronFaceInternalPoints.size()
+      vector<unsigned int> PolyhedronTetrahedronsByFaceTriangulationsByInternalPoint(const Eigen::MatrixXd& polyhedronVertices,
+                                                                                     const vector<vector<unsigned int>>& faceTriangulations,
+                                                                                     const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
+                                                                                     const Eigen::Vector3d& polyhedronInternalPoint);
 
       /// \brief Get Polyhedron Coordinate System
       /// \param polyhedronVertices the polyhedron vertices
