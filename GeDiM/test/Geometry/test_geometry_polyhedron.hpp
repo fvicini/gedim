@@ -590,6 +590,68 @@ namespace GedimUnitTesting
       FAIL();
     }
   }
+
+  TEST(TestGeometryUtilities, TestPolyhedron_TestPolyhedronFaceTriangulations)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      // check cube coordinate system
+      {
+        const Gedim::GeometryUtilities::Polyhedron cube = geometryUtility.CreateParallelepipedWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                         Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                         Eigen::Vector3d(0.0,1.0,0.0));
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(cube.Vertices,
+                                                                                            cube.Faces);
+        vector<vector<unsigned int>> localFacesTriangulations(cube.Faces.size());
+        for (unsigned int f = 0; f < cube.Faces.size(); f++)
+          localFacesTriangulations[f] = geometryUtility.PolygonTriangulationByFirstVertex(faceVertices[f]);
+
+        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulations(cube.Faces,
+                                                               localFacesTriangulations),
+                  vector<vector<unsigned int>>({
+                                                 vector<unsigned int>({ 0,1,2,0,2,3 }),
+                                                 vector<unsigned int>({ 4,5,6,4,6,7 }),
+                                                 vector<unsigned int>({ 0,3,7,0,7,4 }),
+                                                 vector<unsigned int>({ 1,2,6,1,6,5 }),
+                                                 vector<unsigned int>({ 0,1,5,0,5,4 }),
+                                                 vector<unsigned int>({ 3,2,6,3,6,7 })
+                                               }));
+      }
+
+      // check tetrahedron face normals
+      {
+        const Gedim::GeometryUtilities::Polyhedron tetrahedron = geometryUtility.CreateTetrahedronWithOrigin(Eigen::Vector3d(0.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(1.0,0.0,0.0),
+                                                                                                             Eigen::Vector3d(0.0,0.0,1.0),
+                                                                                                             Eigen::Vector3d(0.0,1.0,0.0));
+
+        const vector<Eigen::MatrixXd> faceVertices = geometryUtility.PolyhedronFaceVertices(tetrahedron.Vertices,
+                                                                                            tetrahedron.Faces);
+        vector<vector<unsigned int>> localFacesTriangulations(tetrahedron.Faces.size());
+        for (unsigned int f = 0; f < tetrahedron.Faces.size(); f++)
+          localFacesTriangulations[f] = geometryUtility.PolygonTriangulationByFirstVertex(faceVertices[f]);
+
+        ASSERT_EQ(geometryUtility.PolyhedronFaceTriangulations(tetrahedron.Faces,
+                                                               localFacesTriangulations),
+                  vector<vector<unsigned int>>({
+                                                 vector<unsigned int>({ 0,1,2 }),
+                                                 vector<unsigned int>({ 0,1,3 }),
+                                                 vector<unsigned int>({ 0,2,3 }),
+                                                 vector<unsigned int>({ 1,2,3 })
+                                               }));
+
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
 }
 
 #endif // __TEST_GEOMETRY_POLYHEDRON_H

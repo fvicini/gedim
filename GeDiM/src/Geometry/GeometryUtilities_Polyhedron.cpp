@@ -268,6 +268,25 @@ namespace Gedim
     return faceDirections;
   }
   // ***************************************************************************
+  vector<vector<unsigned int> > GeometryUtilities::PolyhedronFaceTriangulations(const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                                const vector<vector<unsigned int>>& localFaceTriangulations) const
+  {
+    vector<vector<unsigned int>> facesTriangulation(polyhedronFaces.size());
+
+    for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
+    {
+      vector<unsigned int>& faceTriangulation = facesTriangulation[f];
+
+      vector<unsigned int> faceLocalTriangulation = localFaceTriangulations[f];
+      faceTriangulation.resize(faceLocalTriangulation.size());
+
+      for (unsigned int v = 0; v < faceLocalTriangulation.size(); v++)
+        faceTriangulation[v] = polyhedronFaces[f](0, faceLocalTriangulation[v]);
+    }
+
+    return facesTriangulation;
+  }
+  // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolyhedronCoordinateSystem(const Eigen::MatrixXd& polyhedronVertices,
                                                                      const Eigen::MatrixXi& polyhedronEdges)
   {

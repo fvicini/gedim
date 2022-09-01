@@ -146,8 +146,8 @@ namespace Gedim
     return triangulations;
   }
   // ***************************************************************************
-  vector<Matrix3d> GeometryUtilities::ExtractTriangulationPointsByExternalPoint(const Eigen::MatrixXd& points,
-                                                                                const Eigen::Vector3d& externalPoint,
+  vector<Matrix3d> GeometryUtilities::ExtractTriangulationPointsByInternalPoint(const Eigen::MatrixXd& points,
+                                                                                const Eigen::Vector3d& internalPoint,
                                                                                 const vector<unsigned int>& pointsTriangulation) const
   {
     const unsigned int numTriangles = pointsTriangulation.size() / 3;
@@ -156,7 +156,7 @@ namespace Gedim
     for (unsigned int t = 0; t < numTriangles; t++)
     {
       Eigen::Matrix3d& triangleVertices = triangulations[t];
-      triangleVertices.col(0)<< externalPoint;
+      triangleVertices.col(0)<< internalPoint;
       triangleVertices.col(1)<< points.col(pointsTriangulation[3 * t + 1]);
       triangleVertices.col(2)<< points.col(pointsTriangulation[3 * t + 2]);
     }

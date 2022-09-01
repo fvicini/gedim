@@ -1457,8 +1457,8 @@ namespace Gedim
       /// \param externalPoint the external point coordinates
       /// \param pointsTriangulation the polygon sub-division triangulation, size 1 x 3 * numTriangles
       /// \return the triangles coordinates, size 1 x numTriangles
-      vector<Eigen::Matrix3d> ExtractTriangulationPointsByExternalPoint(const Eigen::MatrixXd& points,
-                                                                        const Eigen::Vector3d& externalPoint,
+      vector<Eigen::Matrix3d> ExtractTriangulationPointsByInternalPoint(const Eigen::MatrixXd& points,
+                                                                        const Eigen::Vector3d& internalPoint,
                                                                         const vector<unsigned int>& pointsTriangulation) const;
       /// \brief Create a triangle with points
       Eigen::MatrixXd CreateTriangle(const Eigen::Vector3d& p1,
@@ -1602,7 +1602,12 @@ namespace Gedim
       vector<bool> PolyhedronFaceNormalDirections(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                   const Eigen::Vector3d& pointInsidePolyhedron,
                                                   const vector<Eigen::Vector3d>& polyhedronFaceNormals) const;
-
+      /// \brief Polyhedron Face Triangulations of each face
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param localFaceTriangulations the local faces triangulations indices, size 1xnumFaces x (3xnumTriangles)
+      /// \return for each face the triangulation indices by first vertex, size 1xnumFaces x (3xnumTriangles)
+      vector<vector<unsigned int>> PolyhedronFaceTriangulations(const vector<Eigen::MatrixXi> polyhedronFaces,
+                                                                const vector<vector<unsigned int>>& localFaceTriangulations) const;
       /// \brief Get Polyhedron Coordinate System
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges
