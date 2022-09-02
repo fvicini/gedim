@@ -1,0 +1,17 @@
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_mesh.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_meshUtilities.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_intersectorMesh2DSegment.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_unionMeshSegment.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_conformMesh.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/test_export_conformMesh.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshMatrices_2D_1Cells_Mock.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshMatrices_2D_2Cells_Mock.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshMatrices_2D_4Cells_Mock.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MeshMatrices_2D_26Cells_Mock.hpp)
+list(APPEND gedim_test_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/MashMatrices_2D_CleanTest_Mock.hpp)
+
+list(APPEND gedim_test_src_includes ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(gedim_test_src_sources ${gedim_test_src_sources} PARENT_SCOPE)
+set(gedim_test_src_headers ${gedim_test_src_headers} PARENT_SCOPE)
+set(gedim_test_src_includes ${gedim_test_src_includes} PARENT_SCOPE)
