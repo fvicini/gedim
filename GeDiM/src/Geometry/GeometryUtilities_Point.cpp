@@ -158,6 +158,44 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
+  GeometryUtilities::PointPolyhedronPositionResult GeometryUtilities::PointPolyhedronPosition(const Eigen::Vector3d& point,
+                                                                                              const Eigen::MatrixXd& polyhedronVertices,
+                                                                                              const Eigen::MatrixXi& polyhedronEdges,
+                                                                                              const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                              const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                              const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                                                              const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const
+  {
+    PointPolyhedronPositionResult result;
+
+    for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
+    {
+      const Eigen::MatrixXd& faceVertices = polyhedronFaceVertices[f];
+      const Eigen::MatrixXd faceVertices2D = RotatePointsFrom3DTo2D(faceVertices,
+                                                                    polyhedronFaceRotationMatrices[f],
+                                                                    polyhedronFaceTranslations[f]);
+
+      PointPolygonPositionResult pointFacePosition = PointPolygonPosition(point,
+                                                                          faceVertices);
+
+      switch (pointFacePosition.Type)
+      {
+        case PointPolygonPositionResult::Types::BorderVertex:
+        {
+          result.Type = PointPolyhedronPositionResult::Types::BorderVertex;
+          result.BorderIndex = polyhedronFaces[f](0, pointFacePosition.BorderIndex);
+          return result;
+        }
+
+        default:
+          break;
+      }
+    }
+
+    result.Type = GeometryUtilities::PointPolyhedronPositionResult::Types::Inside;
+    return result;
+  }
+  // ***************************************************************************
   GeometryUtilities::PointCirclePositionResult GeometryUtilities::PointCirclePosition(const Eigen::Vector3d& point,
                                                                                       const Eigen::Vector3d& circleCenter,
                                                                                       const double& circleRadius) const

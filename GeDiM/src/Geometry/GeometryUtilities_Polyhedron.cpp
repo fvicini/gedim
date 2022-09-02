@@ -417,12 +417,6 @@ namespace Gedim
       tetraVertices.col(1)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 1]);
       tetraVertices.col(2)<< polyhedronVertices.col(pointTetrahedrons[4 * t + 2]);
       tetraVertices.col(3)<< polyhedronInternalPoint;
-
-      cerr.precision(4);
-      cerr<< scientific<< tetraVertices.col(0).transpose()<< endl;
-      cerr<< scientific<< tetraVertices.col(1).transpose()<< endl;
-      cerr<< scientific<< tetraVertices.col(2).transpose()<< endl;
-      cerr<< scientific<< tetraVertices.col(3).transpose()<< endl;
     }
 
     return tetra;

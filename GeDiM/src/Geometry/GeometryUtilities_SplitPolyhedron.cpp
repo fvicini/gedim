@@ -333,7 +333,7 @@ namespace Gedim
     }
 
     Eigen::MatrixXd pointsOnPlane2D = RotatePointsFrom3DTo2D(pointsOnPlane3D,
-                                                             planeRotationMatrix,
+                                                             planeRotationMatrix.transpose(),
                                                              planeTranslation);
 
     vector<unsigned int> convexHull = ConvexHull(pointsOnPlane2D);
@@ -555,19 +555,19 @@ namespace Gedim
       }
     }
 
-    //    cerr<< "RESULT"<< endl;
-    //    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
-    //    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
-    //    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
-    //    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
-    //    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
-    //    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
-    //    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
-    //    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
+//    cerr<< "RESULT"<< endl;
+//    cerr<< "**> result.Vertices.Vertices:\n"<< result.Vertices.Vertices<< endl;
+//    cerr<< "**> result.Vertices.NewVerticesOriginalEdge:\n"<< result.Vertices.NewVerticesOriginalEdge<< endl;
+//    cerr<< "**> result.Edges.Edges:\n"<< result.Edges.Edges<< endl;
+//    cerr<< "**> result.Edges.NewEdgesOriginalEdges:\n"<< result.Edges.NewEdgesOriginalEdges<< endl;
+//    cerr<< "**> result.Faces.Faces:\n"<< result.Faces.Faces<< endl;
+//    cerr<< "**> result.Faces.NewFacesOriginalFaces:\n"<< result.Faces.NewFacesOriginalFaces<< endl;
+//    cerr<< "**> result.PositivePolyhedron.Vertices:\n"<< result.PositivePolyhedron.Vertices<< endl;
+//    cerr<< "**> result.PositivePolyhedron.Edges:\n"<< result.PositivePolyhedron.Edges<< endl;
+//    cerr<< "**> result.PositivePolyhedron.Faces:\n"<< result.PositivePolyhedron.Faces<< endl;
+//    cerr<< "**> result.NegativePolyhedron.Vertices:\n"<< result.NegativePolyhedron.Vertices<< endl;
+//    cerr<< "**> result.NegativePolyhedron.Edges:\n"<< result.NegativePolyhedron.Edges<< endl;
+//    cerr<< "**> result.NegativePolyhedron.Faces:\n"<< result.NegativePolyhedron.Faces<< endl;
 
     return result;
   }

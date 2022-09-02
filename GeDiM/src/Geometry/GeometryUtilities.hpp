@@ -536,6 +536,22 @@ namespace Gedim
           Types Type = Types::Unknown;
       };
 
+      struct PointPolyhedronPositionResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            Outside = 1,
+            BorderFace = 2,
+            BorderEdge = 3,
+            BorderVertex = 4,
+            Inside = 5
+          };
+
+          unsigned int BorderIndex = 0; ///< index of vertex/edge/face of border
+          Types Type = Types::Unknown;
+      };
+
       struct Polyhedron final
       {
           Eigen::MatrixXd Vertices; ///< vertices, size 3 x numVertices
@@ -1068,6 +1084,18 @@ namespace Gedim
       PointPolygonPositionResult PointPolygonPosition(const Eigen::Vector3d& point,
                                                       const Eigen::MatrixXd& polygonVertices) const;
 
+      /// \brief Check if point is inside a polygon
+      /// \param point the point
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \param result the resulting position
+      PointPolyhedronPositionResult PointPolyhedronPosition(const Eigen::Vector3d& point,
+                                                            const Eigen::MatrixXd& polyhedronVertices,
+                                                            const Eigen::MatrixXi& polyhedronEdges,
+                                                            const vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                            const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                            const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                            const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const;
+
       /// \brief Check if point is inside a circle
       /// \param point the point
       /// \param circleCenter the circle center
@@ -1580,7 +1608,7 @@ namespace Gedim
 
       /// \brief Compute Polyhedron Faces Rotation matrix
       /// \param polyhedronFaceVertices the polyhedron faces vertices
-      /// \return for each polyhedron face the rotation matrix
+      /// \return for each polyhedron face the rotation matrix from 2D to 3D
       vector<Eigen::Matrix3d> PolyhedronFaceRotationMatrices(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                              const vector<Eigen::Vector3d>& polyhedronFaceNormals,
                                                              const vector<Eigen::Vector3d>& polyhedronFaceTranslations) const;
