@@ -1089,10 +1089,10 @@ namespace Gedim
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
       /// \param result the resulting position
       PointPolyhedronPositionResult PointPolyhedronPosition(const Eigen::Vector3d& point,
-                                                            const Eigen::MatrixXd& polyhedronVertices,
-                                                            const Eigen::MatrixXi& polyhedronEdges,
                                                             const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                             const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                            const vector<Eigen::Vector3d>& polyhedronFaceNormals,
+                                                            const vector<bool>& polyhedronFaceNormalDirections,
                                                             const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
                                                             const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const;
 

@@ -113,7 +113,7 @@ namespace Gedim
   GeometryUtilities::PointPolygonPositionResult GeometryUtilities::PointPolygonPosition(const Vector3d& point,
                                                                                         const MatrixXd& polygonVertices) const
   {
-    Output::Assert(point.rows() == 3 && point.cols() > 0 && PointsAre2D(point));
+    Output::Assert(polygonVertices.cols() > 2 && PointsAre2D(point));
 
     GeometryUtilities::PointPolygonPositionResult result;
 
@@ -159,24 +159,48 @@ namespace Gedim
   }
   // ***************************************************************************
   GeometryUtilities::PointPolyhedronPositionResult GeometryUtilities::PointPolyhedronPosition(const Eigen::Vector3d& point,
-                                                                                              const Eigen::MatrixXd& polyhedronVertices,
-                                                                                              const Eigen::MatrixXi& polyhedronEdges,
                                                                                               const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                                               const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                              const vector<Eigen::Vector3d>& polyhedronFaceNormals,
+                                                                                              const vector<bool>& polyhedronFaceNormalDirections,
                                                                                               const vector<Eigen::Vector3d>& polyhedronFaceTranslations,
                                                                                               const vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const
   {
     PointPolyhedronPositionResult result;
 
+    unsigned int negativeFacePositions = 0;
     for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
     {
       const Eigen::MatrixXd& faceVertices = polyhedronFaceVertices[f];
+      const double faceOutgoingNormal = polyhedronFaceNormalDirections[f] ? 1.0 : -1.0;
+
+      const PointPlanePositionTypes pointFacePlanePosition = PointPlanePosition(point,
+                                                                                faceOutgoingNormal * polyhedronFaceNormals[f],
+                                                                                faceVertices.col(0));
+
+      switch (pointFacePlanePosition)
+      {
+        case PointPlanePositionTypes::Positive:
+          continue;
+        case PointPlanePositionTypes::Negative:
+          negativeFacePositions++;
+          continue;
+        case PointPlanePositionTypes::Unknown:
+          throw runtime_error("Not managed pointFacePlanePosition");
+        default:
+          break;
+      }
+
+      // Point is on face
+      const Eigen::Vector3d point2D = RotatePointsFrom3DTo2D(point,
+                                                             polyhedronFaceRotationMatrices[f].transpose(),
+                                                             polyhedronFaceTranslations[f]);
       const Eigen::MatrixXd faceVertices2D = RotatePointsFrom3DTo2D(faceVertices,
-                                                                    polyhedronFaceRotationMatrices[f],
+                                                                    polyhedronFaceRotationMatrices[f].transpose(),
                                                                     polyhedronFaceTranslations[f]);
 
-      PointPolygonPositionResult pointFacePosition = PointPolygonPosition(point,
-                                                                          faceVertices);
+      PointPolygonPositionResult pointFacePosition = PointPolygonPosition(point2D,
+                                                                          faceVertices2D);
 
       switch (pointFacePosition.Type)
       {
@@ -186,13 +210,28 @@ namespace Gedim
           result.BorderIndex = polyhedronFaces[f](0, pointFacePosition.BorderIndex);
           return result;
         }
-
+        case PointPolygonPositionResult::Types::BorderEdge:
+        {
+          result.Type = PointPolyhedronPositionResult::Types::BorderEdge;
+          result.BorderIndex = polyhedronFaces[f](1, pointFacePosition.BorderIndex);
+          return result;
+        }
+        case PointPolygonPositionResult::Types::Inside:
+        {
+          result.Type = PointPolyhedronPositionResult::Types::BorderFace;
+          result.BorderIndex = f;
+          return result;
+        }
+        case PointPolygonPositionResult::Types::Unknown:
+          throw runtime_error("Not managed pointFacePosition");
         default:
-          break;
+          continue;
       }
     }
 
-    result.Type = GeometryUtilities::PointPolyhedronPositionResult::Types::Inside;
+    result.Type = (negativeFacePositions == polyhedronFaces.size()) ?
+                    GeometryUtilities::PointPolyhedronPositionResult::Types::Inside :
+                    GeometryUtilities::PointPolyhedronPositionResult::Types::Outside;
     return result;
   }
   // ***************************************************************************

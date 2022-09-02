@@ -681,6 +681,110 @@ namespace GedimUnitTesting {
       FAIL();
     }
   }
+
+  TEST(TestGeometryUtilities, TestPoint_PointPolyhedronPosition)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilityConfig;
+      Gedim::GeometryUtilities geometryUtility(geometryUtilityConfig);
+
+      const Gedim::GeometryUtilities::Polyhedron polyhedron =  geometryUtility.CreateCubeWithOrigin(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                                                    1.0);
+      const Eigen::Vector3d polyhedronBarycenter = geometryUtility.PolyhedronBarycenter(polyhedron.Vertices);
+      const vector<Eigen::MatrixXd> polyhedronFaceVertices = geometryUtility.PolyhedronFaceVertices(polyhedron.Vertices,
+                                                                                                    polyhedron.Faces);
+      const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtility.PolyhedronFaceNormals(polyhedronFaceVertices);
+      const vector<bool> polyhedronFaceNormalDirections = geometryUtility.PolyhedronFaceNormalDirections(polyhedronFaceVertices,
+                                                                                                         polyhedronBarycenter,
+                                                                                                         polyhedronFaceNormals);
+      const vector<Eigen::Vector3d> polyhedronFaceTranslations = geometryUtility.PolyhedronFaceTranslations(polyhedronFaceVertices);
+      const vector<Eigen::Matrix3d> polyhedronFaceRotationMatrices = geometryUtility.PolyhedronFaceRotationMatrices(polyhedronFaceVertices,
+                                                                                                                    polyhedronFaceNormals,
+                                                                                                                    polyhedronFaceTranslations);
+
+      // check point outside
+      {
+        Gedim::GeometryUtilities::PointPolyhedronPositionResult result =
+            geometryUtility.PointPolyhedronPosition(Eigen::Vector3d(1.2, 1.7, -15.0),
+                                                    polyhedron.Faces,
+                                                    polyhedronFaceVertices,
+                                                    polyhedronFaceNormals,
+                                                    polyhedronFaceNormalDirections,
+                                                    polyhedronFaceTranslations,
+                                                    polyhedronFaceRotationMatrices);
+        ASSERT_EQ(result.Type,
+                  Gedim::GeometryUtilities::PointPolyhedronPositionResult::Types::Outside);
+      }
+
+      // check point inside
+      {
+        Gedim::GeometryUtilities::PointPolyhedronPositionResult result =
+            geometryUtility.PointPolyhedronPosition(Eigen::Vector3d(0.5, 0.75, 0.25),
+                                                    polyhedron.Faces,
+                                                    polyhedronFaceVertices,
+                                                    polyhedronFaceNormals,
+                                                    polyhedronFaceNormalDirections,
+                                                    polyhedronFaceTranslations,
+                                                    polyhedronFaceRotationMatrices);
+        ASSERT_EQ(result.Type,
+                  Gedim::GeometryUtilities::PointPolyhedronPositionResult::Types::Inside);
+      }
+
+      // check point on face
+      {
+        Gedim::GeometryUtilities::PointPolyhedronPositionResult result =
+            geometryUtility.PointPolyhedronPosition(Eigen::Vector3d(0.5, 0.75, 1.0),
+                                                    polyhedron.Faces,
+                                                    polyhedronFaceVertices,
+                                                    polyhedronFaceNormals,
+                                                    polyhedronFaceNormalDirections,
+                                                    polyhedronFaceTranslations,
+                                                    polyhedronFaceRotationMatrices);
+        ASSERT_EQ(result.Type,
+                  Gedim::GeometryUtilities::PointPolyhedronPositionResult::Types::BorderFace);
+        ASSERT_EQ(result.BorderIndex,
+                  1);
+      }
+
+      // check point on edge
+      {
+        Gedim::GeometryUtilities::PointPolyhedronPositionResult result =
+            geometryUtility.PointPolyhedronPosition(Eigen::Vector3d(0.0, 0.5, 1.0),
+                                                    polyhedron.Faces,
+                                                    polyhedronFaceVertices,
+                                                    polyhedronFaceNormals,
+                                                    polyhedronFaceNormalDirections,
+                                                    polyhedronFaceTranslations,
+                                                    polyhedronFaceRotationMatrices);
+        ASSERT_EQ(result.Type,
+                  Gedim::GeometryUtilities::PointPolyhedronPositionResult::Types::BorderEdge);
+        ASSERT_EQ(result.BorderIndex,
+                  7);
+      }
+
+      // check point on vertex
+      {
+        Gedim::GeometryUtilities::PointPolyhedronPositionResult result =
+            geometryUtility.PointPolyhedronPosition(Eigen::Vector3d(1.0, 1.0, 1.0),
+                                                    polyhedron.Faces,
+                                                    polyhedronFaceVertices,
+                                                    polyhedronFaceNormals,
+                                                    polyhedronFaceNormalDirections,
+                                                    polyhedronFaceTranslations,
+                                                    polyhedronFaceRotationMatrices);
+        ASSERT_EQ(result.Type,
+                  Gedim::GeometryUtilities::PointPolyhedronPositionResult::Types::BorderVertex);
+        ASSERT_EQ(result.BorderIndex,
+                  6);
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
 }
 
 #endif // __TEST_GEOMETRY_POINT_H
