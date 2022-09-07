@@ -9,8 +9,6 @@
 #include "MeshMatrices.hpp"
 #include "MeshUtilities.hpp"
 
-using namespace std;
-
 namespace Gedim
 {
   class ConformerMeshSegment final
