@@ -47,9 +47,7 @@ namespace Gedim
          UnionMesh::UnionMeshPoint>::const_iterator it = result.Points.begin();
          it != result.Points.end(); it++)
     {
-      GeometryUtilities::CompareTypes result = _geometryUtilities.Compare1DValues(it->first, curvilinearCoordinate);
-
-      if (result == GeometryUtilities::CompareTypes::Coincident)
+      if (!_geometryUtilities.IsValue1DPositive(abs(it->first - curvilinearCoordinate)))
       {
         foundCoordinate = it->first;
         break;

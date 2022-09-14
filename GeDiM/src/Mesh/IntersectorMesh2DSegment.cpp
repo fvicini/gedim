@@ -51,10 +51,7 @@ namespace Gedim
          IntersectorMesh2DSegment::IntersectionMesh::IntersectionMeshPoint>::const_iterator it = result.Points.begin();
          it != result.Points.end(); it++)
     {
-      Gedim::GeometryUtilities::CompareTypes result = _geometryUtilities.Compare1DValues(it->first,
-                                                                                         curvilinearCoordinate);
-
-      if (result == Gedim::GeometryUtilities::CompareTypes::Coincident)
+      if (!_geometryUtilities.IsValue1DPositive(abs(it->first - curvilinearCoordinate)))
       {
         foundCoordinate = it->first;
         break;
