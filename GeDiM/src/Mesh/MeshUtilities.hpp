@@ -106,7 +106,7 @@ namespace Gedim
       /// \param rectangleHeightTangent the rectangle height tangent vector
       /// \param baseMeshCurvilinearCoordinates the base mesh 1D curvilinear coordinates
       /// \param heightMeshCurvilinearCoordinates the height mesh 1D curvilinear coordinates
-      /// \note markers on border are set as { 1, 2, 3, 4 } for cell0Ds and { 5, 6, 7, 8 } for cell1Ds
+      /// \note markers on border are set as { 1, 2, 3, 4, ..., numVertices } for cell0Ds and { 5, 6, 7, 8, ..., 2 * numVertices } for cell1Ds
       void CreateRectangleMesh(const Eigen::Vector3d& rectangleOrigin,
                                const Eigen::Vector3d& rectangleBaseTangent,
                                const Eigen::Vector3d& rectangleHeightTangent,
@@ -117,11 +117,21 @@ namespace Gedim
       /// \brief Crete triangular mesh on 2D polygon
       /// \param polygonVertices the 2D polygon vertices, size 3xnumVertices
       /// \param minTriangleArea the minimum triangular area
-      /// \note markers on border are set as { 1, 2, 3, 4, ... } for cell0Ds and { 5, 6, 7, 8, ... } for cell1Ds
+      /// \note markers on border are set as { 1, 2, 3, 4, ..., numVertices } for cell0Ds and { 5, 6, 7, 8, ..., 2 * numVertices } for cell1Ds
       /// \note use triangle library
       void CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
                                 const double& minTriangleArea,
                                 IMeshDAO& mesh) const;
+
+      /// \brief Change Polygon Mesh Markers from { 1, 2, 3, 4, ..., numVertices } for cell0Ds and { 5, 6, 7, 8, ..., 2 * numVertices } for cell1Ds to cell0DMarkers and cell1DMarkers
+      /// \param polygonVertices the 2D polygon vertices, size 3xnumVertices
+      /// \param cell0DMarkers the new cell0D markers, size 1xnumPolygonVertices
+      /// \param cell1DMarkers the new cell1D markers, size 1xnumPolygonVertices
+      /// \param mesh the mesh
+      void ChangePolygonMeshMarkers(const Eigen::MatrixXd& polygonVertices,
+                                    const vector<unsigned int>& cell0DMarkers,
+                                    const vector<unsigned int>& cell1DMarkers,
+                                    IMeshDAO& mesh) const;
 
       /// \brief Export Mesh To VTU
       /// \param mesh the mesh
