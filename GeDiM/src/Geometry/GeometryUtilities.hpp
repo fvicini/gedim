@@ -830,7 +830,7 @@ namespace Gedim
       /// \return true if the points are 2D (z == 0)
       inline bool PointsAre2D(const Eigen::MatrixXd& points) const
       {
-        Output::Assert(points.rows() == 3 && points.cols() > 0);
+        Gedim::Output::Assert(points.rows() == 3 && points.cols() > 0);
         return points.row(2).isZero(_configuration.Tolerance);
       }
 
@@ -931,7 +931,7 @@ namespace Gedim
       inline Eigen::Vector3d SegmentNormal(const Eigen::Vector3d& segmentOrigin,
                                            const Eigen::Vector3d& segmentEnd) const
       {
-        Output::Assert(PointsAre2D(segmentOrigin) && PointsAre2D(segmentEnd));
+        Gedim::Output::Assert(PointsAre2D(segmentOrigin) && PointsAre2D(segmentEnd));
         Eigen::Vector3d tangent = SegmentTangent(segmentOrigin, segmentEnd).normalized();
         return Eigen::Vector3d(tangent.y(), -tangent.x(), 0.0);
       }
@@ -944,7 +944,7 @@ namespace Gedim
       inline double SegmentSlope(const Eigen::Vector3d& segmentOrigin,
                                  const Eigen::Vector3d& segmentEnd) const
       {
-        Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        Gedim::Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
         return (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
       }
 
@@ -956,7 +956,7 @@ namespace Gedim
       inline double SegmentIntercept(const Eigen::Vector3d& segmentOrigin,
                                      const Eigen::Vector3d& segmentEnd) const
       {
-        Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        Gedim::Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
         return segmentOrigin.y() -
             segmentOrigin.x() * (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
       }
@@ -1280,7 +1280,7 @@ namespace Gedim
       /// \param vertices the matrix of vertices of the simplex (size 3 x numVertices)
       inline Eigen::Vector3d SimplexBarycenter(const Eigen::MatrixXd& vertices) const
       {
-        Output::Assert(vertices.rows() == 3);
+        Gedim::Output::Assert(vertices.rows() == 3);
         return vertices.rowwise().mean();
       }
 
@@ -1288,7 +1288,7 @@ namespace Gedim
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
       inline Eigen::Vector3d PolygonBarycenter(const Eigen::MatrixXd& polygonVertices) const
       {
-        Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+        Gedim::Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
         return SimplexBarycenter(polygonVertices);
       }
 
@@ -1296,7 +1296,7 @@ namespace Gedim
       /// \param polyhedronVertices the matrix of vertices of the polyhedron (size 3 x numVertices)
       inline Eigen::Vector3d PolyhedronBarycenter(const Eigen::MatrixXd& polyhedronVertices) const
       {
-        Output::Assert(polyhedronVertices.rows() == 3 && polyhedronVertices.cols() > 2);
+        Gedim::Output::Assert(polyhedronVertices.rows() == 3 && polyhedronVertices.cols() > 2);
         return SimplexBarycenter(polyhedronVertices);
       }
 
@@ -1315,7 +1315,7 @@ namespace Gedim
                                              const Eigen::VectorXd& subPolygonAreas,
                                              const double& polygonArea) const
       {
-        Output::Assert(subPolygonCentroids.rows() == 3 &&
+        Gedim::Output::Assert(subPolygonCentroids.rows() == 3 &&
                        subPolygonCentroids.cols() > 0 &&
                        subPolygonCentroids.cols() == subPolygonAreas.size());
 
