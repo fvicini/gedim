@@ -642,13 +642,13 @@ namespace Gedim
   }
   // ***************************************************************************
   void MeshUtilities::CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
-                                           const double& minTriangleArea,
+                                           const double& maxTriangleArea,
                                            IMeshDAO& mesh) const
   {
     TriangleInterface triangleInterface;
 
     triangleInterface.CreateMesh(polygonVertices,
-                                 minTriangleArea,
+                                 maxTriangleArea,
                                  mesh);
   }
   // ***************************************************************************

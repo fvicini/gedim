@@ -14,7 +14,7 @@ namespace Gedim
                                struct triangulateio& triangleInput,
                                const Eigen::MatrixXd& constrainedPoints = Eigen::MatrixXd(),
                                const Eigen::MatrixXi& constrainedSegments = Eigen::MatrixXi()) const;
-      void CreateTriangleOutput(const double& minTriangleArea,
+      void CreateTriangleOutput(const double& maxTriangleArea,
                                 struct triangulateio& triangleInput,
                                 struct triangulateio& triangleOutput,
                                 const std::string& triangleOptions = "-QDzpqnea") const;
@@ -31,7 +31,7 @@ namespace Gedim
       ~TriangleInterface();
 
       void CreateMesh(const Eigen::MatrixXd& polygonVertices,
-                      const double& minTriangleArea,
+                      const double& maxTriangleArea,
                       IMeshDAO& mesh) const;
 
   };

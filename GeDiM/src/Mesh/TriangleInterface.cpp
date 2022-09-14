@@ -92,7 +92,7 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void TriangleInterface::CreateTriangleOutput(const double& minTriangleArea,
+  void TriangleInterface::CreateTriangleOutput(const double& maxTriangleArea,
                                                struct triangulateio& triangleInput,
                                                struct triangulateio& triangleOutput,
                                                const string& triangleOptions) const
@@ -100,7 +100,7 @@ namespace Gedim
     ostringstream options;
     options.precision(16);
     options<< triangleOptions;
-    options<< scientific<< minTriangleArea;
+    options<< scientific<< maxTriangleArea;
 
     size_t sizeOptions = options.str().size();
     char* optionPointer = new char[sizeOptions + 1];
@@ -141,7 +141,7 @@ namespace Gedim
   }
   // ***************************************************************************
   void TriangleInterface::CreateMesh(const Eigen::MatrixXd& polygonVertices,
-                                     const double& minTriangleArea,
+                                     const double& maxTriangleArea,
                                      IMeshDAO& mesh) const
   {
     struct triangulateio* triangleInput = new triangulateio();
@@ -149,7 +149,7 @@ namespace Gedim
 
     CreateTriangleInput(polygonVertices,
                         *triangleInput);
-    CreateTriangleOutput(minTriangleArea,
+    CreateTriangleOutput(maxTriangleArea,
                          *triangleInput,
                          *triangleOutput);
 

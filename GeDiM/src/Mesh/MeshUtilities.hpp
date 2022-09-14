@@ -116,11 +116,11 @@ namespace Gedim
 
       /// \brief Crete triangular mesh on 2D polygon
       /// \param polygonVertices the 2D polygon vertices, size 3xnumVertices
-      /// \param minTriangleArea the minimum triangular area
+      /// \param maxTriangleArea the maximum triangular area
       /// \note markers on border are set as { 1, 2, 3, 4, ..., numVertices } for cell0Ds and { 5, 6, 7, 8, ..., 2 * numVertices } for cell1Ds
       /// \note use triangle library
       void CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
-                                const double& minTriangleArea,
+                                const double& maxTriangleArea,
                                 IMeshDAO& mesh) const;
 
       /// \brief Change Polygon Mesh Markers from { 1, 2, 3, 4, ..., numVertices } for cell0Ds and { 5, 6, 7, 8, ..., 2 * numVertices } for cell1Ds to cell0DMarkers and cell1DMarkers
