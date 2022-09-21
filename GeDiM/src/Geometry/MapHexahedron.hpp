@@ -19,7 +19,7 @@ namespace Gedim
       const GeometryUtilities& geometryUtility;
 
       bool TestMapConfiguration(const Eigen::MatrixXd& vertices,
-                                const vector<unsigned int>& coordinateSystem,
+                                const std::vector<unsigned int>& coordinateSystem,
                                 const Eigen::MatrixXd& referencePoints,
                                 const unsigned int& secondVertexIndex,
                                 const unsigned int& thirdVertexIndex,
@@ -60,7 +60,7 @@ namespace Gedim
       /// \param edges the hexahedron edges
       /// \return the map data
       MapHexahedronData Compute(const Eigen::MatrixXd& vertices,
-                                const vector<unsigned int>& coordinateSystem) const;
+                                const std::vector<unsigned int>& coordinateSystem) const;
 
       /// Map from the Hexahedron reference element [0,1]x[0,1]x[0,1] to the polygon x = F(x_r) = Q * x_r + b
       /// \param mapData the map data computed

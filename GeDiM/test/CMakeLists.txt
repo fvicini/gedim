@@ -6,6 +6,7 @@ project(GedimUnitTest LANGUAGES CXX C)
 ###############################################################################################
 set(GEDIM_LIBRARY_TEST_SOURCES ${PROJECT_NAME}_sources)
 set(GEDIM_LIBRARY_TEST_HEADERS ${PROJECT_NAME}_headers)
+set(GEDIM_LIBRARY_TEST_PUBLIC_HEADERS ${PROJECT_NAME}_public_headers)
 set(GEDIM_LIBRARY_TEST_INCLUDE ${PROJECT_NAME}_include)
 set(GEDIM_LIBRARY_TEST_LINKED_LIBRARIES ${PROJECT_NAME}_linked_libraries)
 
@@ -67,6 +68,7 @@ add_subdirectory(Mesh)
 add_subdirectory(IO)
 add_subdirectory(Quadrature)
 
+list(APPEND ${GEDIM_LIBRARY_TEST_PUBLIC_HEADERS} ${gedim_test_src_headers})
 list(APPEND ${GEDIM_LIBRARY_TEST_SOURCES} ${gedim_test_src_sources})
 list(APPEND ${GEDIM_LIBRARY_TEST_HEADERS} ${gedim_test_src_headers})
 list(APPEND ${GEDIM_LIBRARY_TEST_INCLUDE} ${gedim_test_src_includes})
@@ -80,5 +82,7 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} ${${GEDIM_LIBRARY_TEST_LINKED_LIBRARIES}})
 target_include_directories(${PROJECT_NAME} PRIVATE ${${GEDIM_LIBRARY_TEST_INCLUDE}})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${${GEDIM_LIBRARY_TEST_PUBLIC_HEADERS}}")
 
 gtest_discover_tests(${PROJECT_NAME})

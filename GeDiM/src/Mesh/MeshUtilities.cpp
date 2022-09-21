@@ -642,14 +642,48 @@ namespace Gedim
   }
   // ***************************************************************************
   void MeshUtilities::CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
-                                           const double& minTriangleArea,
+                                           const double& maxTriangleArea,
                                            IMeshDAO& mesh) const
   {
     TriangleInterface triangleInterface;
 
     triangleInterface.CreateMesh(polygonVertices,
-                                 minTriangleArea,
+                                 maxTriangleArea,
                                  mesh);
+  }
+  // ***************************************************************************
+  void MeshUtilities::ChangePolygonMeshMarkers(const Eigen::MatrixXd& polygonVertices,
+                                               const vector<unsigned int>& cell0DMarkers,
+                                               const vector<unsigned int>& cell1DMarkers,
+                                               IMeshDAO& mesh) const
+  {
+    Output::Assert(mesh.Dimension() == 2);
+
+    const unsigned int numVertices = polygonVertices.cols();
+
+    for (unsigned int v = 0; v < mesh.Cell0DTotalNumber(); v++)
+    {
+      if (mesh.Cell0DMarker(v) == 0)
+        continue;
+
+      const unsigned int newMarker = (mesh.Cell0DMarker(v) <= numVertices) ?
+                                       cell0DMarkers.at(mesh.Cell0DMarker(v) - 1) :
+                                       cell1DMarkers.at(mesh.Cell0DMarker(v) - numVertices - 1);
+
+      mesh.Cell0DSetMarker(v,
+                           newMarker);
+    }
+
+    for (unsigned int e = 0; e < mesh.Cell1DTotalNumber(); e++)
+    {
+      if (mesh.Cell1DMarker(e) == 0)
+        continue;
+
+      const unsigned int newMarker = cell1DMarkers.at(mesh.Cell1DMarker(e) - numVertices - 1);
+
+      mesh.Cell1DSetMarker(e,
+                           newMarker);
+    }
   }
   // ***************************************************************************
   void MeshUtilities::ExportMeshToVTU(const IMeshDAO& mesh,

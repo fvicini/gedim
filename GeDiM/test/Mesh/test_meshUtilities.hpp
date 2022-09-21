@@ -163,6 +163,31 @@ namespace GedimUnitTesting
               meshDao.Cell0DCoordinates());
     EXPECT_EQ(expectedMesh.Cell1DExtremes(),
               meshDao.Cell1DExtremes());
+
+    { using namespace Gedim;
+      cerr<< "Before:\n"<< mesh.Cell0DMarkers<< endl;
+      cerr<< "Before:\n"<< mesh.Cell1DMarkers<< endl;
+    }
+
+    const vector<unsigned int> cell0DMarkers = { 11, 12, 13, 14 };
+    const vector<unsigned int> cell1DMarkers = { 15, 16, 17, 18 };
+    meshUtilities.ChangePolygonMeshMarkers(polygon,
+                                           cell0DMarkers,
+                                           cell1DMarkers,
+                                           meshDao);
+
+    EXPECT_EQ(cell0DMarkers[0],
+        meshDao.Cell0DMarker(0));
+    EXPECT_EQ(cell0DMarkers[1],
+        meshDao.Cell0DMarker(1));
+    EXPECT_EQ(cell0DMarkers[2],
+        meshDao.Cell0DMarker(2));
+    EXPECT_EQ(cell0DMarkers[3],
+        meshDao.Cell0DMarker(3));
+    EXPECT_EQ(cell1DMarkers[1],
+        meshDao.Cell1DMarker(20));
+    EXPECT_EQ(cell1DMarkers[0],
+        meshDao.Cell1DMarker(23));
   }
 
   TEST(TestMeshUtilities, TestComputeCell1DCell2DNeighbours)

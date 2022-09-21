@@ -115,7 +115,7 @@ namespace Gedim
   class VTKUtilities final
   {
     public:
-      enum ExportFormat
+      enum ExportFormats
       {
         Binary = 0,
         Ascii = 1,
@@ -157,7 +157,7 @@ namespace Gedim
                          const std::vector<VTPProperty>& properties = {});
 
       void Export(const std::string& filePath,
-                  const ExportFormat& format = ExportFormat::Binary) const;
+                  const ExportFormats& format = ExportFormats::Binary) const;
   };
 
   template <typename T>

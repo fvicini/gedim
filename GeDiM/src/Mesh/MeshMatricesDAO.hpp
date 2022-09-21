@@ -80,13 +80,13 @@ namespace Gedim
       inline void Cell0DSetMarker(const unsigned int& cell0DIndex,
                                   const unsigned int& marker)
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         _mesh.Cell0DMarkers[cell0DIndex] = marker;
       }
       inline void Cell0DSetState(const unsigned int& cell0DIndex,
                                  const bool& state)
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         _mesh.ActiveCell0D[cell0DIndex] = state;
       }
 
@@ -94,22 +94,22 @@ namespace Gedim
       { return _mesh.NumberCell0D; }
       inline double Cell0DCoordinateX(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.Cell0DCoordinates[3 * cell0DIndex];
       }
       inline double Cell0DCoordinateY(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.Cell0DCoordinates[3 * cell0DIndex + 1];
       }
       inline double Cell0DCoordinateZ(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.Cell0DCoordinates[3 * cell0DIndex + 2];
       }
       inline Eigen::Vector3d Cell0DCoordinates(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return Eigen::Vector3d(Cell0DCoordinateX(cell0DIndex),
                                Cell0DCoordinateY(cell0DIndex),
                                Cell0DCoordinateZ(cell0DIndex));
@@ -117,30 +117,30 @@ namespace Gedim
       Eigen::MatrixXd Cell0DCoordinates() const;
       inline unsigned int Cell0DMarker(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.Cell0DMarkers[cell0DIndex];
       }
       inline bool Cell0DIsActive(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.ActiveCell0D[cell0DIndex];
       }
 
       inline bool Cell0DHasUpdatedCell0Ds(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.UpdatedCell0Ds.find(cell0DIndex) != _mesh.UpdatedCell0Ds.end();
       }
       inline unsigned int Cell0DNumberUpdatedCell0Ds(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.UpdatedCell0Ds.at(cell0DIndex).size();
       }
       inline bool Cell0DHasUpdatedCell0D(const unsigned int& cell0DIndex,
                                          const unsigned int& updatedCell0DIdex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(updatedCell0DIdex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(updatedCell0DIdex < Cell0DTotalNumber());
         return _mesh.UpdatedCell0Ds.at(cell0DIndex).find(updatedCell0DIdex) != _mesh.UpdatedCell0Ds.at(cell0DIndex).end();
       }
       void Cell0DInsertUpdatedCell0D(const unsigned int& cell0DIndex,
@@ -157,32 +157,32 @@ namespace Gedim
                                               const unsigned int& neighbourIndex,
                                               const unsigned int& neigbourCell1DIndex)
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
-        Output::Assert(neigbourCell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
+        Gedim::Output::Assert(neigbourCell1DIndex < Cell1DTotalNumber());
 
         _mesh.Cell0DNeighbourCell1Ds[_mesh.NumberCell0DNeighbourCell1D[cell0DIndex] +
             neighbourIndex] = neigbourCell1DIndex;
       }
       inline unsigned int Cell0DNumberNeighbourCell1D(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.NumberCell0DNeighbourCell1D[cell0DIndex + 1] -
             _mesh.NumberCell0DNeighbourCell1D[cell0DIndex];
       }
       inline unsigned int Cell0DNeighbourCell1D(const unsigned int& cell0DIndex,
                                                 const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
         return _mesh.Cell0DNeighbourCell1Ds[_mesh.NumberCell0DNeighbourCell1D[cell0DIndex] +
             neighbourIndex];
       }
       inline bool Cell0DHasNeighbourCell1D(const unsigned int& cell0DIndex,
                                            const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell1D(cell0DIndex));
         return _mesh.Cell0DNeighbourCell1Ds[_mesh.NumberCell0DNeighbourCell1D[cell0DIndex] +
             neighbourIndex] < _mesh.NumberCell1D;
       }
@@ -199,32 +199,32 @@ namespace Gedim
                                               const unsigned int& neighbourIndex,
                                               const unsigned int& neigbourCell2DIndex)
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
-        Output::Assert(neigbourCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
+        Gedim::Output::Assert(neigbourCell2DIndex < Cell2DTotalNumber());
 
         _mesh.Cell0DNeighbourCell2Ds[_mesh.NumberCell0DNeighbourCell2D[cell0DIndex] +
             neighbourIndex] = neigbourCell2DIndex;
       }
       inline unsigned int Cell0DNumberNeighbourCell2D(const unsigned int& cell0DIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         return _mesh.NumberCell0DNeighbourCell2D[cell0DIndex + 1] -
             _mesh.NumberCell0DNeighbourCell2D[cell0DIndex];
       }
       inline unsigned int Cell0DNeighbourCell2D(const unsigned int& cell0DIndex,
                                                 const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
         return _mesh.Cell0DNeighbourCell2Ds[_mesh.NumberCell0DNeighbourCell2D[cell0DIndex] +
             neighbourIndex];
       }
       inline bool Cell0DHasNeighbourCell2D(const unsigned int& cell0DIndex,
                                            const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell0DNumberNeighbourCell2D(cell0DIndex));
         return _mesh.Cell0DNeighbourCell2Ds[_mesh.NumberCell0DNeighbourCell2D[cell0DIndex] +
             neighbourIndex] < _mesh.NumberCell2D;
       }
@@ -238,16 +238,16 @@ namespace Gedim
                                                    const unsigned int& numberNeighbourCell3Ds) { return; }
       inline void Cell0DInsertNeighbourCell3D(const unsigned int& cell0DIndex,
                                               const unsigned int& neighbourIndex,
-                                              const unsigned int& neigbourCell3DIndex) { throw runtime_error("Not implemented"); }
+                                              const unsigned int& neigbourCell3DIndex) { throw std::runtime_error("Not implemented"); }
       inline unsigned int Cell0DNumberNeighbourCell3D(const unsigned int& cell0DIndex) const { return 0; }
       inline unsigned int Cell0DNeighbourCell3D(const unsigned int& cell0DIndex,
-                                                const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                                const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline bool Cell0DHasNeighbourCell3D(const unsigned int& cell0DIndex,
-                                           const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                           const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline void Cell0DResetNeighbourCell3D(const unsigned int& cell0DIndex,
                                              const unsigned int& neighbourIndex)
       {
-        throw runtime_error("Not implemented");
+        throw std::runtime_error("Not implemented");
       }
 
       void Cell0DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
@@ -260,8 +260,8 @@ namespace Gedim
                                                   const unsigned int& propertyValueIndex,
                                                   const double& propertyValue)
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
 
         _mesh.Cell0DDoublePropertyValues[propertyIndex][_mesh.Cell0DDoublePropertySizes[propertyIndex][cell0DIndex] +
             propertyValueIndex] = propertyValue;
@@ -281,14 +281,14 @@ namespace Gedim
       }
       inline unsigned int Cell0DDoublePropertyIndex(const string& propertyId) const
       {
-        Output::Assert(Cell0DDoublePropertyExists(propertyId));
+        Gedim::Output::Assert(Cell0DDoublePropertyExists(propertyId));
         return _mesh.Cell0DDoublePropertyIndices.at(propertyId);
       }
       inline unsigned int Cell0DDoublePropertySize(const unsigned int& cell0DIndex,
                                                    const unsigned int& propertyIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
         return _mesh.Cell0DDoublePropertySizes[propertyIndex][cell0DIndex + 1] -
             _mesh.Cell0DDoublePropertySizes[propertyIndex][cell0DIndex];
       }
@@ -296,9 +296,9 @@ namespace Gedim
                                               const unsigned int& propertyIndex,
                                               const unsigned int& propertyValueIndex) const
       {
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
-        Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
-        Output::Assert(propertyValueIndex < Cell0DDoublePropertySize(cell0DIndex,
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell0DNumberDoubleProperties());
+        Gedim::Output::Assert(propertyValueIndex < Cell0DDoublePropertySize(cell0DIndex,
                                                                      propertyIndex));
 
         return _mesh.Cell0DDoublePropertyValues[propertyIndex][_mesh.Cell0DDoublePropertySizes[propertyIndex][cell0DIndex] +
@@ -312,9 +312,9 @@ namespace Gedim
                                        const unsigned int& originCell0DIndex,
                                        const unsigned int& endCell0DIndex)
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(originCell0DIndex < Cell0DTotalNumber());
-        Output::Assert(endCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(originCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(endCell0DIndex < Cell0DTotalNumber());
         _mesh.Cell1DVertices[2 * cell1DIndex] = originCell0DIndex;
         _mesh.Cell1DVertices[2 * cell1DIndex + 1] = endCell0DIndex;
         _mesh.Cell1DAdjacency.insert(originCell0DIndex,
@@ -325,28 +325,28 @@ namespace Gedim
       inline bool Cell1DExists(const unsigned int& originCell0DIndex,
                                const unsigned int& endCell0DIndex) const
       {
-        Output::Assert(originCell0DIndex < Cell0DTotalNumber());
-        Output::Assert(endCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(originCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(endCell0DIndex < Cell0DTotalNumber());
         return _mesh.Cell1DAdjacency.coeff(originCell0DIndex, endCell0DIndex) > 0;
       }
 
       inline unsigned int Cell1DByExtremes(const unsigned int& originCell0DIndex,
                                            const unsigned int& endCell0DIndex) const
       {
-        Output::Assert(Cell1DExists(originCell0DIndex, endCell0DIndex));
+        Gedim::Output::Assert(Cell1DExists(originCell0DIndex, endCell0DIndex));
         return _mesh.Cell1DAdjacency.coeff(originCell0DIndex, endCell0DIndex) - 1;
       }
 
       inline void Cell1DSetMarker(const unsigned int& cell1DIndex,
                                   const unsigned int& marker)
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         _mesh.Cell1DMarkers[cell1DIndex] = marker;
       }
       inline void Cell1DSetState(const unsigned int& cell1DIndex,
                                  const bool& state)
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         _mesh.ActiveCell1D[cell1DIndex] = state;
       }
       void Cell1DInitializeNeighbourCell2Ds(const unsigned int& cell1DIndex,
@@ -355,9 +355,9 @@ namespace Gedim
                                               const unsigned int& neighbourIndex,
                                               const unsigned int& neigbourCell2DIndex)
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
-        Output::Assert(neigbourCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
+        Gedim::Output::Assert(neigbourCell2DIndex < Cell2DTotalNumber());
 
         _mesh.Cell1DNeighbourCell2Ds[_mesh.NumberCell1DNeighbourCell2D[cell1DIndex] +
             neighbourIndex] = neigbourCell2DIndex;
@@ -367,18 +367,18 @@ namespace Gedim
       inline unsigned int Cell1DVertex(const unsigned int& cell1DIndex,
                                        const unsigned int& vertexIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(vertexIndex < 2);
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < 2);
         return _mesh.Cell1DVertices[2 * cell1DIndex + vertexIndex];
       }
       inline unsigned int Cell1DOrigin(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.Cell1DVertices[2 * cell1DIndex];
       }
       inline unsigned int Cell1DEnd(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.Cell1DVertices[2 * cell1DIndex + 1];
       }
       inline Eigen::MatrixXd Cell1DCoordinates(const unsigned int& cell1DIndex) const
@@ -395,23 +395,23 @@ namespace Gedim
       }
       inline unsigned int Cell1DNumberNeighbourCell2D(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.NumberCell1DNeighbourCell2D[cell1DIndex + 1] -
             _mesh.NumberCell1DNeighbourCell2D[cell1DIndex];
       }
       inline unsigned int Cell1DNeighbourCell2D(const unsigned int& cell1DIndex,
                                                 const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
         return _mesh.Cell1DNeighbourCell2Ds[_mesh.NumberCell1DNeighbourCell2D[cell1DIndex] +
             neighbourIndex];
       }
       bool Cell1DHasNeighbourCell2D(const unsigned int& cell1DIndex,
                                     const unsigned int& neighbourIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
         return _mesh.Cell1DNeighbourCell2Ds[_mesh.NumberCell1DNeighbourCell2D[cell1DIndex] +
             neighbourIndex] < _mesh.NumberCell2D;
       }
@@ -424,29 +424,29 @@ namespace Gedim
 
       inline unsigned int Cell1DMarker(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.Cell1DMarkers[cell1DIndex];
       }
       inline bool Cell1DIsActive(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.ActiveCell1D[cell1DIndex];
       }
       inline bool Cell1DHasUpdatedCell1Ds(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.UpdatedCell1Ds.find(cell1DIndex) != _mesh.UpdatedCell1Ds.end();
       }
       inline unsigned int Cell1DNumberUpdatedCell1Ds(const unsigned int& cell1DIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.UpdatedCell1Ds.at(cell1DIndex).size();
       }
       inline bool Cell1DHasUpdatedCell1D(const unsigned int& cell1DIndex,
                                          const unsigned int& updatedCell1DIdex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(updatedCell1DIdex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(updatedCell1DIdex < Cell1DTotalNumber());
         return _mesh.UpdatedCell1Ds.at(cell1DIndex).find(updatedCell1DIdex) != _mesh.UpdatedCell1Ds.at(cell1DIndex).end();
       }
       void Cell1DInsertUpdatedCell1D(const unsigned int& cell1DIndex,
@@ -461,16 +461,16 @@ namespace Gedim
       inline void Cell1DInitializeNeighbourCell3Ds(const unsigned int& cell1DIndex,
                                                    const unsigned int& numberNeighbourCell3Ds) {  return; }
       inline void Cell1DInsertNeighbourCell3D(const unsigned int& cell1DIndex,
-                                              const unsigned int& neighbourIndex, const unsigned int& neigbourCell3DIndex) { throw runtime_error("Not implemented"); }
+                                              const unsigned int& neighbourIndex, const unsigned int& neigbourCell3DIndex) { throw std::runtime_error("Not implemented"); }
       inline unsigned int Cell1DNumberNeighbourCell3D(const unsigned int& cell1DIndex) const { return 0; }
       inline unsigned int Cell1DNeighbourCell3D(const unsigned int& cell1DIndex,
-                                                const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                                const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline bool Cell1DHasNeighbourCell3D(const unsigned int& cell1DIndex,
-                                           const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                           const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline void Cell1DResetNeighbourCell3D(const unsigned int& cell1DIndex,
                                              const unsigned int& neighbourIndex)
       {
-        throw runtime_error("Not implemented");
+        throw std::runtime_error("Not implemented");
       }
 
       unsigned int Cell1DAddDoubleProperty(const string& propertyId);
@@ -482,8 +482,8 @@ namespace Gedim
                                                   const unsigned int& propertyValueIndex,
                                                   const double& propertyValue)
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
 
         _mesh.Cell1DDoublePropertyValues[propertyIndex][_mesh.Cell1DDoublePropertySizes[propertyIndex][cell1DIndex] +
             propertyValueIndex] = propertyValue;
@@ -503,14 +503,14 @@ namespace Gedim
       }
       inline unsigned int Cell1DDoublePropertyIndex(const string& propertyId) const
       {
-        Output::Assert(Cell1DDoublePropertyExists(propertyId));
+        Gedim::Output::Assert(Cell1DDoublePropertyExists(propertyId));
         return _mesh.Cell1DDoublePropertyIndices.at(propertyId);
       }
       inline unsigned int Cell1DDoublePropertySize(const unsigned int& cell1DIndex,
                                                    const unsigned int& propertyIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
         return _mesh.Cell1DDoublePropertySizes[propertyIndex][cell1DIndex + 1] -
             _mesh.Cell1DDoublePropertySizes[propertyIndex][cell1DIndex];
       }
@@ -518,9 +518,9 @@ namespace Gedim
                                               const unsigned int& propertyIndex,
                                               const unsigned int& propertyValueIndex) const
       {
-        Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
-        Output::Assert(propertyValueIndex < Cell1DDoublePropertySize(cell1DIndex,
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell1DNumberDoubleProperties());
+        Gedim::Output::Assert(propertyValueIndex < Cell1DDoublePropertySize(cell1DIndex,
                                                                      propertyIndex));
 
         return _mesh.Cell1DDoublePropertyValues[propertyIndex][_mesh.Cell1DDoublePropertySizes[propertyIndex][cell1DIndex] +
@@ -534,13 +534,13 @@ namespace Gedim
       inline void Cell2DSetMarker(const unsigned int& cell2DIndex,
                                   const unsigned int& marker)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         _mesh.Cell2DMarkers[cell2DIndex] = marker;
       }
       inline void Cell2DSetState(const unsigned int& cell2DIndex,
                                  const bool& state)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         _mesh.ActiveCell2D[cell2DIndex] = state;
       }
       void Cell2DInitializeVertices(const unsigned int& cell2DIndex,
@@ -551,9 +551,9 @@ namespace Gedim
                                      const unsigned int& vertexIndex,
                                      const unsigned int& vertexCell0DIndex)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
-        Output::Assert(vertexCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
+        Gedim::Output::Assert(vertexCell0DIndex < Cell0DTotalNumber());
         _mesh.Cell2DVertices[_mesh.NumberCell2DVertices[cell2DIndex] +
             vertexIndex] = vertexCell0DIndex;
       }
@@ -561,9 +561,9 @@ namespace Gedim
                                    const unsigned int& edgeIndex,
                                    const unsigned int& edgeCell1DIndex)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(edgeIndex < Cell2DNumberEdges(cell2DIndex));
-        Output::Assert(edgeCell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(edgeIndex < Cell2DNumberEdges(cell2DIndex));
+        Gedim::Output::Assert(edgeCell1DIndex < Cell1DTotalNumber());
         _mesh.Cell2DEdges[_mesh.NumberCell2DEdges[cell2DIndex] +
             edgeIndex] = edgeCell1DIndex;
       }
@@ -576,13 +576,13 @@ namespace Gedim
       { return _mesh.NumberCell2D; }
       inline unsigned int Cell2DNumberVertices(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.NumberCell2DVertices[cell2DIndex + 1] -
             _mesh.NumberCell2DVertices[cell2DIndex];
       }
       inline unsigned int Cell2DNumberEdges(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.NumberCell2DEdges[cell2DIndex + 1] - _mesh.NumberCell2DEdges[cell2DIndex];
       }
 
@@ -591,15 +591,15 @@ namespace Gedim
       inline unsigned int Cell2DVertex(const unsigned int& cell2DIndex,
                                        const unsigned int& vertexIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
         return _mesh.Cell2DVertices[_mesh.NumberCell2DVertices[cell2DIndex] + vertexIndex];
       }
       inline Eigen::Vector3d Cell2DVertexCoordinates(const unsigned int& cell2DIndex,
                                                      const unsigned int& vertexIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < Cell2DNumberVertices(cell2DIndex));
         return Cell0DCoordinates(Cell2DVertex(cell2DIndex, vertexIndex));
       }
       Eigen::MatrixXd Cell2DVerticesCoordinates(const unsigned int& cell2DIndex) const;
@@ -609,48 +609,48 @@ namespace Gedim
       inline unsigned int Cell2DEdge(const unsigned int& cell2DIndex,
                                      const unsigned int& edgeIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(edgeIndex < Cell2DNumberEdges(cell2DIndex));
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(edgeIndex < Cell2DNumberEdges(cell2DIndex));
         return _mesh.Cell2DEdges[_mesh.NumberCell2DEdges[cell2DIndex] + edgeIndex];
       }
       inline unsigned int Cell2DMarker(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.Cell2DMarkers[cell2DIndex];
       }
       inline bool Cell2DIsActive(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.ActiveCell2D[cell2DIndex];
       }
 
       inline bool Cell2DHasUpdatedCell2Ds(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.UpdatedCell2Ds.find(cell2DIndex) != _mesh.UpdatedCell2Ds.end();
       }
       inline unsigned int Cell2DNumberUpdatedCell2Ds(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.UpdatedCell2Ds.at(cell2DIndex).size();
       }
       inline bool Cell2DHasUpdatedCell2D(const unsigned int& cell2DIndex,
                                          const unsigned int& updatedCell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
         return _mesh.UpdatedCell2Ds.at(cell2DIndex).find(updatedCell2DIndex) != _mesh.UpdatedCell2Ds.at(cell2DIndex).end();
       }
       void Cell2DInsertUpdatedCell2D(const unsigned int& cell2DIndex,
                                      const unsigned int& updatedCell2DIdex);
       inline bool Cell2DHasOriginalCell2D(const unsigned int& updatedCell2DIndex) const
       {
-        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
         return _mesh.Cell2DOriginalCell2Ds.at(updatedCell2DIndex) < _mesh.NumberCell2D;
       }
       inline unsigned int Cell2DOriginalCell2D(const unsigned int& updatedCell2DIndex) const
       {
-        Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(updatedCell2DIndex < Cell2DTotalNumber());
         return _mesh.Cell2DOriginalCell2Ds.at(updatedCell2DIndex);
       }
       bool Cell2DUpdatedCell2Ds(const unsigned int& cell2DIndex,
@@ -663,16 +663,16 @@ namespace Gedim
                                                    const unsigned int& numberNeighbourCell3Ds) { return; }
       inline void Cell2DInsertNeighbourCell3D(const unsigned int& cell2DIndex,
                                               const unsigned int& neighbourIndex,
-                                              const unsigned int& neigbourCell3DIndex) { throw runtime_error("Not implemented"); }
+                                              const unsigned int& neigbourCell3DIndex) { throw std::runtime_error("Not implemented"); }
       inline unsigned int Cell2DNumberNeighbourCell3D(const unsigned int& cell2DIndex) const { return 0; }
       inline unsigned int Cell2DNeighbourCell3D(const unsigned int& cell2DIndex,
-                                                const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                                const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline bool Cell2DHasNeighbourCell3D(const unsigned int& cell2DIndex,
-                                           const unsigned int& neighbourIndex) const { throw runtime_error("Not implemented"); }
+                                           const unsigned int& neighbourIndex) const { throw std::runtime_error("Not implemented"); }
       inline void Cell2DResetNeighbourCell3D(const unsigned int& cell2DIndex,
                                              const unsigned int& neighbourIndex)
       {
-        throw runtime_error("Not implemented");
+        throw std::runtime_error("Not implemented");
       }
       void Cell2DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
       unsigned int Cell2DAddDoubleProperty(const string& propertyId);
@@ -684,8 +684,8 @@ namespace Gedim
                                                   const unsigned int& propertyValueIndex,
                                                   const double& propertyValue)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
 
         _mesh.Cell2DDoublePropertyValues[propertyIndex][_mesh.Cell2DDoublePropertySizes[propertyIndex][cell2DIndex] +
             propertyValueIndex] = propertyValue;
@@ -705,14 +705,14 @@ namespace Gedim
       }
       inline unsigned int Cell2DDoublePropertyIndex(const string& propertyId) const
       {
-        Output::Assert(Cell2DDoublePropertyExists(propertyId));
+        Gedim::Output::Assert(Cell2DDoublePropertyExists(propertyId));
         return _mesh.Cell2DDoublePropertyIndices.at(propertyId);
       }
       inline unsigned int Cell2DDoublePropertySize(const unsigned int& cell2DIndex,
                                                    const unsigned int& propertyIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
         return _mesh.Cell2DDoublePropertySizes[propertyIndex][cell2DIndex + 1] -
             _mesh.Cell2DDoublePropertySizes[propertyIndex][cell2DIndex];
       }
@@ -720,9 +720,9 @@ namespace Gedim
                                               const unsigned int& propertyIndex,
                                               const unsigned int& propertyValueIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
-        Output::Assert(propertyValueIndex < Cell2DDoublePropertySize(cell2DIndex,
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell2DNumberDoubleProperties());
+        Gedim::Output::Assert(propertyValueIndex < Cell2DDoublePropertySize(cell2DIndex,
                                                                      propertyIndex));
 
         return _mesh.Cell2DDoublePropertyValues[propertyIndex][_mesh.Cell2DDoublePropertySizes[propertyIndex][cell2DIndex] +
@@ -735,23 +735,23 @@ namespace Gedim
                                           const unsigned int& subDivisionIndex,
                                           const unsigned int& cell0DIndex)
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(subDivisionIndex < Cell2DNumberSubDivision(cell2DIndex));
-        Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(subDivisionIndex < Cell2DNumberSubDivision(cell2DIndex));
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
         _mesh.Cell2DSubdivision[_mesh.NumberCell2DSubdivision[cell2DIndex] +
             subDivisionIndex] = cell0DIndex;
       }
       inline unsigned int Cell2DNumberSubDivision(const unsigned int& cell2DIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
         return _mesh.NumberCell2DSubdivision[cell2DIndex + 1] -
             _mesh.NumberCell2DSubdivision[cell2DIndex];
       }
       inline unsigned int Cell2DSubDivisionCell0D(const unsigned int& cell2DIndex,
                                                   const unsigned int& subDivisionIndex) const
       {
-        Output::Assert(cell2DIndex < Cell2DTotalNumber());
-        Output::Assert(subDivisionIndex < Cell2DNumberSubDivision(cell2DIndex));
+        Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(subDivisionIndex < Cell2DNumberSubDivision(cell2DIndex));
         return _mesh.Cell2DSubdivision[_mesh.NumberCell2DSubdivision[cell2DIndex] + subDivisionIndex];
       }
 
@@ -762,13 +762,13 @@ namespace Gedim
       inline void Cell3DSetMarker(const unsigned int& cell3DIndex,
                                   const unsigned int& marker)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         _mesh.Cell3DMarkers[cell3DIndex] = marker;
       }
       inline void Cell3DSetState(const unsigned int& cell3DIndex,
                                  const bool& state)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         _mesh.ActiveCell3D[cell3DIndex] = state;
       }
       void Cell3DInitializeVertices(const unsigned int& cell3DIndex,
@@ -781,9 +781,9 @@ namespace Gedim
                                      const unsigned int& vertexIndex,
                                      const unsigned int& vertexCell0DIndex)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(vertexIndex < Cell3DNumberVertices(cell3DIndex));
-        Output::Assert(vertexCell0DIndex < Cell0DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < Cell3DNumberVertices(cell3DIndex));
+        Gedim::Output::Assert(vertexCell0DIndex < Cell0DTotalNumber());
 
         _mesh.Cell3DVertices[_mesh.NumberCell3DVertices[cell3DIndex] +
             vertexIndex] = vertexCell0DIndex;
@@ -792,9 +792,9 @@ namespace Gedim
                                    const unsigned int& edgeIndex,
                                    const unsigned int& edgeCell1DIndex)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(edgeIndex < Cell3DNumberEdges(cell3DIndex));
-        Output::Assert(edgeCell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(edgeIndex < Cell3DNumberEdges(cell3DIndex));
+        Gedim::Output::Assert(edgeCell1DIndex < Cell1DTotalNumber());
 
         _mesh.Cell3DEdges[_mesh.NumberCell3DEdges[cell3DIndex] +
             edgeIndex] = edgeCell1DIndex;
@@ -803,9 +803,9 @@ namespace Gedim
                                    const unsigned int& faceIndex,
                                    const unsigned int& faceCell2DIndex)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(faceIndex < Cell3DNumberFaces(cell3DIndex));
-        Output::Assert(faceCell2DIndex < Cell2DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(faceIndex < Cell3DNumberFaces(cell3DIndex));
+        Gedim::Output::Assert(faceCell2DIndex < Cell2DTotalNumber());
 
         _mesh.Cell3DFaces[_mesh.NumberCell3DFaces[cell3DIndex] +
             faceIndex] = faceCell2DIndex;
@@ -823,72 +823,72 @@ namespace Gedim
       }
       inline unsigned int Cell3DNumberVertices(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.NumberCell3DVertices[cell3DIndex + 1] -
             _mesh.NumberCell3DVertices[cell3DIndex];
       }
       inline unsigned int Cell3DNumberEdges(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.NumberCell3DEdges[cell3DIndex + 1] -
             _mesh.NumberCell3DEdges[cell3DIndex];
       }
       inline unsigned int Cell3DNumberFaces(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.NumberCell3DFaces[cell3DIndex + 1] -
             _mesh.NumberCell3DFaces[cell3DIndex];
       }
       inline unsigned int Cell3DVertex(const unsigned int& cell3DIndex,
                                        const unsigned int& vertexIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(vertexIndex < Cell3DNumberVertices(cell3DIndex));
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(vertexIndex < Cell3DNumberVertices(cell3DIndex));
 
         return _mesh.Cell3DVertices[_mesh.NumberCell3DVertices[cell3DIndex] + vertexIndex];
       }
       inline unsigned int Cell3DEdge(const unsigned int& cell3DIndex,
                                      const unsigned int& edgeIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(edgeIndex < Cell3DNumberEdges(cell3DIndex));
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(edgeIndex < Cell3DNumberEdges(cell3DIndex));
 
         return _mesh.Cell3DEdges[_mesh.NumberCell3DEdges[cell3DIndex] + edgeIndex];
       }
       inline unsigned int Cell3DFace(const unsigned int& cell3DIndex,
                                      const unsigned int& faceIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(faceIndex < Cell3DNumberFaces(cell3DIndex));
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(faceIndex < Cell3DNumberFaces(cell3DIndex));
 
         return _mesh.Cell3DFaces[_mesh.NumberCell3DFaces[cell3DIndex] + faceIndex];
       }
       inline unsigned int Cell3DMarker(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.Cell3DMarkers[cell3DIndex];
       }
       inline bool Cell3DIsActive(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.ActiveCell3D[cell3DIndex];
       }
 
       inline bool Cell3DHasUpdatedCell3Ds(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.UpdatedCell3Ds.find(cell3DIndex) != _mesh.UpdatedCell3Ds.end();
       }
       inline unsigned int Cell3DNumberUpdatedCell3Ds(const unsigned int& cell3DIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
         return _mesh.UpdatedCell3Ds.at(cell3DIndex).size();
       }
       inline bool Cell3DHasUpdatedCell3D(const unsigned int& cell3DIndex,
                                          const unsigned int& updatedCell3DIdex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(updatedCell3DIdex < Cell3DTotalNumber());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(updatedCell3DIdex < Cell3DTotalNumber());
         return _mesh.UpdatedCell3Ds.at(cell3DIndex).find(updatedCell3DIdex) != _mesh.UpdatedCell3Ds.at(cell3DIndex).end();
       }
       void Cell3DInsertUpdatedCell3D(const unsigned int& cell3DIndex,
@@ -910,8 +910,8 @@ namespace Gedim
                                                   const unsigned int& propertyValueIndex,
                                                   const double& propertyValue)
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
 
         _mesh.Cell3DDoublePropertyValues[propertyIndex][_mesh.Cell3DDoublePropertySizes[propertyIndex][cell3DIndex] +
             propertyValueIndex] = propertyValue;
@@ -931,14 +931,14 @@ namespace Gedim
       }
       inline unsigned int Cell3DDoublePropertyIndex(const string& propertyId) const
       {
-        Output::Assert(Cell3DDoublePropertyExists(propertyId));
+        Gedim::Output::Assert(Cell3DDoublePropertyExists(propertyId));
         return _mesh.Cell3DDoublePropertyIndices.at(propertyId);
       }
       inline unsigned int Cell3DDoublePropertySize(const unsigned int& cell3DIndex,
                                                    const unsigned int& propertyIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
         return _mesh.Cell3DDoublePropertySizes[propertyIndex][cell3DIndex + 1] -
             _mesh.Cell3DDoublePropertySizes[propertyIndex][cell3DIndex];
       }
@@ -946,9 +946,9 @@ namespace Gedim
                                               const unsigned int& propertyIndex,
                                               const unsigned int& propertyValueIndex) const
       {
-        Output::Assert(cell3DIndex < Cell3DTotalNumber());
-        Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
-        Output::Assert(propertyValueIndex < Cell3DDoublePropertySize(cell3DIndex,
+        Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
+        Gedim::Output::Assert(propertyIndex < Cell3DNumberDoubleProperties());
+        Gedim::Output::Assert(propertyValueIndex < Cell3DDoublePropertySize(cell3DIndex,
                                                                      propertyIndex));
 
         return _mesh.Cell3DDoublePropertyValues[propertyIndex][_mesh.Cell3DDoublePropertySizes[propertyIndex][cell3DIndex] +

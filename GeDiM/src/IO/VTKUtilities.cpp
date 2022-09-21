@@ -44,7 +44,7 @@ namespace Gedim
                               const vector<VTPProperty>& properties)
   {
 #if ENABLE_VTK == 1
-    VTPPoint vtpPoint(point);
+    const VTPPoint vtpPoint(point);
     GeometryToPolyData<VTPPoint> polyData(vtpPoint);
     AddToExportData(polyData,
                     properties);
@@ -56,10 +56,10 @@ namespace Gedim
                                 const std::vector<VTPProperty>& properties)
   {
 #if ENABLE_VTK == 1
-    Eigen::MatrixXd vertices =  (Eigen::MatrixXd(3, 2)<< origin, end).finished();
-    Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
-    VTPSegment vtpSegment(vertices,
-                          edge);
+    const Eigen::MatrixXd vertices =  (Eigen::MatrixXd(3, 2)<< origin, end).finished();
+    const Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
+    const VTPSegment vtpSegment(vertices,
+                                edge);
     GeometryToPolyData<VTPSegment> polyData(vtpSegment);
     AddToExportData(polyData,
                     properties);
@@ -70,9 +70,9 @@ namespace Gedim
                                 const std::vector<VTPProperty>& properties)
   {
 #if ENABLE_VTK == 1
-    Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
-    VTPSegment vtpSegment(vertices,
-                          edge);
+    const Eigen::VectorXi edge =  (Eigen::VectorXi(2)<< 0, 1).finished();
+    const VTPSegment vtpSegment(vertices,
+                                edge);
     GeometryToPolyData<VTPSegment> polyData(vtpSegment);
     AddToExportData(polyData,
                     properties);
@@ -95,9 +95,9 @@ namespace Gedim
                                              0.0,
                                              vertices.cols() - 1).transpose();
 
-    VTPPolygon vtpPolygon(vertices,
-                          edges,
-                          face);
+    const VTPPolygon vtpPolygon(vertices,
+                                edges,
+                                face);
     GeometryToPolyData<VTPPolygon> polyData(vtpPolygon);
     AddToExportData(polyData,
                     properties);
@@ -110,9 +110,9 @@ namespace Gedim
                                    const std::vector<VTPProperty>& properties)
   {
 #if ENABLE_VTK == 1
-    VTPPolyhedron vtpPolyhedron(vertices,
-                                edges,
-                                faces);
+    const VTPPolyhedron vtpPolyhedron(vertices,
+                                      edges,
+                                      faces);
     GeometryToPolyData<VTPPolyhedron> polyData(vtpPolyhedron);
     AddToExportData(polyData,
                     properties);
@@ -120,7 +120,7 @@ namespace Gedim
   }
   // ***************************************************************************
   void VTKUtilities::Export(const std::string& filePath,
-                            const ExportFormat& format) const
+                            const ExportFormats& format) const
   {
 #if ENABLE_VTK == 1
     exportData->Update();
