@@ -205,6 +205,7 @@ namespace GedimUnitTesting
 
     ASSERT_TRUE(geometryUtilities.IsValue1DZero((expectedWeights - mappedWeights).norm()));
     ASSERT_TRUE(geometryUtilities.IsValue1DZero(abs((mappedWeights).sum() - 308.0)));
+    ASSERT_TRUE(geometryUtilities.IsValue1DZero(1.0/6.0 * abs(mapping.DetJ(mapData)) - 308.0));
   }
 
   TEST(TestQuadratureMap, TestMapHexahedron)

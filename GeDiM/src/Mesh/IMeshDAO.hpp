@@ -814,11 +814,21 @@ namespace Gedim
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \return the Cell0D coordinates of all the vertices of Cell3D, size 3 x NumberCell3DVertices(cell3DIndex)
       virtual Eigen::MatrixXd Cell3DVerticesCoordinates(const unsigned int& cell3DIndex) const = 0;
+
+      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
+      /// \return the Cell1D index collections of Cell3D from 0 to Cell1DTotalNumber(), size Cell3DNumberEdges(cell3DIndex)
+      virtual std::vector<unsigned int> Cell3DEdges(const unsigned int& cell3DIndex) const = 0;
+
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param edgeIndex the index of cell1D edge from 0 to NumberCell3DEdges(edgeIndex)
       /// \return the Cell1D index of edge of Cell3D from 0 to Cell1DTotalNumber()
       virtual unsigned int Cell3DEdge(const unsigned int& cell3DIndex,
                                       const unsigned int& edgeIndex ) const = 0;
+
+      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
+      /// \return the Cell2D index collections of Cell3D from 0 to Cell2DTotalNumber(), size Cell3DNumberFaces(cell3DIndex)
+      virtual std::vector<unsigned int> Cell3DFaces(const unsigned int& cell3DIndex) const = 0;
+
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param faceIndex the index of cell2D face from 0 to NumberCell3DFaces(cell3DIndex)
       /// \return the Cell2D index of face of Cell3D from 0 to Cell2DTotalNumber()

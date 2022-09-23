@@ -78,6 +78,14 @@ namespace Gedim
       /// \return the determinant of Jacobian matrix for each points, size 1 x numPoints
       Eigen::VectorXd DetJ(const MapTetrahedronData& mapData,
                            const Eigen::MatrixXd& x) const;
+
+      /// Compute the determinant of the jacobian matrix of the trasformation
+      /// \param mapData the map data computed
+      /// \return the determinant of Jacobian matrix
+      inline double DetJ(const MapTetrahedronData& mapData) const
+      {
+        return mapData.Q.determinant();
+      };
   };
 }
 

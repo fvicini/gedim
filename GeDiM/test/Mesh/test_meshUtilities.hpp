@@ -220,9 +220,9 @@ namespace GedimUnitTesting
 
     Gedim::MeshUtilities meshUtilities;
 
-    const Gedim::MeshUtilities::MeshGeometricData result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
+    const Gedim::MeshUtilities::MeshGeometricData2D result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
                                                                                                  meshDao);
-    Gedim::MeshUtilities::MeshGeometricData expectedResult;
+    Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
     expectedResult.Cell2DsDiameters = { sqrt(2.0) };
@@ -284,11 +284,11 @@ namespace GedimUnitTesting
 
     Gedim::MeshUtilities meshUtilities;
 
-    const Gedim::MeshUtilities::MeshGeometricData result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
+    const Gedim::MeshUtilities::MeshGeometricData2D result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
                                                                                                  meshDao,
                                                                                                  convexMeshDao,
                                                                                                  meshCell2DToConvexCell2DIndices);
-    Gedim::MeshUtilities::MeshGeometricData expectedResult;
+    Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
     expectedResult.Cell2DsDiameters = { sqrt(2.0) };

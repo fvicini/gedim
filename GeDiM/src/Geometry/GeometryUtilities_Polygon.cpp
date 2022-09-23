@@ -100,29 +100,6 @@ namespace Gedim
     return centroid;
   }
   // ***************************************************************************
-  double GeometryUtilities::PolygonDiameter(const Eigen::MatrixXd& polygonVertices) const
-  {
-    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
-
-    const unsigned int& numVertices = polygonVertices.cols();
-
-    double diameter = 0.0;
-
-    for (unsigned int v = 0; v < numVertices; v++)
-    {
-      const Eigen::Vector3d& vertexOne = polygonVertices.col(v);
-      for (unsigned int w = v + 1; w < numVertices; w++)
-      {
-        const Eigen::Vector3d& vertexTwo = polygonVertices.col(w);
-        double distance = PointDistance(vertexOne, vertexTwo);
-        if (Compare1DValues(diameter, distance) == CompareTypes::FirstBeforeSecond)
-          diameter = distance;
-      }
-    }
-
-    return diameter;
-  }
-  // ***************************************************************************
   Matrix3d GeometryUtilities::PolygonRotationMatrix(const Eigen::MatrixXd& polygonVertices,
                                                     const Eigen::Vector3d& polygonNormal,
                                                     const Eigen::Vector3d& polygonTranslation) const

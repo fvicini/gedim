@@ -334,7 +334,7 @@ namespace Gedim
   // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
                                                                                      const vector<vector<unsigned int>>& faceTriangulations,
-                                                                                     const Eigen::Vector3d& polyhedronInternalPoint)
+                                                                                     const Eigen::Vector3d& polyhedronInternalPoint) const
   {
     list<unsigned int> tetrahedronList;
 
@@ -359,7 +359,7 @@ namespace Gedim
   vector<unsigned int> GeometryUtilities::PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
                                                                                      const vector<vector<unsigned int> >& faceTriangulations,
                                                                                      const vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
-                                                                                     const Eigen::Vector3d& polyhedronInternalPoint)
+                                                                                     const Eigen::Vector3d& polyhedronInternalPoint) const
   {
     list<unsigned int> tetrahedronList;
 
