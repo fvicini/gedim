@@ -1014,6 +1014,28 @@ namespace Gedim
                                             0.0);
   }
   // ***************************************************************************
+  vector<unsigned int> MeshMatricesDAO::Cell3DEdges(const unsigned int& cell3DIndex) const
+  {
+    const unsigned int numEdges = Cell3DNumberEdges(cell3DIndex);
+
+    vector<unsigned int> edges(numEdges);
+    for (unsigned int e = 0; e < numEdges; e++)
+      edges[e] = _mesh.Cell3DEdges[_mesh.NumberCell3DEdges[cell3DIndex] + e];;
+
+    return edges;
+  }
+  // ***************************************************************************
+  vector<unsigned int> MeshMatricesDAO::Cell3DFaces(const unsigned int& cell3DIndex) const
+  {
+    const unsigned int numFaces = Cell2DNumberEdges(cell3DIndex);
+
+    vector<unsigned int> faces(numFaces);
+    for (unsigned int f = 0; f < numFaces; f++)
+      faces[f] = _mesh.Cell3DFaces[_mesh.NumberCell3DFaces[cell3DIndex] + f];;
+
+    return faces;
+  }
+  // ***************************************************************************
   void MeshMatricesDAO::Compress()
   {
     _mesh.Cell0DCoordinates.shrink_to_fit();

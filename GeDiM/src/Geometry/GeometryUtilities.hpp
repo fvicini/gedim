@@ -809,6 +809,10 @@ namespace Gedim
       Eigen::VectorXd PointDistances(const Eigen::MatrixXd& points,
                                      const Eigen::Vector3d& point) const;
 
+      /// \param points the point collection, size 3 x numPoints
+      /// \return the maximum distance between the points.
+      double PointsMaxDistance(const Eigen::MatrixXd& points) const;
+
       /// \param firstPoint the first point
       /// \param secondPoint the second point
       /// \return true if the points are coincident
@@ -1324,7 +1328,10 @@ namespace Gedim
 
       /// \brief Compute the Polygon diameter defined as the maximum distance between the vertices
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
-      double PolygonDiameter(const Eigen::MatrixXd& polygonVertices) const;
+      inline double PolygonDiameter(const Eigen::MatrixXd& polygonVertices) const
+      {
+        return PointsMaxDistance(polygonVertices);
+      }
 
       /// \brief Compute the translation vector of a tridimensional Polygon
       /// \param polygonVertices the vertices of the polygon unclockwise (size 3 x numVertices)
@@ -1568,6 +1575,13 @@ namespace Gedim
                                               Eigen::Vector3d(0.0, edgeLength, 0.0));
       }
 
+      /// \brief Compute the Polyhedron diameter defined as the maximum distance between the vertices
+      /// \param polyhedronVertices the matrix of vertices of the polyhedron (size 3 x numVertices)
+      inline double PolyhedronDiameter(const Eigen::MatrixXd& polyhedronVertices) const
+      {
+        return PointsMaxDistance(polyhedronVertices);
+      }
+
       /// \brief Compute Polyhedron Faces Vertices
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges
@@ -1666,7 +1680,7 @@ namespace Gedim
       /// \note the polyhedron internal point index is polyhedronVertices.size() + f
       std::vector<unsigned int> PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
                                                                            const std::vector<std::vector<unsigned int>>& faceTriangulations,
-                                                                           const Eigen::Vector3d& polyhedronInternalPoint);
+                                                                           const Eigen::Vector3d& polyhedronInternalPoint) const;
 
       /// \brief Polyhedron Tetrahedrons By Face Triangulations with face internal points
       /// \param polyhedronVertices the polyhedron vertices
@@ -1679,7 +1693,7 @@ namespace Gedim
       std::vector<unsigned int> PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
                                                                            const std::vector<std::vector<unsigned int>>& faceTriangulations,
                                                                            const std::vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
-                                                                           const Eigen::Vector3d& polyhedronInternalPoint);
+                                                                           const Eigen::Vector3d& polyhedronInternalPoint) const;
 
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronInternalPoint a polyhedron internal point
