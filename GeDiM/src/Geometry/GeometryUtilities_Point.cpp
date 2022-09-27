@@ -136,21 +136,22 @@ namespace Gedim
         {
           result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge;
           result.BorderIndex = v;
+          return result;
         }
         else if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::OnSegmentOrigin)
         {
           result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
           result.BorderIndex = v;
+          return result;
         }
         else if (resultSegment == GeometryUtilities::PointSegmentPositionTypes::OnSegmentEnd)
         {
           result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
           result.BorderIndex = (v + 1) % numVertices;
+          return result;
         }
         else
-          result.Type = GeometryUtilities::PointPolygonPositionResult::Types::Outside;
-
-        return result;
+          continue; // check for future aligned points on edges
       }
     }
 
@@ -299,9 +300,9 @@ namespace Gedim
       const Eigen::Vector3d& segmentEnd = points.col((p + 1) % numPoints);
       const Eigen::Vector3d& nextPoint = points.col((p + 2) % numPoints);
 
-      if (PointsAreAligned(segmentOrigin,
-                           segmentEnd,
-                           nextPoint)[0])
+      if (PointIsAligned(segmentOrigin,
+                         segmentEnd,
+                         nextPoint))
         unalignedPoints.pop_back();
 
       unalignedPoints.push_back(pointIndexToTest);
