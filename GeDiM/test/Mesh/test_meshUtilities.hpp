@@ -244,6 +244,7 @@ namespace GedimUnitTesting
 
     const Gedim::MeshUtilities::MeshGeometricData2D result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
                                                                                                    meshDao);
+                                                                                                   
     Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
@@ -310,6 +311,7 @@ namespace GedimUnitTesting
                                                                                                    meshDao,
                                                                                                    convexMeshDao,
                                                                                                    meshCell2DToConvexCell2DIndices);
+
     Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
