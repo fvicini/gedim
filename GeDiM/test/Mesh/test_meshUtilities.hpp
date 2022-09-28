@@ -151,6 +151,18 @@ namespace GedimUnitTesting
                                   exportFolder,
                                   "ExpectedTriangleMesh");
 
+    Gedim::MeshUtilities::MeshGeometricData cell2DsGeometricData = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
+                                                                                                         meshDao);
+    const unsigned int cell2DToExportIndex = 0;
+    meshUtilities.ExportCell2DToVTU(meshDao,
+                                    cell2DToExportIndex,
+                                    cell2DsGeometricData.Cell2DsVertices[cell2DToExportIndex],
+                                    cell2DsGeometricData.Cell2DsTriangulations[cell2DToExportIndex],
+                                    cell2DsGeometricData.Cell2DsAreas[cell2DToExportIndex],
+                                    cell2DsGeometricData.Cell2DsCentroids[cell2DToExportIndex],
+                                    exportFolder);
+
+
     EXPECT_EQ(expectedMesh.Dimension(),
               meshDao.Dimension());
     EXPECT_EQ(expectedMesh.Cell0DTotalNumber(),
@@ -163,11 +175,6 @@ namespace GedimUnitTesting
               meshDao.Cell0DCoordinates());
     EXPECT_EQ(expectedMesh.Cell1DExtremes(),
               meshDao.Cell1DExtremes());
-
-    { using namespace Gedim;
-      cerr<< "Before:\n"<< mesh.Cell0DMarkers<< endl;
-      cerr<< "Before:\n"<< mesh.Cell1DMarkers<< endl;
-    }
 
     const vector<unsigned int> cell0DMarkers = { 11, 12, 13, 14 };
     const vector<unsigned int> cell1DMarkers = { 15, 16, 17, 18 };
@@ -188,6 +195,21 @@ namespace GedimUnitTesting
         meshDao.Cell1DMarker(20));
     EXPECT_EQ(cell1DMarkers[0],
         meshDao.Cell1DMarker(23));
+  }
+
+  TEST(TestMeshUtilities, TestCheckMesh2D)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    GedimUnitTesting::MeshMatrices_2D_26Cells_Mock mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh.Mesh);
+    Gedim::MeshUtilities meshUtilities;
+
+    Gedim::MeshUtilities::CheckMesh2DConfiguration config;
+    ASSERT_NO_THROW(meshUtilities.CheckMesh2D(config,
+                                              geometryUtilities,
+                                              meshDao));
   }
 
   TEST(TestMeshUtilities, TestComputeCell1DCell2DNeighbours)

@@ -207,6 +207,157 @@ namespace Gedim
     }
   }
   // ***************************************************************************
+  void MeshUtilities::CheckMesh2D(const CheckMesh2DConfiguration& configuration,
+                                  const GeometryUtilities& geometryUtilities,
+                                  const IMeshDAO& convexMesh) const
+  {
+    Output::Assert(convexMesh.Dimension() == 2);
+
+    // check Cell0D are 2D
+    if (configuration.Cell0D_CheckCoordinates2D)
+      Output::Assert(geometryUtilities.PointsAre2D(convexMesh.Cell0DCoordinates()));
+
+    // check Cell0D duplications
+    if (configuration.Cell0D_CheckDuplications)
+    {
+      for (unsigned int p1 = 0; p1 < convexMesh.Cell0DTotalNumber(); p1++)
+      {
+        for (unsigned int p2 = p1 + 1; p2 < convexMesh.Cell0DTotalNumber(); p2++)
+        {
+          Output::Assert(!geometryUtilities.PointsAreCoincident(convexMesh.Cell0DCoordinates(p1),
+                                                                convexMesh.Cell0DCoordinates(p2)));
+        }
+      }
+    }
+
+    if (configuration.Cell1D_CheckDuplications)
+    {
+      for (unsigned int e1 = 0; e1 < convexMesh.Cell1DTotalNumber(); e1++)
+      {
+        Output::Assert(convexMesh.Cell1DExists(convexMesh.Cell1DOrigin(e1),
+                                               convexMesh.Cell1DEnd(e1)));
+        Output::Assert(!convexMesh.Cell1DExists(convexMesh.Cell1DEnd(e1),
+                                                convexMesh.Cell1DOrigin(e1)));
+
+        for (unsigned int e2 = e1 + 1; e2 < convexMesh.Cell1DTotalNumber(); e2++)
+        {
+          Output::Assert(!(convexMesh.Cell1DOrigin(e1) == convexMesh.Cell1DOrigin(e2) &&
+                           convexMesh.Cell1DEnd(e1) == convexMesh.Cell1DEnd(e2)));
+          Output::Assert(!(convexMesh.Cell1DEnd(e1) == convexMesh.Cell1DOrigin(e2) &&
+                           convexMesh.Cell1DOrigin(e1) == convexMesh.Cell1DEnd(e2)));
+        }
+      }
+    }
+
+    if (configuration.Cell1D_CheckNeighbours)
+    {
+      for (unsigned int e = 0; e < convexMesh.Cell1DTotalNumber(); e++)
+      {
+        Output::Assert(convexMesh.Cell1DNumberNeighbourCell2D(e) == 2);
+
+        if (convexMesh.Cell1DHasNeighbourCell2D(e, 0))
+        {
+          const unsigned int cell2DRight = convexMesh.Cell1DNeighbourCell2D(e, 0);
+          const vector<unsigned int> cell2DEdges = convexMesh.Cell2DEdges(cell2DRight);
+
+          // check edge orientation
+          vector<unsigned int>::const_iterator it = std::find(cell2DEdges.begin(), cell2DEdges.end(), e);
+          Output::Assert(it != cell2DEdges.end());
+
+          const unsigned int cell2DEdgeIndex = std::distance(cell2DEdges.begin(), it);
+          const unsigned int edgeOrigin = convexMesh.Cell2DVertex(cell2DRight,
+                                                                  (cell2DEdgeIndex + 1) % cell2DEdges.size());
+          const unsigned int edgeEnd = convexMesh.Cell2DVertex(cell2DRight,
+                                                               cell2DEdgeIndex);
+
+          Output::Assert(convexMesh.Cell1DExists(edgeOrigin,
+                                                 edgeEnd) &&
+                         convexMesh.Cell1DByExtremes(edgeOrigin,
+                                                     edgeEnd) == e);
+        }
+
+        if (convexMesh.Cell1DHasNeighbourCell2D(e, 1))
+        {
+          const unsigned int cell2DLeft = convexMesh.Cell1DNeighbourCell2D(e, 1);
+          const vector<unsigned int> cell2DEdges = convexMesh.Cell2DEdges(cell2DLeft);
+
+          // check edge orientation
+          vector<unsigned int>::const_iterator it = std::find(cell2DEdges.begin(), cell2DEdges.end(), e);
+          Output::Assert(it != cell2DEdges.end());
+
+          const unsigned int cell2DEdgeIndex = std::distance(cell2DEdges.begin(), it);
+          const unsigned int edgeOrigin = convexMesh.Cell2DVertex(cell2DLeft,
+                                                                  cell2DEdgeIndex);
+          const unsigned int edgeEnd = convexMesh.Cell2DVertex(cell2DLeft,
+                                                               (cell2DEdgeIndex + 1) % cell2DEdges.size());
+
+          Output::Assert(convexMesh.Cell1DExists(edgeOrigin,
+                                                 edgeEnd) &&
+                         convexMesh.Cell1DByExtremes(edgeOrigin,
+                                                     edgeEnd) == e);
+        }
+      }
+    }
+
+    if (configuration.Cell2D_CheckEdges)
+    {
+      for (unsigned int p = 0; p < convexMesh.Cell2DTotalNumber(); p++)
+      {
+        for (unsigned int v = 0; v < convexMesh.Cell2DNumberVertices(p); v++)
+        {
+          const unsigned int eO = convexMesh.Cell2DVertex(p, v);
+          const unsigned int eE = convexMesh.Cell2DVertex(p, (v + 1) % convexMesh.Cell2DNumberVertices(p));
+          const unsigned int edgeFromVertices = convexMesh.Cell1DExists(eO, eE) ? convexMesh.Cell1DByExtremes(eO, eE) :
+                                                                                  convexMesh.Cell1DByExtremes(eE, eO);
+          Output::Assert(convexMesh.Cell2DEdge(p, v) == edgeFromVertices);
+        }
+      }
+    }
+
+    if (configuration.Cell2D_CheckDuplications)
+    {
+      for (unsigned int p1 = 0; p1 < convexMesh.Cell2DTotalNumber(); p1++)
+      {
+        vector<unsigned int> cell2D1Vertices = convexMesh.Cell2DVertices(p1);
+        sort(cell2D1Vertices.begin(), cell2D1Vertices.end());
+        vector<unsigned int> cell2D1Edges = convexMesh.Cell2DEdges(p1);
+        sort(cell2D1Edges.begin(), cell2D1Edges.end());
+
+        for (unsigned int p2 = p1 + 1; p2 < convexMesh.Cell2DTotalNumber(); p2++)
+        {
+          vector<unsigned int> cell2D2Vertices = convexMesh.Cell2DVertices(p2);
+          sort(cell2D2Vertices.begin(), cell2D2Vertices.end());
+          vector<unsigned int> cell2D2Edges = convexMesh.Cell2DEdges(p2);
+          sort(cell2D2Edges.begin(), cell2D2Edges.end());
+
+          Output::Assert(cell2D1Vertices.size() != cell2D2Vertices.size() || !equal(cell2D1Vertices.begin(),
+                                                                                    cell2D1Vertices.end(),
+                                                                                    cell2D2Vertices.begin()));
+          Output::Assert(cell2D1Edges.size() != cell2D2Edges.size() || !equal(cell2D1Edges.begin(),
+                                                                              cell2D1Edges.end(),
+                                                                              cell2D2Edges.begin()));
+        }
+      }
+
+      if (configuration.Cell2D_CheckConvexity)
+      {
+        for (unsigned int p = 0; p < convexMesh.Cell2DTotalNumber(); p++)
+        {
+          const Eigen::MatrixXd cell2DVertices = convexMesh.Cell2DVerticesCoordinates(p);
+          const vector<unsigned int> convexCell2DUnalignedVerticesFilter = geometryUtilities.UnalignedPoints(cell2DVertices);
+          const Eigen::MatrixXd convexCell2DUnalignedVertices = geometryUtilities.ExtractPoints(cell2DVertices,
+                                                                                                convexCell2DUnalignedVerticesFilter);
+          const vector<unsigned int> convexHull = geometryUtilities.ConvexHull(convexCell2DUnalignedVertices);
+          const Eigen::MatrixXd convexHullVertices = geometryUtilities.ExtractPoints(convexCell2DUnalignedVertices,
+                                                                                     convexHull);
+
+          Output::Assert(geometryUtilities.PolygonIsConvex(convexCell2DUnalignedVertices,
+                                                           convexHullVertices));
+        }
+      }
+    }
+  }
+  // ***************************************************************************
   void MeshUtilities::Mesh2DFromPolygon(const Eigen::MatrixXd& polygonVertices,
                                         const vector<unsigned int> vertexMarkers,
                                         const vector<unsigned int> edgeMarkers,
@@ -945,6 +1096,75 @@ namespace Gedim
       }
 
       vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell2Ds.vtu");
+    }
+  }
+  // ***************************************************************************
+  void MeshUtilities::ExportCell2DToVTU(const IMeshDAO& mesh,
+                                        const unsigned int& cell2DIndex,
+                                        const Eigen::MatrixXd& cell2DVertices,
+                                        const vector<Eigen::Matrix3d>& cell2DTriangulations,
+                                        const double& cell2DArea,
+                                        const Eigen::Vector3d& cell2DCentroid,
+                                        const string& exportFolder) const
+  {
+    {
+      Gedim::VTKUtilities vtpUtilities;
+
+      vector<double> id(1, cell2DIndex);
+      vector<double> area(1, cell2DArea);
+
+      // Export cell2D
+      vtpUtilities.AddPolygon(cell2DVertices,
+                              {
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                },
+                                {
+                                  "Area",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(area.size()),
+                                  area.data()
+                                }
+                              });
+
+      vtpUtilities.Export(exportFolder + "/" + "Cell2D_" + to_string(cell2DIndex) + ".vtu");
+    }
+
+    {
+      Gedim::VTKUtilities vtpUtilities;
+
+      // Export cell2D triangulation
+      for (unsigned int t = 0; t < cell2DTriangulations.size(); t++)
+      {
+        vector<double> id(1, t);
+        vtpUtilities.AddPolygon(cell2DTriangulations[t],
+                                {
+                                  {
+                                    "Id",
+                                    Gedim::VTPProperty::Formats::Cells,
+                                    static_cast<unsigned int>(id.size()),
+                                    id.data()
+                                  }
+                                });
+      }
+
+      vtpUtilities.Export(exportFolder + "/" +
+                          "Cell2D_" + to_string(cell2DIndex) +
+                          "_Triangles" + ".vtu");
+    }
+
+    {
+      Gedim::VTKUtilities vtpUtilities;
+
+      // Export cell2D centroid
+      vtpUtilities.AddPoint(cell2DCentroid);
+
+      vtpUtilities.Export(exportFolder + "/" +
+                          "Cell2D_" + to_string(cell2DIndex) +
+                          "_Centroid" + ".vtu");
     }
   }
   // ***************************************************************************
