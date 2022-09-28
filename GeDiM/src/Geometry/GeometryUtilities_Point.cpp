@@ -13,6 +13,29 @@ namespace Gedim
     return (points.colwise() - point).colwise().norm();
   }
   // ***************************************************************************
+  double GeometryUtilities::PointsMaxDistance(const Eigen::MatrixXd& points) const
+  {
+    Output::Assert(points.rows() == 3);
+
+    const unsigned int& numVertices = points.cols();
+
+    double maxDistance = 0.0;
+
+    for (unsigned int v = 0; v < numVertices; v++)
+    {
+      const Eigen::Vector3d& vertexOne = points.col(v);
+      for (unsigned int w = v + 1; w < numVertices; w++)
+      {
+        const Eigen::Vector3d& vertexTwo = points.col(w);
+        double distance = PointDistance(vertexOne, vertexTwo);
+        if (Compare1DValues(maxDistance, distance) == CompareTypes::FirstBeforeSecond)
+          maxDistance = distance;
+      }
+    }
+
+    return maxDistance;
+  }
+  // ***************************************************************************
   vector<unsigned int> GeometryUtilities::FindPointInPoints(const Eigen::MatrixXd& points,
                                                             const Eigen::Vector3d& point) const
   {

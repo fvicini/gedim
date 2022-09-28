@@ -855,6 +855,7 @@ namespace Gedim
         return Cell0DCoordinates(Cell3DVertex(cell3DIndex, vertexIndex));
       }
       Eigen::MatrixXd Cell3DVerticesCoordinates(const unsigned int& cell3DIndex) const;
+      vector<unsigned int> Cell3DEdges(const unsigned int& cell3DIndex) const;
       inline unsigned int Cell3DEdge(const unsigned int& cell3DIndex,
                                      const unsigned int& edgeIndex) const
       {
@@ -863,6 +864,7 @@ namespace Gedim
 
         return _mesh.Cell3DEdges[_mesh.NumberCell3DEdges[cell3DIndex] + edgeIndex];
       }
+      vector<unsigned int> Cell3DFaces(const unsigned int& cell3DIndex) const;
       inline unsigned int Cell3DFace(const unsigned int& cell3DIndex,
                                      const unsigned int& faceIndex) const
       {
