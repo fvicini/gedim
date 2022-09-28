@@ -151,8 +151,8 @@ namespace GedimUnitTesting
                                   exportFolder,
                                   "ExpectedTriangleMesh");
 
-    Gedim::MeshUtilities::MeshGeometricData cell2DsGeometricData = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
-                                                                                                         meshDao);
+    Gedim::MeshUtilities::MeshGeometricData2D cell2DsGeometricData = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
+                                                                                                           meshDao);
     const unsigned int cell2DToExportIndex = 0;
     meshUtilities.ExportCell2DToVTU(meshDao,
                                     cell2DToExportIndex,
@@ -243,7 +243,8 @@ namespace GedimUnitTesting
     Gedim::MeshUtilities meshUtilities;
 
     const Gedim::MeshUtilities::MeshGeometricData2D result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
-                                                                                                 meshDao);
+                                                                                                   meshDao);
+                                                                                                   
     Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
@@ -307,9 +308,10 @@ namespace GedimUnitTesting
     Gedim::MeshUtilities meshUtilities;
 
     const Gedim::MeshUtilities::MeshGeometricData2D result = meshUtilities.FillMesh2DGeometricData(geometryUtilities,
-                                                                                                 meshDao,
-                                                                                                 convexMeshDao,
-                                                                                                 meshCell2DToConvexCell2DIndices);
+                                                                                                   meshDao,
+                                                                                                   convexMeshDao,
+                                                                                                   meshCell2DToConvexCell2DIndices);
+
     Gedim::MeshUtilities::MeshGeometricData2D expectedResult;
     expectedResult.Cell2DsAreas = { 1.0 };
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
