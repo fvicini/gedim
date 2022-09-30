@@ -59,20 +59,21 @@ namespace Gedim
           vector<Eigen::MatrixXd> Cell3DsEdgeTangents;
           vector<vector<bool>> Cell3DsEdgeDirections;
           vector<vector<Eigen::MatrixXd>> Cell3DsTetrahedronPoints;
-          vector<vector<Eigen::Vector3d>> facesTranslations;
-          vector<vector<Eigen::Matrix3d>> facesRotationMatrices;
-          vector<vector<Eigen::Vector3d>> facesNormals;
-          vector<vector<bool>> facesNormalDirections;
-          vector<vector<vector<bool>>> facesEdgeDirections;
+          vector<vector<Eigen::Vector3d>> Cell3DFacesTranslations;
+          vector<vector<Eigen::Matrix3d>> Cell3DFacesRotationMatrices;
+          vector<vector<Eigen::Vector3d>> Cell3DFacesNormals;
+          vector<vector<bool>> Cell3DFacesNormalDirections;
+          vector<vector<vector<bool>>> Cell3DFacesEdgeDirections;
 
-          vector<vector<Eigen::MatrixXd>> facesRotatedVertices; ///< faces vertices coordinates
-          vector<vector<vector<Eigen::Matrix3d>>> facesTriangulations; ///< faces triangulations
-          vector<vector<double>> facesAreas; ///< faces areas
-          vector<vector<Eigen::Vector3d>> facesCentroids; ///< faces centroids
-          vector<vector<double>> facesDiameters; ///< faces diameters
-          vector<vector<Eigen::VectorXd>> facesEdgeLengths; ///< faces edge lenghts
-          vector<vector<Eigen::MatrixXd>> facesEdgeTangents; ///< faces edge tangents
-          vector<vector<Eigen::MatrixXd>> facesEdgeNormals; ///< faces edge normals
+          vector<vector<Eigen::MatrixXd>> Cell3DFacesVertices; ///< faces vertices 3D coordinates
+          vector<vector<Eigen::MatrixXd>> Cell3DFacesRotatedVertices; ///< faces vertices 2D coordinates
+          vector<vector<vector<Eigen::Matrix3d>>> Cell3DFacesRotatedTriangulations; ///< faces triangulations 2D
+          vector<vector<double>> Cell3DFacesAreas; ///< faces areas
+          vector<vector<Eigen::Vector3d>> Cell3DFacesCentroids; ///< faces centroids
+          vector<vector<double>> Cell3DFacesDiameters; ///< faces diameters
+          vector<vector<Eigen::VectorXd>> Cell3DFacesEdgeLengths; ///< faces edge lenghts
+          vector<vector<Eigen::MatrixXd>> Cell3DFacesEdgeTangents; ///< faces edge tangents
+          vector<vector<Eigen::MatrixXd>> Cell3DFacesEdgeNormals; ///< faces edge normals
       };
 
     public:
@@ -120,6 +121,21 @@ namespace Gedim
                              const vector<unsigned int> edgeMarkers,
                              IMeshDAO& mesh) const;
 
+      /// \brief Create a Mesh 3D with a polyhedron
+      /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
+      /// \param polyhedronEdges the polyhedron edges, size 2 x numEdges
+      /// \param polyhedronFaces the polyhedron face vertices and edges, size numFaces x 2 x numVertices
+      /// \param vertexMarkers mesh markers of vertices, size 1xnumVertices
+      /// \param edgeMarkers mesh markers of edges, size 1xnumEdges
+      /// \param faceMarkers mesh markers of faces, size 1xnumFaces
+      void Mesh3DFromPolyhedron(const Eigen::MatrixXd& polyhedronVertices,
+                                const Eigen::MatrixXi& polyhedronEdges,
+                                const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                const vector<unsigned int> vertexMarkers,
+                                const vector<unsigned int> edgeMarkers,
+                                const vector<unsigned int> faceMarkers,
+                                IMeshDAO& mesh) const;
+
       /// \brief Extract the mesh Cell2D Roots
       /// \param mesh the mesh
       /// \return the root cell for each cell2D, size 1xCell2DTotalNumber()
@@ -129,7 +145,7 @@ namespace Gedim
       /// \param convexMesh the convex mesh
       /// \return the MeshGeometricData computed
       MeshGeometricData2D FillMesh2DGeometricData(const GeometryUtilities& geometryUtilities,
-                                                const IMeshDAO& convexMesh) const;
+                                                  const IMeshDAO& convexMesh) const;
 
       /// \brief Fill Mesh2D Geometric Data starting given a mesh with non convex mesh cells and its convex sub-mesh cells
       /// \param mesh the mesh
@@ -137,15 +153,15 @@ namespace Gedim
       /// \param meshCell2DToConvexCell2DIndices the collection of convex cell2Ds for each mesh cell2D
       /// \return the MeshGeometricData computed
       MeshGeometricData2D FillMesh2DGeometricData(const GeometryUtilities& geometryUtilities,
-                                                const IMeshDAO& mesh,
-                                                const IMeshDAO& convexMesh,
-                                                const vector<vector<unsigned int>>& meshCell2DToConvexCell2DIndices) const;
+                                                  const IMeshDAO& mesh,
+                                                  const IMeshDAO& convexMesh,
+                                                  const vector<vector<unsigned int>>& meshCell2DToConvexCell2DIndices) const;
 
       /// \brief Fill Mesh3D Geometric Data given a mesh with convex mesh cells
       /// \param convexMesh the convex mesh
       /// \return the MeshGeometricData computed
       MeshGeometricData3D FillMesh3DGeometricData(const GeometryUtilities& geometryUtilities,
-                                                const IMeshDAO& convexMesh) const;
+                                                  const IMeshDAO& convexMesh) const;
 
       /// \brief Compute Cell1D Cell2DNeighbours with given mesh data
       /// \param mesh the resulting mesh
