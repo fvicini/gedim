@@ -20,6 +20,37 @@ using namespace std;
 namespace GedimUnitTesting
 {
 
+  TEST(TestMeshUtilities, TestMesh1DFromSegment)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    Gedim::MeshMatrices mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh);
+
+    Gedim::MeshUtilities meshUtilities;
+
+    Eigen::MatrixXd segment(3, 4);
+    segment.col(0)<< 0.0, 0.0, 0.0;
+    segment.col(1)<< 1.0, 0.0, 0.0;
+    vector<unsigned int> vertexMarkers = { 1, 2 };
+
+    meshUtilities.Mesh1DFromSegment(geometryUtilities,
+                                    segment,
+                                    vertexMarkers,
+                                    meshDao);
+
+    std::string exportFolder = "./Export/TestMesh1DFromSegment/";
+    Gedim::Output::CreateFolder(exportFolder);
+    meshUtilities.ExportMeshToVTU(meshDao,
+                                  exportFolder,
+                                  "Mesh");
+
+    EXPECT_EQ(meshDao.Dimension(), 1);
+    EXPECT_EQ(meshDao.Cell0DTotalNumber(), 2);
+    EXPECT_EQ(meshDao.Cell1DTotalNumber(), 1);
+  }
+
   TEST(TestMeshUtilities, TestMesh2DFromPolygon)
   {
     Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
@@ -276,7 +307,7 @@ namespace GedimUnitTesting
               vector<unsigned int>({ 1,0,1,0,1,0,1,0 }));
   }
 
-  TEST(TestMeshUtilities, TestFillMesh2DGeometricData_Convex)
+  TEST(TestMeshUtilities, TestFillMesh1DGeometricData)
   {
     Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
     Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
@@ -294,9 +325,9 @@ namespace GedimUnitTesting
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
     expectedResult.Cell2DsDiameters = { sqrt(2.0) };
     expectedResult.Cell2DsEdgeDirections = { { true, true, true, true } };
-    Eigen::VectorXd edgeLenghts(4);
-    edgeLenghts<< 1.0, 1.0, 1.0, 1.0;
-    expectedResult.Cell2DsEdgeLengths = { edgeLenghts };
+    Eigen::VectorXd edgeLengths(4);
+    edgeLengths<< 1.0, 1.0, 1.0, 1.0;
+    expectedResult.Cell2DsEdgeLengths = { edgeLengths };
     Eigen::MatrixXd edgeNormals(3, 4);
     edgeNormals.col(0)<< -1.0, 0.0, 0.0;
     edgeNormals.col(1)<< 0.0, -1.0, 0.0;
@@ -336,6 +367,42 @@ namespace GedimUnitTesting
     EXPECT_EQ(result.Cell2DsVertices, expectedResult.Cell2DsVertices);
   }
 
+  TEST(TestMeshUtilities, TestFillMesh2DGeometricData_Convex)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+    Gedim::MeshUtilities meshUtilities;
+
+    Gedim::MeshMatrices mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh);
+
+    Eigen::MatrixXd segment(3, 4);
+    segment.col(0)<< 0.0, 0.0, 0.0;
+    segment.col(1)<< 1.0, 0.0, 0.0;
+    vector<unsigned int> vertexMarkers = { 1, 2 };
+
+    meshUtilities.Mesh1DFromSegment(geometryUtilities,
+                                    segment,
+                                    vertexMarkers,
+                                    meshDao);
+
+    const Gedim::MeshUtilities::MeshGeometricData1D result = meshUtilities.FillMesh1DGeometricData(geometryUtilities,
+                                                                                                   meshDao);
+
+    Gedim::MeshUtilities::MeshGeometricData1D expectedResult;
+    expectedResult.Cell1DsLengths = { 1.0 };
+    expectedResult.Cell1DsSquaredLengths = { 1.0 };
+    expectedResult.Cell1DsCentroids = { Eigen::Vector3d(0.5, 0.0, 0.0) };
+    expectedResult.Cell1DsTangents = { Eigen::Vector3d(1.0, 0.0, 0.0) };
+    expectedResult.Cell1DsVertices = { (Eigen::MatrixXd(3, 2)<< 0.0, 1.0, 0.0, 0.0, 0.0, 0.0).finished() };
+
+    EXPECT_EQ(result.Cell1DsLengths, expectedResult.Cell1DsLengths);
+    EXPECT_EQ(result.Cell1DsSquaredLengths, expectedResult.Cell1DsSquaredLengths);
+    EXPECT_EQ(result.Cell1DsCentroids, expectedResult.Cell1DsCentroids);
+    EXPECT_EQ(result.Cell1DsTangents, expectedResult.Cell1DsTangents);
+    EXPECT_EQ(result.Cell1DsVertices, expectedResult.Cell1DsVertices);
+  }
+
   TEST(TestMeshUtilities, TestFillMesh2DGeometricData_NonConvex)
   {
     Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
@@ -361,9 +428,9 @@ namespace GedimUnitTesting
     expectedResult.Cell2DsCentroids = { Eigen::Vector3d(0.5, 0.5, 0.0) };
     expectedResult.Cell2DsDiameters = { sqrt(2.0) };
     expectedResult.Cell2DsEdgeDirections = { { true, true, true, true } };
-    Eigen::VectorXd edgeLenghts(4);
-    edgeLenghts<< 1.0, 1.0, 1.0, 1.0;
-    expectedResult.Cell2DsEdgeLengths = { edgeLenghts };
+    Eigen::VectorXd edgeLengths(4);
+    edgeLengths<< 1.0, 1.0, 1.0, 1.0;
+    expectedResult.Cell2DsEdgeLengths = { edgeLengths };
     Eigen::MatrixXd edgeNormals(3, 4);
     edgeNormals.col(0)<< -1.0, 0.0, 0.0;
     edgeNormals.col(1)<< 0.0, -1.0, 0.0;
