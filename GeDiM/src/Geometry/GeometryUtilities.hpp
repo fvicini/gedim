@@ -792,6 +792,16 @@ namespace Gedim
       std::vector<double> EquispaceCoordinates(const double& step,
                                                const bool& insertExtremes) const;
 
+      /// \param size the number of resulting coordinates
+      /// \param origin the starting curvilinear coordinate
+      /// \param end the ending curvilinear coordinate
+      /// \param insertExtremes if true keeps the extremes
+      /// \return equispaced curvilinear coordinates in the interval [origin, end]
+      std::vector<double> EquispaceCoordinates(const unsigned int& size,
+                                               const double& origin,
+                                               const double& end,
+                                               const bool& insertExtremes) const;
+
       /// \brief compute the Point distance
       /// \param firstPoint the first point
       /// \param secondPoint the second point
@@ -963,6 +973,22 @@ namespace Gedim
         Gedim::Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
         return segmentOrigin.y() -
             segmentOrigin.x() * (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
+      }
+
+      /// \brief Check if two spheres do not intersect
+      /// \param firstSphereCenter the first sphere center
+      /// \param secondSphereCenter the second sphere center
+      /// \param firstSphereDiameter the first sphere diameter
+      /// \param secondSphereDiameter the second sphere diameter
+      /// \return true if the two segments do not intersect
+      /// \note if the function returns true it does not mean that the two segments intersects
+      inline bool CheckNoSpheresIntersection(const Eigen::Vector3d& firstSphereCenter,
+                                             const Eigen::Vector3d& secondSphereCenter,
+                                             const double& firstSphereDiameter,
+                                             const double& secondSphereDiameter) const
+      {
+        return IsValue1DGreater(2.0 * PointDistance(firstSphereCenter, secondSphereCenter),
+                                firstSphereDiameter + secondSphereDiameter);
       }
 
       /// \brief Compute the intersection between the two segments
@@ -1299,6 +1325,15 @@ namespace Gedim
       {
         Gedim::Output::Assert(vertices.rows() == 3);
         return vertices.rowwise().mean();
+      }
+
+      /// \brief Compute the segment barycenter as a mean of all vertices
+      /// \param segmentOrigin the segment origin
+      /// \param segmentEnd the segment end
+      inline Eigen::Vector3d SegmentBarycenter(const Eigen::Vector3d& segmentOrigin,
+                                               const Eigen::Vector3d& segmentEnd) const
+      {
+        return SimplexBarycenter((Eigen::MatrixXd(3, 2)<< segmentOrigin, segmentEnd).finished());
       }
 
       /// \brief Compute the Polygon barycenter as a mean of all vertices

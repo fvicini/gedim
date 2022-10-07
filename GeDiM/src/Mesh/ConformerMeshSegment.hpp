@@ -14,22 +14,26 @@ namespace Gedim
   class ConformerMeshSegment final
   {
     public:
-      struct ConformMesh final {
-          struct ConformMeshPoint final {
-              enum Types {
+      struct ConformMesh final
+      {
+          struct ConformMeshPoint final
+          {
+              enum Types
+              {
                 Unknown = 0,
                 Original = 1, ///< point belong to original intersection mesh
                 Inherited = 2, ///< point belong to other intersection mesh
                 External = 3 ///< other points not inherith from intersection mesh
               };
 
-              list<unsigned int> Cell2DIds = {};
-              list<unsigned int> Edge2DIds = {};
+              set<unsigned int> Cell2DIds = {};
+              set<unsigned int> Edge2DIds = {};
               list<unsigned int> Vertex2DIds = {};
               Types Type;
           };
 
-          struct ConformMeshSegment final {
+          struct ConformMeshSegment final
+          {
               vector<double> Points = {};
               list<unsigned int> Cell2DIds = {};
               list<unsigned int> Edge2DIds = {};
@@ -58,7 +62,7 @@ namespace Gedim
 
       ConformMesh::ConformMeshPoint& InsertNewIntersection(const double& curvilinearCoordinate,
                                                            ConformMesh& result,
-                                                           bool& found);
+                                                           bool& found) const;
       void CreateConformPoints(const Gedim::IntersectorMesh2DSegment::IntersectionMesh& meshIntersection,
                                const Gedim::UnionMeshSegment::UnionMesh& meshUnion,
                                const unsigned int& meshIntersectionPosition,
@@ -99,6 +103,17 @@ namespace Gedim
       /// \param conformedMesh the resulting conformed mesh
       void UpdateWithActiveMesh2D(const Gedim::MeshUtilities::ExtractActiveMeshData& activeMesh2DData,
                                   ConformMesh& conformedMesh) const;
+
+      ///
+      /// \brief Add Missing Mesh2D Cell0Ds generated from the intersections with other interfaces
+      /// \param mesh2D the mesh data
+      /// \param conformedMesh the resulting conformed mesh
+      /// \note the mesh2D shall be made by only active elements
+      void AddMissingMesh2DCell0Ds(const Eigen::Vector3d& segmentOrigin,
+                                   const Eigen::Vector3d& segmentTangent,
+                                   const double& segmentSquaredLength,
+                                   const Gedim::IMeshDAO& mesh2D,
+                                   ConformMesh& conformedMesh) const;
   };
 }
 

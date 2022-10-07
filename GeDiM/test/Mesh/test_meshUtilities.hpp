@@ -9,6 +9,7 @@
 
 #include "MeshMatrices.hpp"
 #include "MeshMatricesDAO.hpp"
+#include "MeshMatrices_3D_22Cells_Mock.hpp"
 #include "MeshUtilities.hpp"
 #include "MeshMatrices_2D_1Cells_Mock.hpp"
 #include "MeshMatrices_2D_2Cells_Mock.hpp"
@@ -270,6 +271,43 @@ namespace GedimUnitTesting
         meshDao.Cell1DMarker(20));
     EXPECT_EQ(cell1DMarkers[0],
         meshDao.Cell1DMarker(23));
+  }
+
+  TEST(TestMeshUtilities, TestCreateTetrahedralMesh)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    Gedim::MeshMatrices mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh);
+
+    Gedim::MeshUtilities meshUtilities;
+
+    const Gedim::GeometryUtilities::Polyhedron polyhedron = geometryUtilities.CreateCubeWithOrigin(Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                                                   1.0);
+
+    meshUtilities.CreateTetrahedralMesh(polyhedron.Vertices,
+                                        polyhedron.Edges,
+                                        polyhedron.Faces,
+                                        0.03,
+                                        meshDao);
+
+    std::string exportFolder = "./Export/TestMeshUtilities/TestCreateTetrahedralMesh";
+    Gedim::Output::CreateFolder(exportFolder);
+    meshUtilities.ExportMeshToVTU(meshDao,
+                                  exportFolder,
+                                  "CreatedTetrahedralMesh");
+
+    EXPECT_EQ(3,
+              meshDao.Dimension());
+    EXPECT_EQ(28,
+              meshDao.Cell0DTotalNumber());
+    EXPECT_EQ(103,
+              meshDao.Cell1DTotalNumber());
+    EXPECT_EQ(127,
+              meshDao.Cell2DTotalNumber());
+    EXPECT_EQ(51,
+              meshDao.Cell3DTotalNumber());
   }
 
   TEST(TestMeshUtilities, TestCheckMesh2D)

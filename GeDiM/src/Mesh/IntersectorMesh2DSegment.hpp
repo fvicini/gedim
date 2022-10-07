@@ -12,17 +12,20 @@ namespace Gedim
   class IntersectorMesh2DSegment final
   {
     public:
-      struct IntersectionMesh final {
-          struct IntersectionMeshPoint final {
+      struct IntersectionMesh final
+      {
+          struct IntersectionMeshPoint final
+          {
               set<unsigned int> Cell2DIds = {};
               set<unsigned int> Edge2DIds = {};
               set<unsigned int> Vertex2DIds = {};
           };
 
-          struct IntersectionMeshSegment final {
+          struct IntersectionMeshSegment final
+          {
               vector<double> Points = {};
-              list<unsigned int> Cell2DIds = {};
-              list<unsigned int> Edge2DIds = {};
+              set<unsigned int> Cell2DIds = {};
+              set<unsigned int> Edge2DIds = {};
           };
 
           map<double, IntersectionMeshPoint> Points;
@@ -47,6 +50,9 @@ namespace Gedim
                                             IntersectionMesh& result);
       void CreateIntersectionPoints(const Eigen::Vector3d& segmentOrigin,
                                     const Eigen::Vector3d& segmentEnd,
+                                    const Eigen::Vector3d& segmentTangent,
+                                    const Eigen::Vector3d& segmentBarycenter,
+                                    const double& segmentLength,
                                     IntersectionMesh& result);
       void CreateIntersectionSegments(IntersectionMesh& result);
 
@@ -63,6 +69,9 @@ namespace Gedim
 
       void CreateIntersectionMesh(const Eigen::Vector3d& segmentOrigin,
                                   const Eigen::Vector3d& segmentEnd,
+                                  const Eigen::Vector3d& segmentTangent,
+                                  const Eigen::Vector3d& segmentBarycenter,
+                                  const double& segmentLength,
                                   IntersectionMesh& result);
   };
 }
