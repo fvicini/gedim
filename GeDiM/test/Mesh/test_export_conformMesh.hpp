@@ -34,8 +34,15 @@ namespace GedimUnitTesting
         GedimUnitTesting::MeshMatrices_2D_2Cells_Mock mockOriginalMesh;
         Gedim::MeshMatricesDAO domainMesh(mockOriginalMesh.Mesh);
 
-        Vector3d segmentOrigin(0.25, 0.25, 0.0);
-        Vector3d segmentEnd(0.35, 0.35, 0.0);
+        const Vector3d segmentOrigin(0.25, 0.25, 0.0);
+        const Vector3d segmentEnd(0.35, 0.35, 0.0);
+        const Eigen::Vector3d segmentTangent = geometryUtilities.SegmentTangent(segmentOrigin,
+                                                                                segmentEnd);
+        const Eigen::Vector3d segmentBarycenter = geometryUtilities.SegmentBarycenter(segmentOrigin,
+                                                                                      segmentEnd);
+        const double segmentLength = geometryUtilities.SegmentLength(segmentOrigin,
+                                                                     segmentEnd);
+        const double segmentSquaredLength = segmentLength * segmentLength;
 
         // Intersect mesh 2D with segment
         Gedim::IntersectorMesh2DSegment intersectorMeshSegment(domainMesh,
@@ -44,6 +51,9 @@ namespace GedimUnitTesting
         Gedim::IntersectorMesh2DSegment::IntersectionMesh intersectionMesh;
         intersectorMeshSegment.CreateIntersectionMesh(segmentOrigin,
                                                       segmentEnd,
+                                                      segmentTangent,
+                                                      segmentBarycenter,
+                                                      segmentLength,
                                                       intersectionMesh);
 
         // Create mesh union
@@ -85,6 +95,13 @@ namespace GedimUnitTesting
         // Update mesh 1D with cleaned mesh 2D
         ASSERT_NO_THROW(conformMeshSegment.UpdateWithActiveMesh2D(extractionData,
                                                                   conformMesh));
+
+        // Check missing mesh 2D cell0Ds
+        ASSERT_NO_THROW(conformMeshSegment.AddMissingMesh2DCell0Ds(segmentOrigin,
+                                                                   segmentTangent,
+                                                                   segmentSquaredLength,
+                                                                   domainMesh,
+                                                                   conformMesh));
 
         EXPECT_EQ(mockOriginalMesh.Mesh.NumberCell0D, 7);
         EXPECT_EQ(mockOriginalMesh.Mesh.NumberCell1D, 9);
@@ -187,24 +204,24 @@ namespace GedimUnitTesting
         segmentMesh.Points.at(6.6913757867999368e-01).Type = Gedim::ConformerMeshSegment::ConformMesh::ConformMeshPoint::External;
         segmentMesh.Points.at(1.0000000000000000e+00).Type = Gedim::ConformerMeshSegment::ConformMesh::ConformMeshPoint::Original;
 
-        segmentMesh.Points.at(0.0000000000000000e+00).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.7221089123105585e-02).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(1.5081657587860950e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.0636899211510995e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.2032877240731363e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.7084084009418125e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.8618524662562461e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(2.9736416870129134e-01).Cell2DIds.push_back(3);
+        segmentMesh.Points.at(0.0000000000000000e+00).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.7221089123105585e-02).Cell2DIds.insert(3);
+        segmentMesh.Points.at(1.5081657587860950e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.0636899211510995e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.2032877240731363e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.7084084009418125e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.8618524662562461e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(2.9736416870129134e-01).Cell2DIds.insert(3);
         segmentMesh.Points.at(3.5907750767017105e-01).Vertex2DIds.push_back(40);
-        segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.push_back(43);
-        segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.push_back(44);
-        segmentMesh.Points.at(3.5907750767017105e-01).Cell2DIds.push_back(3);
-        segmentMesh.Points.at(3.5907750767017105e-01).Cell2DIds.push_back(4);
-        segmentMesh.Points.at(4.0661516876623027e-01).Cell2DIds.push_back(4);
-        segmentMesh.Points.at(4.3798874569320156e-01).Cell2DIds.push_back(4);
-        segmentMesh.Points.at(6.6913757867999368e-01).Cell2DIds.push_back(4);
-        segmentMesh.Points.at(1.0000000000000000e+00).Edge2DIds.push_back(21);
-        segmentMesh.Points.at(1.0000000000000000e+00).Cell2DIds.push_back(4);
+        segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.insert(43);
+        segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.insert(44);
+        segmentMesh.Points.at(3.5907750767017105e-01).Cell2DIds.insert(3);
+        segmentMesh.Points.at(3.5907750767017105e-01).Cell2DIds.insert(4);
+        segmentMesh.Points.at(4.0661516876623027e-01).Cell2DIds.insert(4);
+        segmentMesh.Points.at(4.3798874569320156e-01).Cell2DIds.insert(4);
+        segmentMesh.Points.at(6.6913757867999368e-01).Cell2DIds.insert(4);
+        segmentMesh.Points.at(1.0000000000000000e+00).Edge2DIds.insert(21);
+        segmentMesh.Points.at(1.0000000000000000e+00).Cell2DIds.insert(4);
 
         segmentMesh.Segments.resize(12);
         segmentMesh.Segments[0].Points = vector<double> { 0.0000000000000000e+00, 2.7221089123105585e-02 };

@@ -189,6 +189,9 @@ namespace Gedim
   // ***************************************************************************
   void IntersectorMesh2DSegment::CreateIntersectionPoints(const Vector3d& segmentOrigin,
                                                           const Vector3d& segmentEnd,
+                                                          const Vector3d& segmentTangent,
+                                                          const Vector3d& segmentBarycenter,
+                                                          const double& segmentLength,
                                                           IntersectorMesh2DSegment::IntersectionMesh& result)
   {
     for (unsigned int e = 0; e < _mesh.Cell1DTotalNumber(); e++)
@@ -200,6 +203,17 @@ namespace Gedim
       const unsigned int edgeEndId = _mesh.Cell1DEnd(e);
       const Vector3d edgeOrigin = _mesh.Cell1DOriginCoordinates(e);
       const Vector3d edgeEnd = _mesh.Cell1DEndCoordinates(e);
+
+      const Eigen::Vector3d edgeBarycenter = _geometryUtilities.SegmentBarycenter(edgeOrigin,
+                                                                                  edgeEnd);
+      const double edgeLength = _geometryUtilities.SegmentLength(edgeOrigin,
+                                                                 edgeEnd);
+
+      if (_geometryUtilities.CheckNoSpheresIntersection(edgeBarycenter,
+                                                        segmentBarycenter,
+                                                        edgeLength,
+                                                        segmentLength))
+        continue;
 
       Gedim::GeometryUtilities::IntersectionSegmentSegmentResult intersectionSegmentSegmentResult = _geometryUtilities.IntersectionSegmentSegment(edgeOrigin,
                                                                                                                                                   edgeEnd,
@@ -417,13 +431,15 @@ namespace Gedim
                        intersectionPoint.Edge2DIds.end(),
                        intersectionPointNext.Edge2DIds.begin(),
                        intersectionPointNext.Edge2DIds.end(),
-                       back_inserter(meshSegment.Edge2DIds));
+                       std::inserter(meshSegment.Edge2DIds,
+                                     meshSegment.Edge2DIds.begin()));
       // fill the mesh 2D cells
       set_intersection(intersectionPoint.Cell2DIds.begin(),
                        intersectionPoint.Cell2DIds.end(),
                        intersectionPointNext.Cell2DIds.begin(),
                        intersectionPointNext.Cell2DIds.end(),
-                       back_inserter(meshSegment.Cell2DIds));
+                       std::inserter(meshSegment.Cell2DIds,
+                                     meshSegment.Cell2DIds.begin()));
       itPoint++;
       itPointNext++;
     }
@@ -576,13 +592,23 @@ namespace Gedim
   // ***************************************************************************
   void IntersectorMesh2DSegment::CreateIntersectionMesh(const Vector3d& segmentOrigin,
                                                         const Vector3d& segmentEnd,
+                                                        const Vector3d& segmentTangent,
+                                                        const Vector3d& segmentBarycenter,
+                                                        const double& segmentLength,
                                                         IntersectorMesh2DSegment::IntersectionMesh& result)
   {
     // check if segment origin is inside a single cell
-    CheckOriginAndEndSegmentPosition(segmentOrigin, segmentEnd, result);
+    CheckOriginAndEndSegmentPosition(segmentOrigin,
+                                     segmentEnd,
+                                     result);
 
     // check all segment intersection points with mesh edges
-    CreateIntersectionPoints(segmentOrigin, segmentEnd, result);
+    CreateIntersectionPoints(segmentOrigin,
+                             segmentEnd,
+                             segmentTangent,
+                             segmentBarycenter,
+                             segmentLength,
+                             result);
 
     Gedim::Output::Assert(!result.Points.empty() && result.Points.size() > 1);
 
