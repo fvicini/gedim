@@ -114,12 +114,14 @@ namespace Gedim
 
       void CreateConformMeshGeneralized(const Eigen::Vector3d& segmentOrigin,
                                         const Eigen::Vector3d& segmentEnd,
+                                        const Eigen::Vector3d& segmentTangent,
                                         ConformerMeshSegment::ConformMesh& mesh1D,
                                         Gedim::IMeshDAO& mesh2D,
                                         ConformerMeshPolygon::ConformMesh& meshConformedInformation);
 
       void CreateConformMeshOnlyOnEdges(const Eigen::Vector3d& segmentOrigin,
                                         const Eigen::Vector3d& segmentEnd,
+                                        const Eigen::Vector3d& segmentTangent,
                                         ConformerMeshSegment::ConformMesh& mesh1D,
                                         Gedim::IMeshDAO& mesh2D,
                                         ConformerMeshPolygon::ConformMesh& meshConformedInformation);
@@ -135,6 +137,7 @@ namespace Gedim
       /// \param mesh2DConformed the resulting conformed mesh
       void CreateConformMesh(const Eigen::Vector3d& segmentOrigin,
                              const Eigen::Vector3d& segmentEnd,
+                             const Eigen::Vector3d& segmentTangent,
                              ConformerMeshSegment::ConformMesh& mesh1D,
                              Gedim::IMeshDAO& mesh2D,
                              ConformerMeshPolygon::ConformMesh& meshConformedInformation);
