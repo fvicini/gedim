@@ -82,6 +82,7 @@ namespace GedimUnitTesting
 
         ASSERT_NO_THROW(conformMeshPolygon.CreateConformMesh(segmentOrigin,
                                                              segmentEnd,
+                                                             segmentTangent,
                                                              conformMesh,
                                                              domainMesh,
                                                              domainConformedMeshData));
@@ -171,8 +172,10 @@ namespace GedimUnitTesting
         GedimUnitTesting::MashMatrices_2D_CleanTest_Mock mockOriginalMesh;
         Gedim::MeshMatricesDAO domainMesh(mockOriginalMesh.Mesh);
 
-        Eigen::Vector3d segmentOrigin(1.7745275237876366e+00, 2.5306770050657718e-01, 0.0000000000000000e+00);
-        Eigen::Vector3d segmentEnd(3.5355337963926114e+00, 1.7400074306985638e+00, 0.0000000000000000e+00);
+        const Eigen::Vector3d segmentOrigin(1.7745275237876366e+00, 2.5306770050657718e-01, 0.0000000000000000e+00);
+        const Eigen::Vector3d segmentEnd(3.5355337963926114e+00, 1.7400074306985638e+00, 0.0000000000000000e+00);
+        const Eigen::Vector3d segmentTangent = geometryUtilities.SegmentTangent(segmentOrigin,
+                                                                                segmentEnd);
 
         Gedim::ConformerMeshSegment::ConformMesh segmentMesh;
 
@@ -212,7 +215,7 @@ namespace GedimUnitTesting
         segmentMesh.Points.at(2.7084084009418125e-01).Cell2DIds.insert(3);
         segmentMesh.Points.at(2.8618524662562461e-01).Cell2DIds.insert(3);
         segmentMesh.Points.at(2.9736416870129134e-01).Cell2DIds.insert(3);
-        segmentMesh.Points.at(3.5907750767017105e-01).Vertex2DIds.push_back(40);
+        segmentMesh.Points.at(3.5907750767017105e-01).Vertex2DIds.insert(40);
         segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.insert(43);
         segmentMesh.Points.at(3.5907750767017105e-01).Edge2DIds.insert(44);
         segmentMesh.Points.at(3.5907750767017105e-01).Cell2DIds.insert(3);
@@ -237,32 +240,25 @@ namespace GedimUnitTesting
         segmentMesh.Segments[10].Points = vector<double> { 4.3798874569320156e-01, 6.6913757867999368e-01 };
         segmentMesh.Segments[11].Points = vector<double> { 6.6913757867999368e-01, 1.0000000000000000e+00 };
 
-        segmentMesh.Segments[0].Cell2DIds.push_back(3);
-        segmentMesh.Segments[0].Cell2DIds.push_back(3);
-        segmentMesh.Segments[1].Cell2DIds.push_back(3);
-        segmentMesh.Segments[1].Cell2DIds.push_back(3);
-        segmentMesh.Segments[2].Cell2DIds.push_back(3);
-        segmentMesh.Segments[2].Cell2DIds.push_back(3);
-        segmentMesh.Segments[3].Cell2DIds.push_back(3);
-        segmentMesh.Segments[3].Cell2DIds.push_back(3);
-        segmentMesh.Segments[4].Cell2DIds.push_back(3);
-        segmentMesh.Segments[4].Cell2DIds.push_back(3);
-        segmentMesh.Segments[5].Cell2DIds.push_back(3);
-        segmentMesh.Segments[5].Cell2DIds.push_back(3);
-        segmentMesh.Segments[6].Cell2DIds.push_back(3);
-        segmentMesh.Segments[7].Cell2DIds.push_back(3);
-        segmentMesh.Segments[8].Cell2DIds.push_back(4);
-        segmentMesh.Segments[8].Cell2DIds.push_back(4);
-        segmentMesh.Segments[9].Cell2DIds.push_back(4);
-        segmentMesh.Segments[9].Cell2DIds.push_back(4);
-        segmentMesh.Segments[10].Cell2DIds.push_back(4);
-        segmentMesh.Segments[11].Cell2DIds.push_back(4);
+        segmentMesh.Segments[0].Cell2DIds.insert(3);
+        segmentMesh.Segments[1].Cell2DIds.insert(3);
+        segmentMesh.Segments[2].Cell2DIds.insert(3);
+        segmentMesh.Segments[3].Cell2DIds.insert(3);
+        segmentMesh.Segments[4].Cell2DIds.insert(3);
+        segmentMesh.Segments[5].Cell2DIds.insert(3);
+        segmentMesh.Segments[6].Cell2DIds.insert(3);
+        segmentMesh.Segments[7].Cell2DIds.insert(3);
+        segmentMesh.Segments[8].Cell2DIds.insert(4);
+        segmentMesh.Segments[9].Cell2DIds.insert(4);
+        segmentMesh.Segments[10].Cell2DIds.insert(4);
+        segmentMesh.Segments[11].Cell2DIds.insert(4);
 
         Gedim::ConformerMeshPolygon::ConformMesh segmentConformMeshInfos;
 
         Gedim::ConformerMeshPolygon conformerMeshDomain(geometryUtilities);
         conformerMeshDomain.CreateConformMesh(segmentOrigin,
                                               segmentEnd,
+                                              segmentTangent,
                                               segmentMesh,
                                               domainMesh,
                                               segmentConformMeshInfos);
