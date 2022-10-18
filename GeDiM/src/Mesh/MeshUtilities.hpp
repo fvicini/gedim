@@ -202,6 +202,15 @@ namespace Gedim
                                const std::vector<double>& heightMeshCurvilinearCoordinates,
                                IMeshDAO& mesh) const;
 
+      void CreateParallelepipedMesh(const Eigen::Vector3d& rectangleOrigin,
+                                    const Eigen::Vector3d& rectangleLengthTangent,
+                                    const Eigen::Vector3d& rectangleHeightTangent,
+                                    const Eigen::Vector3d& rectangleWidthTangent,
+                                    const std::vector<double>& lengthMeshCurvilinearCoordinates,
+                                    const std::vector<double>& heightMeshCurvilinearCoordinates,
+                                    const std::vector<double>& widthMeshCurvilinearCoordinates,
+                                    IMeshDAO& mesh) const;
+
       /// \brief Crete triangular mesh on 2D polygon
       /// \param polygonVertices the 2D polygon vertices, size 3xnumVertices
       /// \param maxTriangleArea the maximum triangular area
@@ -263,6 +272,7 @@ namespace Gedim
       /// \return polyhedron from mesh 3D cell
       GeometryUtilities::Polyhedron MeshCell3DToPolyhedron(const IMeshDAO& mesh,
                                                            const unsigned int& cell3DIndex) const;
+
   };
 
 }
