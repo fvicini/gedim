@@ -195,7 +195,7 @@ namespace Gedim
 
       mesh.Cell3DInitializeFaces(c, numCellFaces);
       for (unsigned int f = 0; f < numCellFaces; f++)
-        mesh.Cell3DInsertVertex(c, f, cell3D.Faces[f]);
+        mesh.Cell3DInsertFace(c, f, cell3D.Faces[f]);
     }
   }
   // ***************************************************************************
