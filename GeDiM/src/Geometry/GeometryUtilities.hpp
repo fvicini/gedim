@@ -840,6 +840,12 @@ namespace Gedim
                                                   const Eigen::Vector3d& point) const;
 
 
+
+      double PointLineDistance(const Eigen::Vector3d& point,
+                               const Eigen::Vector3d& pointOnLine,
+                               const Eigen::Vector3d& edgeNormal) const;
+
+
       /// \param points the points to test, size 3 x numPoints
       /// \return true if the points are 2D (z == 0)
       inline bool PointsAre2D(const Eigen::MatrixXd& points) const
@@ -1373,6 +1379,18 @@ namespace Gedim
 
         return subPolygonCentroids * subPolygonAreas / polygonArea;
       }
+
+
+
+      double PolygonInRadius(const Eigen::MatrixXd& polygonVertices,
+                             const Eigen::Vector3d& polygonCentroid,
+                             const Eigen::MatrixXd& polygonEdgeNormals) const;
+
+      inline double PolygonAspectRatio(const double& polygonDiameter,
+                                       const double& polygonInRadius) const
+      {
+        return polygonDiameter / (2.0 * polygonInRadius);
+      };
 
       /// \brief Compute the Polygon diameter defined as the maximum distance between the vertices
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)

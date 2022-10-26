@@ -100,6 +100,28 @@ namespace Gedim
     return centroid;
   }
   // ***************************************************************************
+  double GeometryUtilities::PolygonInRadius(const Eigen::MatrixXd& polygonVertices,
+                                            const Eigen::Vector3d& polygonCentroid,
+                                            const Eigen::MatrixXd& polygonEdgeNormals) const
+  {
+    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+
+    double inRadius = numeric_limits<double>::max();
+    unsigned int numEdges = polygonVertices.cols();
+
+    for(unsigned int e = 0; e < numEdges; e++)
+    {
+      double inRadiusTemp = PointLineDistance(polygonCentroid,
+                                              polygonVertices.col(e),
+                                              polygonEdgeNormals.col(e));
+
+      if(inRadiusTemp < inRadius)
+        inRadius = inRadiusTemp;
+    }
+
+    return inRadius;
+  }
+  // ***************************************************************************
   Matrix3d GeometryUtilities::PolygonRotationMatrix(const Eigen::MatrixXd& polygonVertices,
                                                     const Eigen::Vector3d& polygonNormal,
                                                     const Eigen::Vector3d& polygonTranslation) const
