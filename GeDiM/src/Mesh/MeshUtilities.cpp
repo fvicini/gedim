@@ -124,7 +124,7 @@ namespace Gedim
     mesh.Compress();
   }
   // ***************************************************************************
-  void MeshUtilities::FillMesh1D(const GeometryUtilities& geometryUtilities,
+  void MeshUtilities::FillMesh1D(const GeometryUtilities&,
                                  const Vector3d& segmentOrigin,
                                  const Vector3d& segmentTangent,
                                  const vector<double>& coordinates,
@@ -405,7 +405,7 @@ namespace Gedim
     // Create Cell1Ds
     unsigned int numCell1Ds = numPolygonVertices;
     mesh.Cell1DsInitialize(numCell1Ds);
-    for (int e = 0; e < numPolygonVertices; e++)
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
     {
       mesh.Cell1DSetId(e, e);
       mesh.Cell1DInsertExtremes(e,
@@ -432,7 +432,7 @@ namespace Gedim
     mesh.Cell2DSetMarker(0, 0);
 
     // Create Cell1D neighbours
-    for (int e = 0; e < numPolygonVertices; e++)
+    for (unsigned int e = 0; e < numPolygonVertices; e++)
     {
       mesh.Cell1DInitializeNeighbourCell2Ds(e, 2);
       mesh.Cell1DInsertNeighbourCell2D(e, 1, 0);
@@ -472,7 +472,7 @@ namespace Gedim
     // Create Cell1Ds
     unsigned int numCell1Ds = numEdges;
     mesh.Cell1DsInitialize(numCell1Ds);
-    for (int e = 0; e < numCell1Ds; e++)
+    for (unsigned int e = 0; e < numCell1Ds; e++)
     {
       mesh.Cell1DSetId(e, e);
       mesh.Cell1DInsertExtremes(e,
@@ -486,7 +486,7 @@ namespace Gedim
     // Create Cell2Ds
     const unsigned int& numCell2Ds = numFaces;
     mesh.Cell2DsInitialize(numCell2Ds);
-    for (int f = 0; f < numCell2Ds; f++)
+    for (unsigned int f = 0; f < numCell2Ds; f++)
     {
       const unsigned int numCell2DVertices = polyhedronFaces.at(f).cols();
       mesh.Cell2DInitializeVertices(f, numCell2DVertices);
@@ -921,7 +921,7 @@ namespace Gedim
   void MeshUtilities::ComputeCell1DCell2DNeighbours(IMeshDAO& mesh) const
   {
     // Initialize cell1D neighbours
-    for (int c1D = 0; c1D < mesh.Cell1DTotalNumber(); c1D++)
+    for (unsigned int c1D = 0; c1D < mesh.Cell1DTotalNumber(); c1D++)
       mesh.Cell1DInitializeNeighbourCell2Ds(c1D, 2);
 
     // Compute Cell1D neighbours starting from cell2Ds
@@ -1738,7 +1738,7 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  void MeshUtilities::ExportCell2DToVTU(const IMeshDAO& mesh,
+  void MeshUtilities::ExportCell2DToVTU(const IMeshDAO&,
                                         const unsigned int& cell2DIndex,
                                         const Eigen::MatrixXd& cell2DVertices,
                                         const vector<Eigen::Matrix3d>& cell2DTriangulations,

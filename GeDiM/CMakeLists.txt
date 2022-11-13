@@ -26,6 +26,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 Message(STATUS "Gedim Build configuration: " ${CMAKE_BUILD_TYPE})
 
+# IMPOSE WARNINGS ON DEBUG
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -pedantic-errors")
+
+# IMPOSE CXX FLAGS FOR WINDOWS
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
+endif (WIN32)
+
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/${GEDIM_INSTALL_DIR} CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
 Message(STATUS "Gedim Library will be installed in: " ${CMAKE_INSTALL_PREFIX})
 
@@ -49,6 +57,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 ## Eigen3
 find_package(Eigen3 CONFIG REQUIRED)
 list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC Eigen3::Eigen)
+
+## Blas
+find_package(BLAS REQUIRED)
+list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC BLAS::BLAS)
+
+## Lapack
+find_package(LAPACK REQUIRED)
+list(APPEND ${GEDIM_LIBRARY_LINKED_LIBRARIES} PUBLIC LAPACK::LAPACK)
 
 ## triangle
 find_package(triangle CONFIG REQUIRED)

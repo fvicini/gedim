@@ -840,10 +840,18 @@ namespace Gedim
                                                   const Eigen::Vector3d& point) const;
 
 
-
-      double PointLineDistance(const Eigen::Vector3d& point,
-                               const Eigen::Vector3d& pointOnLine,
-                               const Eigen::Vector3d& edgeNormal) const;
+      /// \brief Compute the distance between a point and a line
+      /// \param point a point P
+      /// \param lineOrigin the line origin O
+      /// \param normalToLine a normal vector n to the line, in the same plane of P and the line
+      /// \return the distance d
+      /// \note The distance is computed as d = n^T * (P - O) / ||n||
+      inline double PointLineDistance(const Eigen::Vector3d& point,
+                                      const Eigen::Vector3d& lineOrigin,
+                                      const Eigen::Vector3d& normalToLine) const
+      {
+        return abs(normalToLine.dot(point - lineOrigin)) / normalToLine.norm();
+      }
 
 
       /// \param points the points to test, size 3 x numPoints
@@ -1381,11 +1389,17 @@ namespace Gedim
       }
 
 
-
+      /// \param polygonVertices the polygon vertices, size 3 x numVertices
+      /// \param polygonCentroid the polygon centroid
+      /// \param polygonEdgeNormals the polygon edge normals outgoing the polygon, size 3 x numEdges
+      /// \return the polygon in radius, as the minimum distance between the polygon centroid and the edges
       double PolygonInRadius(const Eigen::MatrixXd& polygonVertices,
                              const Eigen::Vector3d& polygonCentroid,
                              const Eigen::MatrixXd& polygonEdgeNormals) const;
 
+      /// \param polygonDiameter the polygon diameter
+      /// \param polygonInRadius the polygon in radius
+      /// \return the polygon aspect ratio, defined as the ratio bewteen the in and out diameter
       inline double PolygonAspectRatio(const double& polygonDiameter,
                                        const double& polygonInRadius) const
       {
@@ -1443,11 +1457,8 @@ namespace Gedim
       /// \return the resulting translation vector t which translates 2D points to 3D points
       /// \note to rotate some point P from 2D to 3D use Q * P + t
       /// \note to rotate some point P from 3D to 2D use Q^T * (P - t)
-      inline Eigen::Vector3d PlaneTranslation(const Eigen::Vector3d& planeNormal,
-                                              const Eigen::Vector3d& planeOrigin) const
-      {
-        return planeOrigin;
-      }
+      inline Eigen::Vector3d PlaneTranslation(const Eigen::Vector3d& planeOrigin) const
+      { return planeOrigin; }
 
       /// \brief Rotate Points P using rotation matrix Q and translation t: Q * P + t
       /// \param points the points (size 3 x numPoints)
