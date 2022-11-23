@@ -1388,6 +1388,12 @@ namespace Gedim
         return subPolygonCentroids * subPolygonAreas / polygonArea;
       }
 
+      void PolygonCentroidAndAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
+                                            const Eigen::VectorXd& edgeLengths,
+                                            const Eigen::MatrixXd& edgeTangents,
+                                            const Eigen::MatrixXd& edgeNormals,
+                                            double& polygonArea,
+                                            Eigen::Vector3d& centroid) const;
 
       /// \param polygonVertices the polygon vertices, size 3 x numVertices
       /// \param polygonCentroid the polygon centroid
@@ -1798,6 +1804,7 @@ namespace Gedim
                                                                                          const std::vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                                          const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                                                          const std::vector<Eigen::Vector3d>& polyhedronFaceInternalPoints) const;
+
       /// \brief Polyhedron Tetrahedrons By Face Triangulations
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronFaces the polyhedron faces
@@ -1808,7 +1815,7 @@ namespace Gedim
       std::vector<unsigned int> PolyhedronTetrahedronsByFaceTriangulations(const Eigen::MatrixXd& polyhedronVertices,
                                                                            const std::vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                            const std::vector<std::vector<unsigned int>>& polyhedronFaceTriangulations,
-                                                                           const Eigen::Vector3d& polyhedronInternalPoint) const;
+                                                                           const Eigen::Vector3d& polyhedronInternalPoint) const;    
 
       /// \brief Polyhedron Tetrahedrons By Face Triangulations with face internal points
       /// \param polyhedronVertices the polyhedron vertices
