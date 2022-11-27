@@ -797,6 +797,7 @@ namespace Gedim
       /// \param end the ending curvilinear coordinate
       /// \param insertExtremes if true keeps the extremes
       /// \return equispaced curvilinear coordinates in the interval [origin, end]
+      /// \note if size < 2 then size will be considered as 2
       std::vector<double> EquispaceCoordinates(const unsigned int& size,
                                                const double& origin,
                                                const double& end,
@@ -853,6 +854,12 @@ namespace Gedim
         return abs(normalToLine.dot(point - lineOrigin)) / normalToLine.norm();
       }
 
+      /// \param point the point
+      /// \return true if the point is 2D (z == 0)
+      inline bool PointIs2D(const Eigen::Vector3d& point) const
+      {
+        return PointsAre2D(point);
+      }
 
       /// \param points the points to test, size 3 x numPoints
       /// \return true if the points are 2D (z == 0)
@@ -1388,12 +1395,31 @@ namespace Gedim
         return subPolygonCentroids * subPolygonAreas / polygonArea;
       }
 
-      void PolygonCentroidAndAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
-                                            const Eigen::VectorXd& edgeLengths,
-                                            const Eigen::MatrixXd& edgeTangents,
-                                            const Eigen::MatrixXd& edgeNormals,
-                                            double& polygonArea,
-                                            Eigen::Vector3d& centroid) const;
+      /// \brief Polygon Area By Integral on edges
+      /// \param polygonVertices the polygon vertices, size 3 x numVertices
+      /// \param edgeLengths the edge lengths, size numEdges
+      /// \param edgeTangents the edge tangents, size 3 x numEdges
+      /// \param edgeNormals the edge outgoint normals, size 3 x numEdges
+      /// \return the polygon area
+      /// \note the area is computed as integral_edges x dot n_x with gauss formula on edges of order 1
+      double PolygonAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
+                                   const Eigen::VectorXd& edgeLengths,
+                                   const Eigen::MatrixXd& edgeTangents,
+                                   const Eigen::MatrixXd& edgeNormals) const;
+
+      /// \brief Polygon Area By Integral on edges
+      /// \param polygonVertices the polygon vertices, size 3 x numVertices
+      /// \param edgeLengths the edge lengths, size numEdges
+      /// \param edgeTangents the edge tangents, size 3 x numEdges
+      /// \param edgeNormals the edge outgoint normals, size 3 x numEdges
+      /// \param polygonArea the polygon area
+      /// \return the polygon centroid
+      /// \note the area is computed as integral_edges (x^2, y^2) dot n with gauss formula on edges of order 2
+      Eigen::Vector3d PolygonCentroidByIntegral(const Eigen::MatrixXd& polygonVertices,
+                                                const Eigen::VectorXd& edgeLengths,
+                                                const Eigen::MatrixXd& edgeTangents,
+                                                const Eigen::MatrixXd& edgeNormals,
+                                                const double& polygonArea) const;
 
       /// \param polygonVertices the polygon vertices, size 3 x numVertices
       /// \param polygonCentroid the polygon centroid
@@ -1579,6 +1605,17 @@ namespace Gedim
       std::vector<Eigen::Matrix3d> ExtractTriangulationPointsByInternalPoint(const Eigen::MatrixXd& points,
                                                                              const Eigen::Vector3d& internalPoint,
                                                                              const std::vector<unsigned int>& pointsTriangulation) const;
+
+      /// \brief Create 2D Ellipse approximation with 2D polygon
+      /// \param axisMajorLength the ellipse axis major length
+      /// \param axisMinorLength the ellipse axis minor length
+      /// \param resolution the number of points on each ellipse quadrant
+      /// \return the polygon which approximate the ellipse
+      /// \note the ellipse is centered in the origin and parallel to xy-axis
+      Eigen::MatrixXd CreateEllipse(const double& axisMajorLength,
+                                    const double& axisMinorLength,
+                                    const unsigned int& resolution) const;
+
       /// \brief Create a triangle with points
       Eigen::MatrixXd CreateTriangle(const Eigen::Vector3d& p1,
                                      const Eigen::Vector3d& p2,
