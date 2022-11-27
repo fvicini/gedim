@@ -100,6 +100,104 @@ namespace Gedim
     return centroid;
   }
   // ***************************************************************************
+  double GeometryUtilities::PolygonAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
+                                                  const Eigen::VectorXd& edgeLengths,
+                                                  const Eigen::MatrixXd& edgeTangents,
+                                                  const Eigen::MatrixXd& edgeNormals) const
+  {
+    Gedim::Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+    Gedim::Output::Assert(edgeLengths.size() == polygonVertices.cols());
+    Output::Assert(edgeTangents.rows() == 3 && edgeTangents.cols() == polygonVertices.cols());
+    Output::Assert(edgeNormals.rows() == 3 && edgeNormals.cols() == polygonVertices.cols());
+
+    // quadrature on reference segment [0,1] of order 1
+    const double referenceSegmentPoints = 5.0000000000000000e-01;
+    const double referenceSegmentWeights = 1.0000000000000000e+00;
+    const unsigned int numReferenceQuadraturePoints = 1;
+
+    const unsigned int numEdges = polygonVertices.cols();
+    const unsigned int numQuadraturePoints = numEdges *
+                                             numReferenceQuadraturePoints;
+
+    Eigen::MatrixXd quadraturePoints = Eigen::MatrixXd::Zero(3, numQuadraturePoints);
+    Eigen::MatrixXd quadratureWeightsTimesNormal = Eigen::MatrixXd::Zero(3, numQuadraturePoints);
+
+    for (unsigned int e = 0; e < numEdges; e++)
+    {
+      const MatrixXd edgeWeightsTimesNormal = std::abs(edgeLengths[e]) *
+                                              referenceSegmentWeights *
+                                              edgeNormals.col(e).transpose();
+
+      for (unsigned int q = 0; q < numReferenceQuadraturePoints; q++)
+      {
+        quadraturePoints.col(e * numReferenceQuadraturePoints +
+                             q) = polygonVertices.col(e) +
+                                  referenceSegmentPoints *
+                                  edgeTangents.col(e);
+      }
+
+      quadratureWeightsTimesNormal.block(0,
+                                         e * numReferenceQuadraturePoints,
+                                         3,
+                                         numReferenceQuadraturePoints) = edgeWeightsTimesNormal.transpose();
+    }
+
+    return quadraturePoints.row(0).dot(quadratureWeightsTimesNormal.row(0));
+  }
+  // ***************************************************************************
+  Vector3d GeometryUtilities::PolygonCentroidByIntegral(const Eigen::MatrixXd& polygonVertices, const Eigen::VectorXd& edgeLengths, const Eigen::MatrixXd& edgeTangents, const Eigen::MatrixXd& edgeNormals, const double& polygonArea) const
+  {
+    Gedim::Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+    Gedim::Output::Assert(edgeLengths.size() == polygonVertices.cols());
+    Output::Assert(edgeTangents.rows() == 3 && edgeTangents.cols() == polygonVertices.cols());
+    Output::Assert(edgeNormals.rows() == 3 && edgeNormals.cols() == polygonVertices.cols());
+
+    // quadrature on reference segment [0,1] of order 2
+    const Eigen::Vector2d referenceSegmentPoints(2.1132486540518713e-01,
+                                                 7.8867513459481287e-01);
+    const Eigen::Vector2d referenceSegmentWeights(5.0000000000000000e-01,
+                                                  5.0000000000000000e-01);
+    const unsigned int numReferenceQuadraturePoints = 2;
+
+    const unsigned int numEdges = polygonVertices.cols();
+    const unsigned int numQuadraturePoints = numEdges *
+                                             numReferenceQuadraturePoints;
+
+    Eigen::MatrixXd quadraturePoints = Eigen::MatrixXd::Zero(3, numQuadraturePoints);
+    Eigen::MatrixXd quadratureWeightsTimesNormal = Eigen::MatrixXd::Zero(3, numQuadraturePoints);
+
+    for (unsigned int e = 0; e < numEdges; e++)
+    {
+      const MatrixXd edgeWeightsTimesNormal = std::abs(edgeLengths[e]) *
+                                              referenceSegmentWeights *
+                                              edgeNormals.col(e).transpose();
+
+      for (unsigned int q = 0; q < numReferenceQuadraturePoints; q++)
+      {
+        quadraturePoints.col(e * numReferenceQuadraturePoints +
+                             q) = polygonVertices.col(e) +
+                                  referenceSegmentPoints(q) *
+                                  edgeTangents.col(e);
+      }
+
+      quadratureWeightsTimesNormal.block(0,
+                                         e * numReferenceQuadraturePoints,
+                                         3,
+                                         numReferenceQuadraturePoints) = edgeWeightsTimesNormal.transpose();
+    }
+
+    Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+    centroid(0) = quadraturePoints.row(0) *
+                  quadratureWeightsTimesNormal.row(0).asDiagonal() *
+                  quadraturePoints.row(0).transpose();
+    centroid(1) = quadraturePoints.row(1) *
+                  quadratureWeightsTimesNormal.row(1).asDiagonal() *
+                  quadraturePoints.row(1).transpose();
+    centroid *= 0.5 / polygonArea;
+
+    return centroid;
+  }
+  // ***************************************************************************
   double GeometryUtilities::PolygonInRadius(const Eigen::MatrixXd& polygonVertices,
                                             const Eigen::Vector3d& polygonCentroid,
                                             const Eigen::MatrixXd& polygonEdgeNormals) const
