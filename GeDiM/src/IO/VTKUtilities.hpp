@@ -37,6 +37,15 @@ namespace Gedim
       { }
   };
 
+  struct VTPPoints final
+  {
+      const Eigen::MatrixXd& Points;
+
+      VTPPoints(const Eigen::MatrixXd& points) :
+        Points(points)
+      { }
+  };
+
   struct VTPSegment final
   {
       const Eigen::MatrixXd& Vertices;
@@ -49,33 +58,63 @@ namespace Gedim
       { }
   };
 
-  struct VTPPolygon final
+  struct VTPSegments final
   {
       const Eigen::MatrixXd& Vertices;
       const Eigen::MatrixXi& Edges;
-      const Eigen::MatrixXi& Face;
+
+      VTPSegments(const Eigen::MatrixXd& vertices,
+                  const Eigen::MatrixXi& edges) :
+        Vertices(vertices),
+        Edges(edges)
+      { }
+  };
+
+  struct VTPPolygon final
+  {
+      const Eigen::MatrixXd& Vertices;
+      const std::vector<unsigned int>& Polygon;
 
       VTPPolygon(const Eigen::MatrixXd& vertices,
-                 const Eigen::MatrixXi& edges,
-                 const Eigen::MatrixXi& face) :
+                 const std::vector<unsigned int>& polygon) :
         Vertices(vertices),
-        Edges(edges),
-        Face(face)
+        Polygon(polygon)
+      { }
+  };
+
+  struct VTPPolygons final
+  {
+      const Eigen::MatrixXd& Vertices;
+      const std::vector<std::vector<unsigned int>>& Polygons;
+
+      VTPPolygons(const Eigen::MatrixXd& vertices,
+                  const std::vector<std::vector<unsigned int>>& polygons) :
+        Vertices(vertices),
+        Polygons(polygons)
       { }
   };
 
   struct VTPPolyhedron final
   {
       const Eigen::MatrixXd& Vertices; /// size 3xnumVertices
-      const Eigen::MatrixXi& Edges; /// size 2xnumEdges
-      const std::vector<Eigen::MatrixXi>& Faces; /// size numFacesx2xnumFaceVertices
+      const std::vector<std::vector<unsigned int>>& PolyhedronFaces; /// size numFaces x numFaceVertices
 
       VTPPolyhedron(const Eigen::MatrixXd& vertices,
-                    const Eigen::MatrixXi& edges,
-                    const std::vector<Eigen::MatrixXi>& faces) :
+                    const std::vector<std::vector<unsigned int>>& faces) :
         Vertices(vertices),
-        Edges(edges),
-        Faces(faces)
+        PolyhedronFaces(faces)
+      { }
+  };
+
+  struct VTPPolyhedrons final
+  {
+      const Eigen::MatrixXd& Vertices; /// size 3xnumVertices
+      const std::vector<std::vector<std::vector<unsigned int>>>& PolyhedronsFaces; /// size numPolyhedrons x numPolyhedronFaces x numPolyhedronFaceVertices
+
+      VTPPolyhedrons(const Eigen::MatrixXd& vertices,
+                     const std::vector<std::vector<std::vector<unsigned int>>>& polyhedronsFaces) :
+        Vertices(vertices),
+        PolyhedronsFaces(polyhedronsFaces)
       { }
   };
 
@@ -129,6 +168,8 @@ namespace Gedim
 
       void AddPoint(const Eigen::Vector3d& point,
                     const std::vector<VTPProperty>& properties = {});
+      void AddPoints(const Eigen::MatrixXd& points,
+                     const std::vector<VTPProperty>& properties = {});
       void AddSegment(const Eigen::Vector3d& origin,
                       const Eigen::Vector3d& end,
                       const std::vector<VTPProperty>& properties = {});
@@ -137,15 +178,27 @@ namespace Gedim
       void AddSegment(const Eigen::MatrixXd& vertices,
                       const Eigen::VectorXi& edge,
                       const std::vector<VTPProperty>& properties = {});
+      void AddSegments(const Eigen::MatrixXd& vertices,
+                       const Eigen::MatrixXi& edges,
+                       const std::vector<VTPProperty>& properties = {});
       void AddPolygon(const Eigen::MatrixXd& vertices,
                       const std::vector<VTPProperty>& properties = {});
       void AddPolygon(const Eigen::MatrixXd& vertices,
-                      const Eigen::MatrixXi& edges,
+                      const std::vector<unsigned int>& polygon,
                       const std::vector<VTPProperty>& properties = {});
+      void AddPolygons(const Eigen::MatrixXd& vertices,
+                       const std::vector<std::vector<unsigned int>>& polygons,
+                       const std::vector<VTPProperty>& properties = {});
       void AddPolyhedron(const Eigen::MatrixXd& vertices,
                          const Eigen::MatrixXi& edges,
                          const std::vector<Eigen::MatrixXi>& faces,
                          const std::vector<VTPProperty>& properties = {});
+      void AddPolyhedron(const Eigen::MatrixXd& vertices,
+                         const std::vector<std::vector<unsigned int>>& polyhedronFaces,
+                         const std::vector<VTPProperty>& properties = {});
+      void AddPolyhedrons(const Eigen::MatrixXd& vertices,
+                          const std::vector<std::vector<std::vector<unsigned int>>>& polyhedronsFaces,
+                          const std::vector<VTPProperty>& properties = {});
 
       void Export(const std::string& filePath,
                   const ExportFormats& format = ExportFormats::Binary) const;
@@ -161,13 +214,21 @@ namespace Gedim
 #if ENABLE_VTK == 1
       void AddPoint(const Eigen::Vector3d& point,
                     vtkNew<vtkPoints>& points) const;
+      void AddPoints(const Eigen::MatrixXd& points,
+                     vtkNew<vtkPoints>& vtkPoints) const;
       void AddVertex(const unsigned int& pointId,
                      vtkNew<vtkCellArray>& vertices) const;
+      void AddVertices(const std::vector<unsigned int>& pointIds,
+                       vtkNew<vtkCellArray>& vertices) const;
       void AddLine(const unsigned int& originId,
                    const unsigned int& endId,
                    vtkNew<vtkCellArray>& lines) const;
-      void AddPolygon(const Eigen::VectorXi& faceVerticesIds,
+      void AddLines(const Eigen::MatrixXi& edges,
+                    vtkNew<vtkCellArray>& lines) const;
+      void AddPolygon(const std::vector<unsigned int>& faceVerticesIds,
                       vtkNew<vtkCellArray>& faces) const;
+      void AddPolygons(const std::vector<std::vector<unsigned int>>& facesVerticesIds,
+                       vtkNew<vtkCellArray>& faces) const;
       void AppendSolution(vtkDataSet* polyData) const;
 #endif
 

@@ -39,11 +39,6 @@ namespace Gedim
       /// \brief Add the Cell0Ds Coordinates
       /// \param coordinates the coordinates of the Cell0Ds, size 3 x Cell0DTotalNumber()
       virtual void Cell0DsInsertCoordinates(const Eigen::MatrixXd& coordinates) = 0;
-      /// \brief Set the Cell0D Id
-      /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
-      /// \param id the id of the Cell0D
-      virtual void Cell0DSetId(const unsigned int& cell0DIndex,
-                               const unsigned int& id) = 0;
       /// \brief Set the Cell0D Marker
       /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
       /// \param marker the marker of the Cell0D
@@ -69,13 +64,10 @@ namespace Gedim
       /// \return the coordinates as Eigen Vector3d of cell0D, size 3x1
       virtual Eigen::Vector3d Cell0DCoordinates(const unsigned int& cell0DIndex) const = 0;
       /// \return the coordinates as Eigen MatrixXd of cell0D, size 3xCell0DTotalNumber()
-      virtual Eigen::MatrixXd Cell0DCoordinates() const = 0;
+      virtual Eigen::MatrixXd Cell0DsCoordinates() const = 0;
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
       /// \return if the cell0D is active
       virtual bool Cell0DIsActive(const unsigned int& cell0DIndex) const = 0;
-      /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
-      /// \return the cell0D id
-      virtual unsigned int Cell0DId(const unsigned int& cell0DIndex) const = 0;
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
       /// \return the cell0D marker
       virtual unsigned int Cell0DMarker(const unsigned int& cell0DIndex) const = 0;
@@ -259,13 +251,18 @@ namespace Gedim
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \note the cell1D is removed and no integrity check in the mesh are performed
       virtual void Cell1DRemove(const unsigned int& cell1DIndex) = 0;
-      /// \brief Set the Cell1D Origin
+      /// \brief Set the Cell1D Origin and End
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param originCell0DIndex the Cell0D index of Cell1D origin from 0 to Cell0DTotalNumber()
       /// \param endCell0DIndex the Cell0D index of Cell1D end from 0 to Cell0DTotalNumber()
       virtual void Cell1DInsertExtremes(const unsigned int& cell1DIndex,
                                         const unsigned int& originCell0DIndex,
                                         const unsigned int& endCell0DIndex) = 0;
+
+      /// \brief Set the Cell1D Extremes for the whole mesh edges
+      /// \param cell1DExtremes the origin and end indices of all the edges, size 2 x Cell1DTotalNumber()
+      virtual void Cell1DsInsertExtremes(const Eigen::MatrixXi& cell1DExtremes) = 0;
+
       /// \return true if Cell1D (origin->end) exists, false otherwise
       /// \param originCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
       /// \param endCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
@@ -273,7 +270,7 @@ namespace Gedim
                                 const unsigned int& endCell0DIndex) const = 0;
 
       /// \return the extrems as Eigen MatrixXi of cell1Ds, size 2xCell1DTotalNumber()
-      virtual Eigen::MatrixXi Cell1DExtremes() const = 0;
+      virtual Eigen::MatrixXi Cell1DsExtremes() const = 0;
       /// \return the extrems as Eigen MatrixXi of cell1D, size 2
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       virtual Eigen::VectorXi Cell1DExtremes(const unsigned int& cell1DIndex) const = 0;
@@ -282,11 +279,6 @@ namespace Gedim
       /// \param endCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
       virtual unsigned int Cell1DByExtremes(const unsigned int& originCell0DIndex,
                                             const unsigned int& endCell0DIndex) const = 0;
-      /// \brief Set the Cell1D Id
-      /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
-      /// \param id the id of the Cell1D
-      virtual void Cell1DSetId(const unsigned int& cell1DIndex,
-                               const unsigned int& id) = 0;
       /// \brief Set the Cell1D Marker
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param marker the marker of the Cell1D
@@ -319,9 +311,6 @@ namespace Gedim
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return the end Cell0D index of Cell1D from 0 to Cell0DTotalNumber()
       virtual unsigned int Cell1DEnd(const unsigned int& cell1DIndex) const = 0;
-      /// \param cell1DIndex the index of cell0D from 0 to Cell1DTotalNumber()
-      /// \return the cell1D id
-      virtual unsigned int Cell1DId(const unsigned int& cell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return the cell1D marker
       virtual unsigned int Cell1DMarker(const unsigned int& cell1DIndex) const = 0;
@@ -515,11 +504,6 @@ namespace Gedim
       /// \note No itialization is necessary
       virtual void Cell2DAddEdges(const unsigned int& cell2DIndex,
                                   const std::vector<unsigned int>& edgesCell0DIndices) = 0;
-      /// \brief Set the Cell2D Id
-      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
-      /// \param id the id of the Cell2D
-      virtual void Cell2DSetId(const unsigned int& cell2DIndex,
-                               const unsigned int& id) = 0;
       /// \brief Set the Cell2D Marker
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param marker the marker of the Cell2D
@@ -538,6 +522,8 @@ namespace Gedim
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the number of edges of Cell2D
       virtual unsigned int Cell2DNumberEdges(const unsigned int& cell2DIndex ) const = 0;
+      /// \return the Cell0D index collections of all Cell2Ds, size Cell2DTotalNumber() x Cell2DNumberVertices(cell2DIndex)
+      virtual std::vector<std::vector<unsigned int>> Cell2DsVertices() const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the Cell0D index collections of Cell2D from 0 to Cell0DTotalNumber(), size Cell2DNumberVertices(cell2DIndex)
       virtual std::vector<unsigned int> Cell2DVertices(const unsigned int& cell2DIndex) const = 0;
@@ -562,9 +548,6 @@ namespace Gedim
       /// \return the Cell1D index of edge of Cell2D from 0 to Cell1DTotalNumber()
       virtual unsigned int Cell2DEdge(const unsigned int& cell2DIndex,
                                       const unsigned int& edgeIndex) const = 0;
-      /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
-      /// \return the cell2D id
-      virtual unsigned int Cell2DId(const unsigned int& cell2DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the cell2D marker
       virtual unsigned int Cell2DMarker(const unsigned int& cell2DIndex ) const = 0;
@@ -778,11 +761,6 @@ namespace Gedim
       /// \note No itialization is necessary
       virtual void Cell3DAddFaces(const unsigned int& cell3DIndex,
                                   const std::vector<unsigned int>& facesCell0DIndices) = 0;
-      /// \brief Set the Cell3D Id
-      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
-      /// \param id the id of the Cell3D
-      virtual void Cell3DSetId(const unsigned int& cell3DIndex,
-                               const unsigned int& id) = 0;
       /// \brief Set the Cell1D Marker
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \param marker the marker of the Cell3D
@@ -832,14 +810,14 @@ namespace Gedim
       /// \return the Cell2D index collections of Cell3D from 0 to Cell2DTotalNumber(), size Cell3DNumberFaces(cell3DIndex)
       virtual std::vector<unsigned int> Cell3DFaces(const unsigned int& cell3DIndex) const = 0;
 
+      /// \return the Cell0D index collections of all the faces of all Cell3Ds, size Cell3DTotalNumber() x Cell3DNumberFaces(cell3DIndex) x Cell2DNumberVertices(cell2DIndex)
+      virtual std::vector<std::vector<std::vector<unsigned int>>> Cell3DsFacesVertices() const = 0;
+
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param faceIndex the index of cell2D face from 0 to NumberCell3DFaces(cell3DIndex)
       /// \return the Cell2D index of face of Cell3D from 0 to Cell2DTotalNumber()
       virtual unsigned int Cell3DFace(const unsigned int& cell3DIndex,
                                       const unsigned int& faceIndex ) const = 0;
-      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
-      /// \return the cell3D id
-      virtual unsigned int Cell3DId(const unsigned int& cell3DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \return the cell3D marker
       virtual unsigned int Cell3DMarker(const unsigned int& cell3DIndex ) const = 0;
