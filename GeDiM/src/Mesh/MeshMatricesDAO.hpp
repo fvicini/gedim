@@ -114,7 +114,7 @@ namespace Gedim
                                Cell0DCoordinateY(cell0DIndex),
                                Cell0DCoordinateZ(cell0DIndex));
       }
-      Eigen::MatrixXd Cell0DCoordinates() const;
+      Eigen::MatrixXd Cell0DsCoordinates() const;
       inline unsigned int Cell0DMarker(const unsigned int& cell0DIndex) const
       {
         Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
@@ -148,9 +148,6 @@ namespace Gedim
       bool Cell0DUpdatedCell0Ds(const unsigned int& cell0DIndex,
                                 list<unsigned int>& updatedCell0DIds) const;
 
-      inline void Cell0DSetId(const unsigned int& ,
-                              const unsigned int& ) { return; }
-      inline unsigned int Cell0DId(const unsigned int& cell0DIndex) const { return cell0DIndex; }
       inline void Cell0DInitializeNeighbourCell1Ds(const unsigned int& cell0DIndex,
                                                    const unsigned int& numberNeighbourCell1Ds);
       inline void Cell0DInsertNeighbourCell1D(const unsigned int& cell0DIndex,
@@ -308,20 +305,13 @@ namespace Gedim
       void Cell1DsInitialize(const unsigned int& numberCell1Ds);
       unsigned int Cell1DAppend(const unsigned int& numberCell1Ds);
       void Cell1DRemove(const unsigned int& cell1DIndex);
-      inline void Cell1DInsertExtremes(const unsigned int& cell1DIndex,
+      void Cell1DInsertExtremes(const unsigned int& cell1DIndex,
                                        const unsigned int& originCell0DIndex,
-                                       const unsigned int& endCell0DIndex)
-      {
-        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
-        Gedim::Output::Assert(originCell0DIndex < Cell0DTotalNumber());
-        Gedim::Output::Assert(endCell0DIndex < Cell0DTotalNumber());
-        _mesh.Cell1DVertices[2 * cell1DIndex] = originCell0DIndex;
-        _mesh.Cell1DVertices[2 * cell1DIndex + 1] = endCell0DIndex;
-        _mesh.Cell1DAdjacency.insert(originCell0DIndex,
-                                     endCell0DIndex) = cell1DIndex + 1;
-        _mesh.Cell1DAdjacency.makeCompressed();
-      }
-      Eigen::MatrixXi Cell1DExtremes() const;
+                                       const unsigned int& endCell0DIndex);
+
+      void Cell1DsInsertExtremes(const Eigen::MatrixXi& cell1DExtremes);
+
+      Eigen::MatrixXi Cell1DsExtremes() const;
       /// \return the extrems as Eigen MatrixXi of cell1D, size 2
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       inline Eigen::VectorXi Cell1DExtremes(const unsigned int& cell1DIndex) const
@@ -460,9 +450,6 @@ namespace Gedim
                                 list<unsigned int>& updatedCell1DIds) const;
       void Cell1DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
 
-      inline void Cell1DSetId(const unsigned int& ,
-                              const unsigned int& ) { return; }
-      inline unsigned int Cell1DId(const unsigned int& cell1DIndex) const { return cell1DIndex; }
       inline void Cell1DInitializeNeighbourCell3Ds(const unsigned int& ,
                                                    const unsigned int& ) { }
       inline void Cell1DInsertNeighbourCell3D(const unsigned int& ,
@@ -595,6 +582,7 @@ namespace Gedim
       }
 
       vector<unsigned int> Cell2DVertices(const unsigned int& cell2DIndex) const;
+      std::vector<std::vector<unsigned int>> Cell2DsVertices() const;
 
       inline unsigned int Cell2DVertex(const unsigned int& cell2DIndex,
                                        const unsigned int& vertexIndex) const
@@ -664,9 +652,6 @@ namespace Gedim
       bool Cell2DUpdatedCell2Ds(const unsigned int& cell2DIndex,
                                 list<unsigned int>& updatedCell2DIds) const;
 
-      inline void Cell2DSetId(const unsigned int& ,
-                              const unsigned int& ) { return; }
-      inline unsigned int Cell2DId(const unsigned int& cell2DIndex) const { return cell2DIndex; }
       inline void Cell2DInitializeNeighbourCell3Ds(const unsigned int& ,
                                                    const unsigned int& ) { }
       inline void Cell2DInsertNeighbourCell3D(const unsigned int& ,
@@ -884,6 +869,7 @@ namespace Gedim
 
         return _mesh.Cell3DFaces[_mesh.NumberCell3DFaces[cell3DIndex] + faceIndex];
       }
+      std::vector<std::vector<std::vector<unsigned int>>> Cell3DsFacesVertices() const;
       inline unsigned int Cell3DMarker(const unsigned int& cell3DIndex) const
       {
         Gedim::Output::Assert(cell3DIndex < Cell3DTotalNumber());
@@ -916,10 +902,6 @@ namespace Gedim
                                      const unsigned int& updatedCell3DIdex);
       bool Cell3DUpdatedCell3Ds(const unsigned int& cell3DIndex,
                                 list<unsigned int>& updatedCell3DIds) const;
-
-      inline void Cell3DSetId(const unsigned int& ,
-                              const unsigned int& ) { }
-      inline unsigned int Cell3DId(const unsigned int& cell3DIndex) const { return cell3DIndex; }
 
       void Cell3DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
       unsigned int Cell3DAddDoubleProperty(const string& propertyId);
