@@ -15,6 +15,10 @@
 #include "MeshMatrices_2D_1Cells_Mock.hpp"
 #include "MeshMatrices_2D_2Cells_Mock.hpp"
 #include "MeshMatrices_3D_1Cells_Mock.hpp"
+#include "MeshMatrices_3D_68Cells_Mock.hpp"
+
+#include "MeshFromCsvUtilities.hpp"
+#include "MeshDAOImporterFromCsv.hpp"
 
 using namespace testing;
 using namespace std;
@@ -376,6 +380,22 @@ namespace GedimUnitTesting
 
     Gedim::MeshUtilities::CheckMesh2DConfiguration config;
     ASSERT_NO_THROW(meshUtilities.CheckMesh2D(config,
+                                              geometryUtilities,
+                                              meshDao));
+  }
+
+  TEST(TestMeshUtilities, TestCheckMesh3D)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance = 1e-12;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    GedimUnitTesting::MeshMatrices_3D_68Cells_Mock mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh.Mesh);
+    Gedim::MeshUtilities meshUtilities;
+
+    Gedim::MeshUtilities::CheckMesh3DConfiguration config;
+    ASSERT_NO_THROW(meshUtilities.CheckMesh3D(config,
                                               geometryUtilities,
                                               meshDao));
   }
