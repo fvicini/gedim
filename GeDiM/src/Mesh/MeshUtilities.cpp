@@ -1740,20 +1740,23 @@ namespace Gedim
   // ***************************************************************************
   void MeshUtilities::CreateTriangularMesh(const Eigen::MatrixXd& polygonVertices,
                                            const double& maxTriangleArea,
-                                           IMeshDAO& mesh) const
+                                           IMeshDAO& mesh,
+                                           const string& options) const
   {
     TriangleInterface triangleInterface;
 
     triangleInterface.CreateMesh(polygonVertices,
                                  maxTriangleArea,
-                                 mesh);
+                                 mesh,
+                                 options);
   }
   // ***************************************************************************
   void MeshUtilities::CreateTetrahedralMesh(const Eigen::MatrixXd& polyhedronVertices,
                                             const Eigen::MatrixXi& polyhedronEdges,
                                             const std::vector<Eigen::MatrixXi>& polyhedronFaces,
                                             const double& maxTetrahedronVolume,
-                                            IMeshDAO& mesh) const
+                                            IMeshDAO& mesh,
+                                            const string& options) const
   {
     TetgenInterface tetgenInterface;
 
@@ -1761,7 +1764,8 @@ namespace Gedim
                                polyhedronEdges,
                                polyhedronFaces,
                                maxTetrahedronVolume,
-                               mesh);
+                               mesh,
+                               options);
   }
   // ***************************************************************************
   void MeshUtilities::ChangePolygonMeshMarkers(const Eigen::MatrixXd& polygonVertices,
