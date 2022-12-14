@@ -290,7 +290,7 @@ namespace GedimUnitTesting {
         points.row(2)<< 0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
 
         {
-          const string exportFolder = "./TEST";
+          const string exportFolder = "./Export/TestGeometryUtilities/TestConvexHullAlignedPointsSquareTwo";
           Gedim::Output::CreateFolder(exportFolder);
 
           const vector<double> pointIds = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0 };
@@ -339,7 +339,7 @@ namespace GedimUnitTesting {
         points.col(7)<< 15.0, 25.0, 0.0;
 
         {
-          const string exportFolder = "./TEST";
+          const string exportFolder = "./Export/TestGeometryUtilities/TestConvexHullComplex";
           Gedim::Output::CreateFolder(exportFolder);
 
           const vector<double> pointIds = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0 };
