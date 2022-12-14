@@ -110,52 +110,90 @@ namespace Gedim
     //     pointOnHull = endpoint
     // until endpoint = P[0]      // wrapped around to first hull point
 
-    Output::Assert(points.rows() == 3 && points.cols() > 2 && PointsAre2D(points));
+    Output::Assert(points.rows() == 3 && PointsAre2D(points));
 
+    list<unsigned int> convexHull;
     const unsigned int numPoints = points.cols();
+
+    if (numPoints == 1)
+      return vector<unsigned int> { 0 };
+
     unsigned int leftMost = 0;
     for (unsigned int p = 1; p < numPoints; p++)
     {
       if (points(0, p) < points(0, leftMost))
         leftMost = p;
     }
-    list<unsigned int> convexHull;
+
+    if (numPoints == 2)
+      return vector<unsigned int> { leftMost, (leftMost + 1) % 2 };
+
+    list<unsigned int> elements;
+    for (unsigned int p = 0; p < numPoints; p++)
+    {
+      if (p == leftMost)
+        continue;
+
+      elements.push_back(p);
+    }
 
     unsigned int pointOnHull = leftMost;
+    list<unsigned int>::iterator itSelected = elements.begin();
     do
     {
       convexHull.push_back(pointOnHull);
 
-      unsigned int endpoint = 0;
-      unsigned int numPointTested = 0;
-
-      while (numPointTested < numPoints) // to avoid aligned points
+      itSelected = elements.begin();
+      for (list<unsigned int>::iterator it = elements.begin();
+           it != elements.end();
+           it++)
       {
-        for (unsigned int j = 0; j < numPoints; j++)
+        if (it == itSelected)
+          continue;
+
+        const  GeometryUtilities::PointSegmentPositionTypes pointPosition =  PointSegmentPosition(points.col(*it),
+                                                                                                  points.col(pointOnHull),
+                                                                                                  points.col(*itSelected));
+
+        Output::Assert(pointPosition != GeometryUtilities::PointSegmentPositionTypes::Unknown);
+        if (pointPosition == GeometryUtilities::PointSegmentPositionTypes::RightTheSegment)
         {
-          if (endpoint == pointOnHull)
-          {
-            endpoint = j;
-            continue;
-          }
-
-          const  GeometryUtilities::PointSegmentPositionTypes pointPosition =  PointSegmentPosition(points.col(j),
-                                                                                                    points.col(pointOnHull),
-                                                                                                    points.col(endpoint));
-
-          if (pointPosition == GeometryUtilities::PointSegmentPositionTypes::RightTheSegment)
-          {
-            endpoint = j;
-            numPointTested = 0;
-            break;
-          }
-
-          numPointTested++;
+          itSelected = it;
         }
       }
-      pointOnHull = endpoint;
+
+      if (itSelected != elements.end())
+      {
+        if (convexHull.size() == 1)
+        {
+          pointOnHull = *itSelected;
+          elements.erase(itSelected);
+        }
+        else
+        {
+          // check position of selected point
+          const  GeometryUtilities::PointSegmentPositionTypes pointPosition =  PointSegmentPosition(points.col(*itSelected),
+                                                                                                    points.col(convexHull.front()),
+                                                                                                    points.col(convexHull.back()));
+
+          Output::Assert(pointPosition != GeometryUtilities::PointSegmentPositionTypes::Unknown);
+
+          if (pointPosition == GeometryUtilities::PointSegmentPositionTypes::LeftTheSegment ||
+              pointPosition == GeometryUtilities::PointSegmentPositionTypes::InsideSegment ||
+              pointPosition == GeometryUtilities::PointSegmentPositionTypes::OnSegmentLineAfterEnd)
+          {
+            pointOnHull = *itSelected;
+            elements.erase(itSelected);
+          }
+          else
+          {
+            // point is inside the convex hull, nothing to do more
+            break;
+          }
+        }
+      }
     }
-    while (pointOnHull != convexHull.front());
+    while (itSelected != elements.end());
 
     return vector<unsigned int>(convexHull.begin(), convexHull.end());
   }
