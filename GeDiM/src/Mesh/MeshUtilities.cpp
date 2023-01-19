@@ -1357,6 +1357,654 @@ namespace Gedim
     }
   }
   // ***************************************************************************
+  void MeshUtilities::CreateRectanglePlusHangingNodesMesh(const Eigen::Vector3d& rectangleOrigin,
+                                                          const Eigen::Vector3d& rectangleBaseTangent,
+                                                          const Eigen::Vector3d& rectangleHeightTangent,
+                                                          const vector<double>& baseMeshCurvilinearCoordinates,
+                                                          const vector<double>& heightMeshCurvilinearCoordinates,
+                                                          const unsigned int& numberOfAddedVerticesForEachRectangle,
+                                                          const GeometryUtilities& geometryUtilities,
+                                                          IMeshDAO& mesh) const
+  {
+    const unsigned int& numBasePoints = baseMeshCurvilinearCoordinates.size();
+    const unsigned int& numHeightPoints = heightMeshCurvilinearCoordinates.size();
+
+    if ( numberOfAddedVerticesForEachRectangle == 0)
+    {
+      MeshUtilities::CreateRectangleMesh(rectangleOrigin,
+                                         rectangleBaseTangent,
+                                         rectangleHeightTangent,
+                                         baseMeshCurvilinearCoordinates,
+                                         heightMeshCurvilinearCoordinates,
+                                         mesh);
+    }
+    else
+    {
+      unsigned int N = ( numberOfAddedVerticesForEachRectangle + 4 ) % 4;
+      unsigned int numberOfAddedNodesToFirstNEdges = numberOfAddedVerticesForEachRectangle / 4 + 1;
+      if (N == 0)
+      {
+        N = 4;
+        numberOfAddedNodesToFirstNEdges = numberOfAddedVerticesForEachRectangle / 4;
+      }
+
+      const unsigned int numCell0Ds = numBasePoints * numHeightPoints
+                                      + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
+                                      + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                      * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2))
+                                      + (numHeightPoints / 2) * (numBasePoints - 1) *
+                                      (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3))
+                                      + (numBasePoints / 2) * (numHeightPoints - 1) *
+                                      (numberOfAddedNodesToFirstNEdges *   (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4));
+
+      const unsigned int numCell1Ds = ceil((numHeightPoints * 0.5)) *
+                                      (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1)
+                                      + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                      * ( numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2) + 1)
+                                      + (numHeightPoints / 2) * (numBasePoints - 1) *
+                                      (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3) + 1)
+                                      + (numBasePoints / 2) * (numHeightPoints - 1) *
+                                      (numberOfAddedNodesToFirstNEdges *   (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4) + 1);
+
+
+
+      const unsigned int numCell2Ds = (numBasePoints - 1) * (numHeightPoints - 1);
+
+      mesh.InitializeDimension(2);
+
+      mesh.Cell0DsInitialize(numCell0Ds);
+      mesh.Cell1DsInitialize(numCell1Ds);
+      mesh.Cell2DsInitialize(numCell2Ds);
+
+      // create cell0Ds (# numBasePoints * numHeightPoints)
+      unsigned int cell0DIndex = 0;
+      for (unsigned int h = 0; h < numHeightPoints; h++)
+      {
+        for (unsigned int b = 0; b < numBasePoints; b++)
+        {
+          const Eigen::Vector3d coordinate = rectangleOrigin +
+                                             baseMeshCurvilinearCoordinates[b] * rectangleBaseTangent +
+                                             heightMeshCurvilinearCoordinates[h] * rectangleHeightTangent;
+          const unsigned int marker = 1 * (b == 0 && h == 0) +
+                                      2 * (b == (numBasePoints - 1) && h == 0) +
+                                      4 * (b == 0 && h == (numHeightPoints - 1)) +
+                                      3 * (b == (numBasePoints - 1) && h == (numHeightPoints - 1)) +
+                                      5 * (h == 0 && b != 0 && b != (numBasePoints - 1)) +
+                                      7 * (h == (numHeightPoints - 1) && b != 0 && b != (numBasePoints - 1)) +
+                                      8 * (b == 0 && h != 0 && h != (numHeightPoints - 1)) +
+                                      6 * (b == (numBasePoints - 1) && h != 0 && h != (numHeightPoints - 1));
+
+          mesh.Cell0DSetState(cell0DIndex, true);
+          mesh.Cell0DInsertCoordinates(cell0DIndex,
+                                       coordinate);
+
+          mesh.Cell0DSetMarker(cell0DIndex, marker);
+          cell0DIndex++;
+        }
+      }
+
+      // create hanging nodes onto the base of rectangle
+      // (# numberOfAddedNodesToFirstNEdges * (numBasePoints - 1) * ceil((numHeightPoints * 0.5)))
+      for (unsigned int h = 0; h < numHeightPoints; h = h + 2)
+      {
+        for (unsigned int b = 0; b < (numBasePoints - 1); b++)
+        {
+
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesToFirstNEdges,
+                                                                                         baseMeshCurvilinearCoordinates[b],
+                                                                                         baseMeshCurvilinearCoordinates[b+1],
+                                                                                         false);
+          for (unsigned int s = 0; s < numberOfAddedNodesToFirstNEdges; s++)
+          {
+            const Eigen::Vector3d coordinate = rectangleOrigin +
+                                               curvilinearPoints[s] * rectangleBaseTangent +
+                                               heightMeshCurvilinearCoordinates[h] * rectangleHeightTangent;
+
+
+
+            const unsigned int marker = 5 * (h == 0) +
+                                        7 * (h == (numHeightPoints - 1));
+
+            mesh.Cell0DSetState(cell0DIndex, true);
+            mesh.Cell0DInsertCoordinates(cell0DIndex,
+                                         coordinate);
+
+            mesh.Cell0DSetMarker(cell0DIndex, marker);
+            cell0DIndex++;
+          }
+        }
+      }
+
+      for (unsigned int h = 0; h < (numHeightPoints - 1); h++)
+      {
+        for (unsigned int b = 0; b < numBasePoints; b = b + 2)
+        {
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 2)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
+                                                                                         heightMeshCurvilinearCoordinates[h],
+                                                                                         heightMeshCurvilinearCoordinates[h+1],
+                                                                                         false);
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const Eigen::Vector3d coordinate = rectangleOrigin +
+                                               baseMeshCurvilinearCoordinates[b] * rectangleBaseTangent +
+                                               curvilinearPoints[s] * rectangleHeightTangent;
+
+            const unsigned int marker = 8 * (b == 0) +
+                                        6 * (b == (numBasePoints - 1));
+
+            mesh.Cell0DSetState(cell0DIndex, true);
+            mesh.Cell0DInsertCoordinates(cell0DIndex,
+                                         coordinate);
+
+            mesh.Cell0DSetMarker(cell0DIndex, marker);
+            cell0DIndex++;
+          }
+        }
+      }
+
+      for (unsigned int h = 1; h < numHeightPoints; h = h + 2)
+      {
+        for (unsigned int b = 0; b < (numBasePoints - 1); b++)
+        {
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 3)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
+                                                                                         baseMeshCurvilinearCoordinates[b],
+                                                                                         baseMeshCurvilinearCoordinates[b+1],
+                                                                                         false);
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const Eigen::Vector3d coordinate = rectangleOrigin +
+                                               curvilinearPoints[s] * rectangleBaseTangent +
+                                               heightMeshCurvilinearCoordinates[h] * rectangleHeightTangent;
+
+
+
+            const unsigned int marker = 5 * (h == 0) +
+                                        7 * (h == (numHeightPoints - 1));
+
+            mesh.Cell0DSetState(cell0DIndex, true);
+            mesh.Cell0DInsertCoordinates(cell0DIndex,
+                                         coordinate);
+
+            mesh.Cell0DSetMarker(cell0DIndex, marker);
+            cell0DIndex++;
+          }
+        }
+      }
+
+      for (unsigned int h = 0; h < (numHeightPoints-1); h++)
+      {
+        for (unsigned int b = 1; b < numBasePoints; b = b + 2)
+        {
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 4)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
+                                                                                         heightMeshCurvilinearCoordinates[h],
+                                                                                         heightMeshCurvilinearCoordinates[h+1],
+                                                                                         false);
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const Eigen::Vector3d coordinate = rectangleOrigin +
+                                               baseMeshCurvilinearCoordinates[b] * rectangleBaseTangent +
+                                               curvilinearPoints[s] * rectangleHeightTangent;
+
+            const unsigned int marker = 8 * (b == 0) +
+                                        6 * (b == (numBasePoints - 1));
+
+            mesh.Cell0DSetState(cell0DIndex, true);
+            mesh.Cell0DInsertCoordinates(cell0DIndex,
+                                         coordinate);
+
+            mesh.Cell0DSetMarker(cell0DIndex, marker);
+            cell0DIndex++;
+          }
+        }
+      }
+
+      // create cell1Ds
+      unsigned int cell1DIndex = 0;
+
+      // create horizontal cell1Ds on b % 2 == 0
+      unsigned int cell0DIndexBaseHangsEvenB = numBasePoints * numHeightPoints - 1;
+      for (unsigned int h = 0; h < numHeightPoints; h = h + 2)
+      {
+        for (unsigned int b = 0; b < numBasePoints - 1; b++)
+        {
+          const unsigned int cell0DIndex = b + h * numBasePoints;
+          unsigned int cell1DOrigin = cell0DIndex;
+
+          for (unsigned int s = 0; s < numberOfAddedNodesToFirstNEdges; s++)
+          {
+            const unsigned int cell1DEnd = cell0DIndexBaseHangsEvenB + 1;
+
+            const unsigned int marker = 5 * (h == 0) +
+                                        7 * (h == (numHeightPoints - 1));
+
+            mesh.Cell1DInsertExtremes(cell1DIndex,
+                                      cell1DOrigin,
+                                      cell1DEnd);
+            mesh.Cell1DSetState(cell1DIndex, true);
+            mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+            cell1DIndex++;
+            cell0DIndexBaseHangsEvenB++;
+            cell1DOrigin = cell1DEnd;
+          }
+
+          const unsigned int cell1DEnd = cell0DIndex + 1;
+
+          const unsigned int marker = 5 * (h == 0) +
+                                      7 * (h == (numHeightPoints - 1));
+
+          mesh.Cell1DInsertExtremes(cell1DIndex,
+                                    cell1DOrigin,
+                                    cell1DEnd);
+          mesh.Cell1DSetState(cell1DIndex, true);
+          mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+          cell1DIndex++;
+        }
+      }
+
+      // create horizontal cell1Ds on b % 2 == 1
+      unsigned int cell0DIndexBaseHangsOddB = numBasePoints * numHeightPoints - 1
+                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
+                                              + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                              * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
+      for (unsigned int h = 1; h < numHeightPoints; h = h + 2)
+      {
+        for (unsigned int b = 0; b < numBasePoints - 1; b++)
+        {
+
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 3)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          const unsigned int cell0DIndex = b + h * numBasePoints;
+          unsigned int cell1DOrigin = cell0DIndex;
+
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const unsigned int cell1DEnd = cell0DIndexBaseHangsOddB + 1;
+
+            const unsigned int marker = 5 * (h == 0) +
+                                        7 * (h == (numHeightPoints - 1));
+
+            mesh.Cell1DInsertExtremes(cell1DIndex,
+                                      cell1DOrigin,
+                                      cell1DEnd);
+            mesh.Cell1DSetState(cell1DIndex, true);
+            mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+            cell1DIndex++;
+            cell0DIndexBaseHangsOddB++;
+            cell1DOrigin = cell1DEnd;
+          }
+
+          const unsigned int cell1DEnd = cell0DIndex + 1;
+
+          const unsigned int marker = 5 * (h == 0) +
+                                      7 * (h == (numHeightPoints - 1));
+
+          mesh.Cell1DInsertExtremes(cell1DIndex,
+                                    cell1DOrigin,
+                                    cell1DEnd);
+          mesh.Cell1DSetState(cell1DIndex, true);
+          mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+          cell1DIndex++;
+        }
+      }
+
+      // create vertical cell1Ds on h % 2 == 0
+      unsigned int cell0DIndexBaseHangsEvenH = numBasePoints * numHeightPoints - 1
+                                               + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
+
+      for (unsigned int h = 0; h < numHeightPoints - 1; h++)
+      {
+        for (unsigned int b = 0; b < numBasePoints; b = b + 2)
+        {
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 2)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          const unsigned int cell0DIndex = b + h * numBasePoints;
+          unsigned int cell1DOrigin = cell0DIndex;
+
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const unsigned int cell1DEnd = cell0DIndexBaseHangsEvenH + 1;
+
+            const unsigned int marker = 8 * (b == 0) +
+                                        6 * (b == (numBasePoints - 1));
+
+            mesh.Cell1DInsertExtremes(cell1DIndex,
+                                      cell1DOrigin,
+                                      cell1DEnd);
+            mesh.Cell1DSetState(cell1DIndex, true);
+            mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+            cell1DIndex++;
+            cell0DIndexBaseHangsEvenH++;
+            cell1DOrigin = cell1DEnd;
+          }
+
+          const unsigned int cell1DEnd = cell0DIndex + numBasePoints;
+
+          const unsigned int marker = 8 * (b == 0) +
+                                      6 * (b == (numBasePoints - 1));
+
+          mesh.Cell1DInsertExtremes(cell1DIndex,
+                                    cell1DOrigin,
+                                    cell1DEnd);
+          mesh.Cell1DSetState(cell1DIndex, true);
+          mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+          cell1DIndex++;
+        }
+      }
+
+      // create vertical cell1Ds on h % 2 == 1
+      unsigned int cell0DIndexBaseHangsOddH = numBasePoints * numHeightPoints - 1
+                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
+                                              + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                              * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2))
+                                              + (numHeightPoints / 2) * (numBasePoints - 1) *
+                                              (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
+
+      for (unsigned int h = 0; h < numHeightPoints - 1; h++)
+      {
+        for (unsigned int b = 1; b < numBasePoints; b = b + 2)
+        {
+          unsigned int numberOfAddedNodesTolastEdges;
+          if (N >= 4)
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+          else
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+
+          const unsigned int cell0DIndex = b + h * numBasePoints;
+          unsigned int cell1DOrigin = cell0DIndex;
+
+          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          {
+            const unsigned int cell1DEnd = cell0DIndexBaseHangsOddH + 1;
+
+            const unsigned int marker = 8 * (b == 0) +
+                                        6 * (b == (numBasePoints - 1));
+
+            mesh.Cell1DInsertExtremes(cell1DIndex,
+                                      cell1DOrigin,
+                                      cell1DEnd);
+            mesh.Cell1DSetState(cell1DIndex, true);
+            mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+            cell1DIndex++;
+            cell0DIndexBaseHangsOddH++;
+            cell1DOrigin = cell1DEnd;
+          }
+
+          const unsigned int cell1DEnd = cell0DIndex + numBasePoints;
+
+          const unsigned int marker = 8 * (b == 0) +
+                                      6 * (b == (numBasePoints - 1));
+
+          mesh.Cell1DInsertExtremes(cell1DIndex,
+                                    cell1DOrigin,
+                                    cell1DEnd);
+          mesh.Cell1DSetState(cell1DIndex, true);
+          mesh.Cell1DSetMarker(cell1DIndex, marker);
+
+          cell1DIndex++;
+        }
+      }
+
+      // create cell2Ds
+      unsigned int cell2DIndex = 0;
+
+      cell0DIndexBaseHangsEvenB = numBasePoints * numHeightPoints - 1;
+
+      cell0DIndexBaseHangsEvenH = cell0DIndexBaseHangsEvenB
+                                  + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
+
+      cell0DIndexBaseHangsOddB = cell0DIndexBaseHangsEvenH
+                                 + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                 * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
+
+      cell0DIndexBaseHangsOddH = cell0DIndexBaseHangsOddB
+                                 + (numHeightPoints / 2) * (numBasePoints - 1) *
+                                 (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
+
+      unsigned int cell1DHorizontalEvenB = 0;
+      unsigned int cell1DHorizontalOddB = ceil((numHeightPoints * 0.5)) *
+                                          (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1);
+      unsigned int cell1DVerticalEvenH = cell1DHorizontalOddB
+                                         + (numHeightPoints / 2) * (numBasePoints - 1) *
+                                         (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3) + 1);
+      unsigned int cell1DVerticalOddH = cell1DVerticalEvenH
+                                              + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+                                              * ( numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2) + 1);
+
+      for (unsigned int h = 0; h < numHeightPoints - 1; h++)
+      {
+        if ( h != 0)
+        {
+          if (h % 2 == 0)
+          {
+            cell0DIndexBaseHangsEvenB -= (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
+            cell1DHorizontalEvenB -= (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1);
+          }
+          else
+          {
+            cell0DIndexBaseHangsOddB -= (numBasePoints - 1) *
+                                        (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
+            cell1DHorizontalOddB -= (numBasePoints - 1) *
+                                    ((numberOfAddedNodesToFirstNEdges + 1) * (N >= 3) + numberOfAddedNodesToFirstNEdges * (N < 3));
+          }
+        }
+
+        for (unsigned int b = 0; b < numBasePoints - 1; b++)
+        {
+
+          if ( b != 0)
+          {
+            if (b % 2 == 0)
+            {
+              cell0DIndexBaseHangsEvenH -= (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
+              cell1DVerticalEvenH -= ((numberOfAddedNodesToFirstNEdges + 1) * (N >= 2) + numberOfAddedNodesToFirstNEdges * (N < 2));
+            }
+            else
+            {
+              cell0DIndexBaseHangsOddH -= (numberOfAddedNodesToFirstNEdges * (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4));
+              cell1DVerticalOddH -= ((numberOfAddedNodesToFirstNEdges + 1) * (N == 4) + numberOfAddedNodesToFirstNEdges * (N < 4));
+            }
+          }
+
+          const unsigned int cell0DIndex = b + h * numBasePoints;
+
+          vector<unsigned int> cell2DVertices(4 + numberOfAddedVerticesForEachRectangle);
+          vector<unsigned int> cell2DEdges(4 + numberOfAddedVerticesForEachRectangle);
+
+          unsigned int countV = 0;
+          unsigned int countE = 0;
+          cell2DVertices[countV] = cell0DIndex;
+          countV++;
+
+          unsigned int numberOfAddedNodesTolastEdges;
+
+          if (h % 2 == 0)
+          {
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenB + 1;
+              cell0DIndexBaseHangsEvenB++;
+              cell2DEdges[countE++] = cell1DHorizontalEvenB;
+              cell1DHorizontalEvenB++;
+            }
+            cell2DEdges[countE++] = cell1DHorizontalEvenB;
+            cell1DHorizontalEvenB++;
+          }
+          else
+          {
+            if (N < 3)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddB + 1;
+              cell0DIndexBaseHangsOddB++;
+              cell2DEdges[countE++] = cell1DHorizontalOddB;
+              cell1DHorizontalOddB++;
+            }
+
+            cell2DEdges[countE++] = cell1DHorizontalOddB;
+            cell1DHorizontalOddB++;
+          }
+
+          cell2DVertices[countV] = cell0DIndex + 1;
+          countV++;
+
+          if(b % 2 == 0)
+          {
+            if (N < 4)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddH + 1;
+              cell0DIndexBaseHangsOddH++;
+              cell2DEdges[countE++] = cell1DVerticalOddH;
+              cell1DVerticalOddH++;
+            }
+            cell2DEdges[countE++] = cell1DVerticalOddH;
+            cell1DVerticalOddH++;
+          }
+          else
+          {
+            if (N < 2)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenH + 1;
+              cell0DIndexBaseHangsEvenH++;
+              cell2DEdges[countE++] = cell1DVerticalEvenH;
+              cell1DVerticalEvenH++;
+            }
+            cell2DEdges[countE++] = cell1DVerticalEvenH;
+            cell1DVerticalEvenH++;
+          }
+
+          cell2DVertices[countV] = cell0DIndex + numBasePoints + 1;
+          countV++;
+
+          if (h % 2 == 1)
+          {
+            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenB + (numberOfAddedNodesTolastEdges - s);
+              cell2DEdges[countE++] = cell1DHorizontalEvenB + (numberOfAddedNodesTolastEdges - s);
+            }
+
+            cell2DEdges[countE++] = cell1DHorizontalEvenB;
+            cell1DHorizontalEvenB += numberOfAddedNodesTolastEdges + 1;
+            cell0DIndexBaseHangsEvenB += numberOfAddedNodesTolastEdges;
+          }
+          else
+          {
+            if (N < 3)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddB + (numberOfAddedNodesTolastEdges - s);
+              cell2DEdges[countE++] = cell1DHorizontalOddB + (numberOfAddedNodesTolastEdges - s);
+            }
+
+            cell2DEdges[countE++] = cell1DHorizontalOddB;
+            cell1DHorizontalOddB += numberOfAddedNodesTolastEdges + 1;
+            cell0DIndexBaseHangsOddB += numberOfAddedNodesTolastEdges;
+          }
+
+          cell2DVertices[countV] = cell0DIndex + numBasePoints;
+          countV++;
+
+          if(b % 2 == 1)
+          {
+            if (N < 4)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddH + (numberOfAddedNodesTolastEdges - s);
+              cell2DEdges[countE++] = cell1DVerticalOddH + (numberOfAddedNodesTolastEdges - s);
+            }
+
+            cell2DEdges[countE++] = cell1DVerticalOddH;
+            cell1DVerticalOddH += numberOfAddedNodesTolastEdges + 1;
+            cell0DIndexBaseHangsOddH += numberOfAddedNodesTolastEdges;
+          }
+          else
+          {
+            if (N < 2)
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
+            else
+              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
+
+            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            {
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenH + (numberOfAddedNodesTolastEdges - s);
+              cell2DEdges[countE++] = cell1DVerticalEvenH + (numberOfAddedNodesTolastEdges - s);
+            }
+
+            cell2DEdges[countE++] = cell1DVerticalEvenH;
+            cell1DVerticalEvenH += numberOfAddedNodesTolastEdges + 1;
+            cell0DIndexBaseHangsEvenH += numberOfAddedNodesTolastEdges;
+          }
+
+          mesh.Cell2DAddVertices(cell2DIndex, cell2DVertices);
+          mesh.Cell2DAddEdges(cell2DIndex, cell2DEdges);
+
+          mesh.Cell2DSetState(cell2DIndex, true);
+
+          mesh.Cell2DSetMarker(cell2DIndex, 0);
+
+          cell2DIndex++;
+        }
+      }
+    }
+  }
+  // ***************************************************************************
   void MeshUtilities::CreateParallelepipedMesh(const Eigen::Vector3d& parallelepipedOrigin,
                                                const Eigen::Vector3d& parallelepipedLengthTangent,
                                                const Eigen::Vector3d& parallelepipedHeightTangent,
