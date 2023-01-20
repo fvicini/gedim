@@ -313,6 +313,14 @@ namespace Gedim
       MeshUtilities::VTPPolyhedron MeshCell3DToVTPPolyhedron(const IMeshDAO& mesh,
                                                              const unsigned int& cell3DIndex) const;
 
+      void CreateRectanglePlusHangingNodesMesh(const Eigen::Vector3d& rectangleOrigin,
+                                               const Eigen::Vector3d& rectangleBaseTangent,
+                                               const Eigen::Vector3d& rectangleHeightTangent,
+                                               const std::vector<double>& baseMeshCurvilinearCoordinates,
+                                               const std::vector<double>& heightMeshCurvilinearCoordinates,
+                                               const unsigned int& numberOfAddedVerticesForEachRectangle,
+                                               const GeometryUtilities& geometryUtilities,
+                                               IMeshDAO& mesh) const;
   };
 
 }
