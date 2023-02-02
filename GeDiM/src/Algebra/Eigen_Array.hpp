@@ -30,14 +30,18 @@ namespace Gedim
       operator const Eigen_ArrayType&() const { return _vector; }
       inline Eigen_ArrayType& Cast(IArray& v)
       { return (Eigen_ArrayType&)static_cast<Eigen_Array<Eigen_ArrayType, Eigen_SparseArrayType>&>(v); }
-      inline const Eigen_ArrayType& Cast(const IArray& v)
+      inline const Eigen_ArrayType& Cast(const IArray& v) const
       { return (const Eigen_ArrayType&)static_cast<const Eigen_Array<Eigen_ArrayType, Eigen_SparseArrayType>&>(v); }
 
       inline void Create() {  }
       inline void SetSize(const unsigned int& numCols) { _vector.setZero(numCols); }
       inline void SetSizes(const unsigned int& numCols,
                            const unsigned int& = 0) { return SetSize(numCols); }
+
       inline unsigned int Size() const { return _vector.size(); }
+      inline const double* Data() const { return _vector.data(); }
+      inline double* Data() { return _vector.data(); }
+
       inline void SetValue(const int& i,
                            const double& val)
       { _vector[i] = val; }
@@ -124,6 +128,9 @@ namespace Gedim
 
       inline double Norm() const
       { return _vector.norm(); }
+
+      inline double Dot(const IArray& v) const
+      { return _vector.dot(Cast(v)); }
 
       inline void Copy(const IArray& v)
       { _vector = Cast(v); }

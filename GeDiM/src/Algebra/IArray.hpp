@@ -25,6 +25,10 @@ namespace Gedim
                             const unsigned int& numLocalCols) = 0;
       /// \return the size of the array
       virtual unsigned int Size() const = 0;
+      /// \return the const pointer of the array
+      virtual const double* Data() const = 0;
+      /// \return the pointer of the array
+      virtual double* Data() = 0;
       /// \brief Put zero-values in the Array
       virtual void Zeros() = 0;
       /// \brief Put one-values in the Array
@@ -73,6 +77,8 @@ namespace Gedim
 
       /// \return the \em l2 norm of array
       virtual double Norm() const = 0;
+      /// \return the dot product
+      virtual double Dot(const IArray& v) const = 0;
 
       /// \brief Copy the content of vector v inside this
       virtual void Copy(const IArray& v) = 0;
