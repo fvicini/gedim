@@ -285,7 +285,7 @@ namespace Gedim
                oldNextVertex == cell0DMesh2DUpdated[0])
       {
         edgeListDirection = false;
-        for (unsigned int nv = cell0DMesh2DUpdated.size() - 1; nv > 0; nv--)
+        for (unsigned int nv = cell0DMesh2DUpdated.size() - 1; nv < UINT_MAX && nv > 0; nv--)
           cell2DMesh2DNewVertices[vertexCounter++] = cell0DMesh2DUpdated[nv];
       }
       else
@@ -309,7 +309,7 @@ namespace Gedim
         }
         else
         {
-          for (unsigned int ne = cell1DMesh2DUpdated.size(); ne > 0; ne--)
+          for (unsigned int ne = cell1DMesh2DUpdated.size(); ne < UINT_MAX && ne > 0; ne--)
             cell2DMesh2DNewEdges[edgeCounter++] = cell1DMesh2DUpdated[ne - 1];
         }
       }
