@@ -318,7 +318,7 @@ namespace Gedim
                                                const Eigen::Vector3d& rectangleHeightTangent,
                                                const std::vector<double>& baseMeshCurvilinearCoordinates,
                                                const std::vector<double>& heightMeshCurvilinearCoordinates,
-                                               const unsigned int& numberOfAddedVerticesForEachRectangle,
+                                               const std::vector<unsigned int>& numberOfAddedVerticesForEachRectangle,
                                                const GeometryUtilities& geometryUtilities,
                                                IMeshDAO& mesh) const;
   };
