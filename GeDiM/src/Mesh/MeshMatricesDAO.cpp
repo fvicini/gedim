@@ -358,9 +358,15 @@ namespace Gedim
     _mesh.Cell1DVertices.resize(2 * _mesh.NumberCell1D, 0);
     _mesh.Cell1DMarkers.resize(_mesh.NumberCell1D, 0);
     _mesh.ActiveCell1D.resize(_mesh.NumberCell1D, false);
+    _mesh.Cell1DOriginalCell1Ds.resize(_mesh.NumberCell1D, _mesh.NumberCell1D);
     _mesh.NumberCell1DNeighbourCell2D.resize(_mesh.NumberCell1D + 1, 0);
     for (unsigned int p = 0; p < Cell1DNumberDoubleProperties(); p++)
       _mesh.Cell1DDoublePropertySizes[p].resize(_mesh.NumberCell1D + 1, 0);
+
+    // update original cells
+    AlignContainerElements(_mesh.Cell1DOriginalCell1Ds,
+                           oldNumberCell1D,
+                           _mesh.NumberCell1D);
 
     // update neighbours
     AlignContainerElements(_mesh.Cell0DNeighbourCell1Ds,
@@ -412,6 +418,7 @@ namespace Gedim
 
     _mesh.Cell1DVertices.erase(std::next(_mesh.Cell1DVertices.begin(), 2 * cell1DIndex),
                                std::next(_mesh.Cell1DVertices.begin(), 2 * cell1DIndex + 2));
+    _mesh.Cell1DOriginalCell1Ds.erase(std::next(_mesh.Cell1DOriginalCell1Ds.begin(), cell1DIndex));
     _mesh.Cell1DMarkers.erase(std::next(_mesh.Cell1DMarkers.begin(), cell1DIndex));
     _mesh.ActiveCell1D.erase(std::next(_mesh.ActiveCell1D.begin(), cell1DIndex));
     _mesh.NumberCell1D--;
@@ -429,6 +436,9 @@ namespace Gedim
     AlignMapContainerHigherElements(_mesh.UpdatedCell1Ds,
                                     cell1DIndex,
                                     _mesh.NumberCell1D);
+    AlignContainerHigherElements(_mesh.Cell1DOriginalCell1Ds,
+                                 cell1DIndex,
+                                 _mesh.NumberCell1D);
 
     AlignSparseMatrixHigherElements(_mesh.Cell1DAdjacency,
                                     cell1DIndex + 1);
@@ -439,8 +449,7 @@ namespace Gedim
                                              const unsigned int& endCell0DIndex)
   {
     Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
-    Gedim::Output::Assert(originCell0DIndex < Cell0DTotalNumber());
-    Gedim::Output::Assert(endCell0DIndex < Cell0DTotalNumber());
+    Gedim::Output::Assert(!Cell1DExists(originCell0DIndex, endCell0DIndex));
     _mesh.Cell1DVertices[2 * cell1DIndex] = originCell0DIndex;
     _mesh.Cell1DVertices[2 * cell1DIndex + 1] = endCell0DIndex;
     _mesh.Cell1DAdjacency.insert(originCell0DIndex,
@@ -504,6 +513,7 @@ namespace Gedim
     if (!Cell1DHasUpdatedCell1Ds(cell1DIndex))
       _mesh.UpdatedCell1Ds.insert(pair<unsigned int, set<unsigned int>>(cell1DIndex, {}));
     _mesh.UpdatedCell1Ds.at(cell1DIndex).insert(updatedCell1DIdex);
+    _mesh.Cell1DOriginalCell1Ds[updatedCell1DIdex] = cell1DIndex;
   }
   // ***************************************************************************
   bool MeshMatricesDAO::Cell1DUpdatedCell1Ds(const unsigned int& cell1DIndex,
@@ -708,25 +718,33 @@ namespace Gedim
   }
   // ***************************************************************************
   void MeshMatricesDAO::Cell2DAddEdges(const unsigned int& cell2DIndex,
-                                       const vector<unsigned int>& edgesCell0DIndices)
+                                       const vector<unsigned int>& edgesCell1DIndices)
   {
     Cell2DInitializeEdges(cell2DIndex,
-                          edgesCell0DIndices.size());
-    for (unsigned int e = 0; e < edgesCell0DIndices.size(); e++)
+                          edgesCell1DIndices.size());
+    for (unsigned int e = 0; e < edgesCell1DIndices.size(); e++)
       Cell2DInsertEdge(cell2DIndex,
                        e,
-                       edgesCell0DIndices[e]);
+                       edgesCell1DIndices[e]);
   }
   // ***************************************************************************
-  vector<unsigned int> MeshMatricesDAO::Cell2DVertices(const unsigned int& cell2DIndex) const
+  void MeshMatricesDAO::Cell2DAddVerticesAndEdges(const unsigned int& cell2DIndex,
+                                                  const Eigen::MatrixXi& verticesAndEdgesIndices)
   {
-    const unsigned int numVertices = Cell2DNumberVertices(cell2DIndex);
+    Cell2DInitializeVertices(cell2DIndex,
+                             verticesAndEdgesIndices.cols());
+    Cell2DInitializeEdges(cell2DIndex,
+                          verticesAndEdgesIndices.cols());
 
-    vector<unsigned int> vertices(numVertices);
-    for (unsigned int v = 0; v < numVertices; v++)
-      vertices[v] = _mesh.Cell2DVertices[_mesh.NumberCell2DVertices[cell2DIndex] + v];
-
-    return vertices;
+    for (unsigned int v = 0; v < verticesAndEdgesIndices.cols(); v++)
+    {
+      Cell2DInsertVertex(cell2DIndex,
+                         v,
+                         verticesAndEdgesIndices(0, v));
+      Cell2DInsertEdge(cell2DIndex,
+                       v,
+                       verticesAndEdgesIndices(1, v));
+    }
   }
   // ***************************************************************************
   std::vector<std::vector<unsigned int>> MeshMatricesDAO::Cell2DsVertices() const
@@ -747,15 +765,30 @@ namespace Gedim
     return coordinates;
   }
   // ***************************************************************************
-  vector<unsigned int> MeshMatricesDAO::Cell2DEdges(const unsigned int& cell2DIndex) const
+  unsigned int MeshMatricesDAO::Cell2DFindVertex(const unsigned int& cell2DIndex,
+                                                 const unsigned int& cell0DIndex) const
   {
-    const unsigned int numEdges = Cell2DNumberEdges(cell2DIndex);
-
-    vector<unsigned int> edges(numEdges);
-    for (unsigned int e = 0; e < numEdges; e++)
-      edges[e] = _mesh.Cell2DEdges[_mesh.NumberCell2DEdges[cell2DIndex] + e];
-
-    return edges;
+    const vector<unsigned int> vertices = Cell2DVertices(cell2DIndex);
+    const vector<unsigned int>::const_iterator it = std::find(vertices.begin(),
+                                                              vertices.end(),
+                                                              cell0DIndex);
+    if (it != vertices.end())
+      return std::distance(vertices.begin(), it);
+    else
+      throw runtime_error("Vertex not found");
+  }
+  // ***************************************************************************
+  unsigned int MeshMatricesDAO::Cell2DFindEdge(const unsigned int& cell2DIndex,
+                                               const unsigned int& cell1DIndex) const
+  {
+    const vector<unsigned int> edges = Cell2DEdges(cell2DIndex);
+    const vector<unsigned int>::const_iterator it = std::find(edges.begin(),
+                                                              edges.end(),
+                                                              cell1DIndex);
+    if (it != edges.end())
+      return std::distance(edges.begin(), it);
+    else
+      throw runtime_error("Edge not found");
   }
   // ***************************************************************************
   void MeshMatricesDAO::Cell2DInsertUpdatedCell2D(const unsigned int& cell2DIndex,
@@ -1129,6 +1162,7 @@ namespace Gedim
     _mesh.NumberCell1DNeighbourCell2D.shrink_to_fit();
     _mesh.Cell1DNeighbourCell2Ds.shrink_to_fit();
     _mesh.Cell1DMarkers.shrink_to_fit();
+    _mesh.Cell1DOriginalCell1Ds.shrink_to_fit();
     _mesh.ActiveCell1D.shrink_to_fit();
     _mesh.Cell1DDoublePropertyIds.shrink_to_fit();
     _mesh.Cell1DDoublePropertySizes.shrink_to_fit();
@@ -1221,6 +1255,7 @@ namespace Gedim
     converter<< scientific<< "Cell1DAdjacency.makeCompressed();"<< endl;
 
     converter<< scientific<< "Cell1DMarkers = "<< _mesh.Cell1DMarkers<< ";"<< endl;
+    converter<< scientific<< "Cell1DOriginalCell1Ds = "<< _mesh.Cell1DOriginalCell1Ds<< ";"<< endl;
     converter<< scientific<< "ActiveCell1D = "<< _mesh.ActiveCell1D<< ";"<< endl;
     converter<< scientific<< "UpdatedCell1Ds = "<< _mesh.UpdatedCell1Ds<< ";"<< endl;
     converter<< scientific<< "NumberCell1DNeighbourCell2D = "<< _mesh.NumberCell1DNeighbourCell2D<< ";"<< endl;

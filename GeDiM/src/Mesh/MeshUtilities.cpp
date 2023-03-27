@@ -5,6 +5,8 @@
 #include "VTKUtilities.hpp"
 #include "MapTetrahedron.hpp"
 
+#include "numeric"
+
 using namespace std;
 using namespace Eigen;
 
@@ -1437,14 +1439,16 @@ namespace Gedim
                                                           const Eigen::Vector3d& rectangleHeightTangent,
                                                           const vector<double>& baseMeshCurvilinearCoordinates,
                                                           const vector<double>& heightMeshCurvilinearCoordinates,
-                                                          const unsigned int& numberOfAddedVerticesForEachRectangle,
+                                                          const vector<unsigned int>& numberOfAddedVerticesForEachRectangle,
                                                           const GeometryUtilities& geometryUtilities,
                                                           IMeshDAO& mesh) const
   {
     const unsigned int& numBasePoints = baseMeshCurvilinearCoordinates.size();
     const unsigned int& numHeightPoints = heightMeshCurvilinearCoordinates.size();
 
-    if ( numberOfAddedVerticesForEachRectangle == 0)
+    unsigned int totalAddedHangNodes = std::accumulate(numberOfAddedVerticesForEachRectangle.begin(), numberOfAddedVerticesForEachRectangle.end(), 0);
+
+    if ( totalAddedHangNodes == 0)
     {
       MeshUtilities::CreateRectangleMesh(rectangleOrigin,
                                          rectangleBaseTangent,
@@ -1455,33 +1459,21 @@ namespace Gedim
     }
     else
     {
-      unsigned int N = ( numberOfAddedVerticesForEachRectangle + 4 ) % 4;
-      unsigned int numberOfAddedNodesToFirstNEdges = numberOfAddedVerticesForEachRectangle / 4 + 1;
-      if (N == 0)
-      {
-        N = 4;
-        numberOfAddedNodesToFirstNEdges = numberOfAddedVerticesForEachRectangle / 4;
-      }
 
       const unsigned int numCell0Ds = numBasePoints * numHeightPoints
-                                      + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
-                                      + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                      * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2))
-                                      + (numHeightPoints / 2) * (numBasePoints - 1) *
-                                      (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3))
-                                      + (numBasePoints / 2) * (numHeightPoints - 1) *
-                                      (numberOfAddedNodesToFirstNEdges *   (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4));
+                                      + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0]
+                                      + ceil(numBasePoints * 0.5) * (numHeightPoints - 1) * numberOfAddedVerticesForEachRectangle[1]
+                                      + (numHeightPoints / 2) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[2]
+                                      + (numBasePoints / 2) * (numHeightPoints - 1) * numberOfAddedVerticesForEachRectangle[3];
 
       const unsigned int numCell1Ds = ceil((numHeightPoints * 0.5)) *
-                                      (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1)
-                                      + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                      * ( numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2) + 1)
-                                      + (numHeightPoints / 2) * (numBasePoints - 1) *
-                                      (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3) + 1)
-                                      + (numBasePoints / 2) * (numHeightPoints - 1) *
-                                      (numberOfAddedNodesToFirstNEdges *   (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4) + 1);
-
-
+                                      (numBasePoints - 1) * (numberOfAddedVerticesForEachRectangle[0] + 1)
+          + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
+          * ( numberOfAddedVerticesForEachRectangle[1] + 1)
+          + (numHeightPoints / 2) * (numBasePoints - 1) *
+          (numberOfAddedVerticesForEachRectangle[2] + 1)
+          + (numBasePoints / 2) * (numHeightPoints - 1) *
+          (numberOfAddedVerticesForEachRectangle[3] + 1);
 
       const unsigned int numCell2Ds = (numBasePoints - 1) * (numHeightPoints - 1);
 
@@ -1525,11 +1517,12 @@ namespace Gedim
         for (unsigned int b = 0; b < (numBasePoints - 1); b++)
         {
 
-          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesToFirstNEdges,
-                                                                                         baseMeshCurvilinearCoordinates[b],
-                                                                                         baseMeshCurvilinearCoordinates[b+1],
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedVerticesForEachRectangle[0],
+              baseMeshCurvilinearCoordinates[b],
+              baseMeshCurvilinearCoordinates[b+1],
               false);
-          for (unsigned int s = 0; s < numberOfAddedNodesToFirstNEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[0]; s++)
+
           {
             const Eigen::Vector3d coordinate = rectangleOrigin +
                                                curvilinearPoints[s] * rectangleBaseTangent +
@@ -1554,17 +1547,12 @@ namespace Gedim
       {
         for (unsigned int b = 0; b < numBasePoints; b = b + 2)
         {
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 2)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
 
-          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
-                                                                                         heightMeshCurvilinearCoordinates[h],
-                                                                                         heightMeshCurvilinearCoordinates[h+1],
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedVerticesForEachRectangle[1],
+              heightMeshCurvilinearCoordinates[h],
+              heightMeshCurvilinearCoordinates[h+1],
               false);
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[1]; s++)
           {
             const Eigen::Vector3d coordinate = rectangleOrigin +
                                                baseMeshCurvilinearCoordinates[b] * rectangleBaseTangent +
@@ -1587,17 +1575,11 @@ namespace Gedim
       {
         for (unsigned int b = 0; b < (numBasePoints - 1); b++)
         {
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 3)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-
-          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
-                                                                                         baseMeshCurvilinearCoordinates[b],
-                                                                                         baseMeshCurvilinearCoordinates[b+1],
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedVerticesForEachRectangle[2],
+              baseMeshCurvilinearCoordinates[b],
+              baseMeshCurvilinearCoordinates[b+1],
               false);
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[2]; s++)
           {
             const Eigen::Vector3d coordinate = rectangleOrigin +
                                                curvilinearPoints[s] * rectangleBaseTangent +
@@ -1622,17 +1604,11 @@ namespace Gedim
       {
         for (unsigned int b = 1; b < numBasePoints; b = b + 2)
         {
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 4)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-
-          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedNodesTolastEdges,
-                                                                                         heightMeshCurvilinearCoordinates[h],
-                                                                                         heightMeshCurvilinearCoordinates[h+1],
+          std::vector<double> curvilinearPoints = geometryUtilities.EquispaceCoordinates(numberOfAddedVerticesForEachRectangle[3],
+              heightMeshCurvilinearCoordinates[h],
+              heightMeshCurvilinearCoordinates[h+1],
               false);
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[3]; s++)
           {
             const Eigen::Vector3d coordinate = rectangleOrigin +
                                                baseMeshCurvilinearCoordinates[b] * rectangleBaseTangent +
@@ -1663,7 +1639,7 @@ namespace Gedim
           const unsigned int cell0DIndex = b + h * numBasePoints;
           unsigned int cell1DOrigin = cell0DIndex;
 
-          for (unsigned int s = 0; s < numberOfAddedNodesToFirstNEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[0]; s++)
           {
             const unsigned int cell1DEnd = cell0DIndexBaseHangsEvenB + 1;
 
@@ -1698,24 +1674,18 @@ namespace Gedim
 
       // create horizontal cell1Ds on b % 2 == 1
       unsigned int cell0DIndexBaseHangsOddB = numBasePoints * numHeightPoints - 1
-                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
-                                              + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                              * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
+                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0]
+                                              + ceil(numBasePoints * 0.5) * (numHeightPoints - 1) * numberOfAddedVerticesForEachRectangle[1];
+
       for (unsigned int h = 1; h < numHeightPoints; h = h + 2)
       {
         for (unsigned int b = 0; b < numBasePoints - 1; b++)
         {
 
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 3)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-
           const unsigned int cell0DIndex = b + h * numBasePoints;
           unsigned int cell1DOrigin = cell0DIndex;
 
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[2]; s++)
           {
             const unsigned int cell1DEnd = cell0DIndexBaseHangsOddB + 1;
 
@@ -1750,22 +1720,17 @@ namespace Gedim
 
       // create vertical cell1Ds on h % 2 == 0
       unsigned int cell0DIndexBaseHangsEvenH = numBasePoints * numHeightPoints - 1
-                                               + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
+                                               + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0];
 
       for (unsigned int h = 0; h < numHeightPoints - 1; h++)
       {
         for (unsigned int b = 0; b < numBasePoints; b = b + 2)
         {
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 2)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
 
           const unsigned int cell0DIndex = b + h * numBasePoints;
           unsigned int cell1DOrigin = cell0DIndex;
 
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[1]; s++)
           {
             const unsigned int cell1DEnd = cell0DIndexBaseHangsEvenH + 1;
 
@@ -1800,26 +1765,20 @@ namespace Gedim
 
       // create vertical cell1Ds on h % 2 == 1
       unsigned int cell0DIndexBaseHangsOddH = numBasePoints * numHeightPoints - 1
-                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges
+                                              + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0]
                                               + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                              * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2))
-                                              + (numHeightPoints / 2) * (numBasePoints - 1) *
-                                              (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
+                                              * numberOfAddedVerticesForEachRectangle[1]
+                                              + (numHeightPoints / 2) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[2];
 
       for (unsigned int h = 0; h < numHeightPoints - 1; h++)
       {
         for (unsigned int b = 1; b < numBasePoints; b = b + 2)
         {
-          unsigned int numberOfAddedNodesTolastEdges;
-          if (N >= 4)
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-          else
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
 
           const unsigned int cell0DIndex = b + h * numBasePoints;
           unsigned int cell1DOrigin = cell0DIndex;
 
-          for (unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+          for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[3]; s++)
           {
             const unsigned int cell1DEnd = cell0DIndexBaseHangsOddH + 1;
 
@@ -1858,25 +1817,25 @@ namespace Gedim
       cell0DIndexBaseHangsEvenB = numBasePoints * numHeightPoints - 1;
 
       cell0DIndexBaseHangsEvenH = cell0DIndexBaseHangsEvenB
-                                  + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
+                                  + ceil((numHeightPoints * 0.5)) * (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0];
 
       cell0DIndexBaseHangsOddB = cell0DIndexBaseHangsEvenH
                                  + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                 * (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
+                                 * (numberOfAddedVerticesForEachRectangle[1]);
 
       cell0DIndexBaseHangsOddH = cell0DIndexBaseHangsOddB
                                  + (numHeightPoints / 2) * (numBasePoints - 1) *
-                                 (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
+                                 (numberOfAddedVerticesForEachRectangle[2]);
 
       unsigned int cell1DHorizontalEvenB = 0;
       unsigned int cell1DHorizontalOddB = ceil((numHeightPoints * 0.5)) *
-                                          (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1);
+                                          (numBasePoints - 1) * (numberOfAddedVerticesForEachRectangle[0] + 1);
       unsigned int cell1DVerticalEvenH = cell1DHorizontalOddB
                                          + (numHeightPoints / 2) * (numBasePoints - 1) *
-                                         (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3) + 1);
+                                         (numberOfAddedVerticesForEachRectangle[2] + 1);
       unsigned int cell1DVerticalOddH = cell1DVerticalEvenH
                                         + ceil(numBasePoints * 0.5) * (numHeightPoints - 1)
-                                        * ( numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2) + 1);
+                                        * ( numberOfAddedVerticesForEachRectangle[1] + 1);
 
       for (unsigned int h = 0; h < numHeightPoints - 1; h++)
       {
@@ -1884,15 +1843,13 @@ namespace Gedim
         {
           if (h % 2 == 0)
           {
-            cell0DIndexBaseHangsEvenB -= (numBasePoints - 1) * numberOfAddedNodesToFirstNEdges;
-            cell1DHorizontalEvenB -= (numBasePoints - 1) * (numberOfAddedNodesToFirstNEdges + 1);
+            cell0DIndexBaseHangsEvenB -= (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[0];
+            cell1DHorizontalEvenB -= (numBasePoints - 1) * (numberOfAddedVerticesForEachRectangle[0] + 1);
           }
           else
           {
-            cell0DIndexBaseHangsOddB -= (numBasePoints - 1) *
-                                        (numberOfAddedNodesToFirstNEdges * (N >= 3) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 3));
-            cell1DHorizontalOddB -= (numBasePoints - 1) *
-                                    ((numberOfAddedNodesToFirstNEdges + 1) * (N >= 3) + numberOfAddedNodesToFirstNEdges * (N < 3));
+            cell0DIndexBaseHangsOddB -= (numBasePoints - 1) * numberOfAddedVerticesForEachRectangle[2];
+            cell1DHorizontalOddB -= (numBasePoints - 1) * (numberOfAddedVerticesForEachRectangle[2] + 1);
           }
         }
 
@@ -1903,32 +1860,31 @@ namespace Gedim
           {
             if (b % 2 == 0)
             {
-              cell0DIndexBaseHangsEvenH -= (numberOfAddedNodesToFirstNEdges * (N >= 2) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 2));
-              cell1DVerticalEvenH -= ((numberOfAddedNodesToFirstNEdges + 1) * (N >= 2) + numberOfAddedNodesToFirstNEdges * (N < 2));
+              cell0DIndexBaseHangsEvenH -= numberOfAddedVerticesForEachRectangle[1];
+              cell1DVerticalEvenH -= numberOfAddedVerticesForEachRectangle[1] + 1;
             }
             else
             {
-              cell0DIndexBaseHangsOddH -= (numberOfAddedNodesToFirstNEdges * (N == 4) + (numberOfAddedNodesToFirstNEdges - 1) * (N < 4));
-              cell1DVerticalOddH -= ((numberOfAddedNodesToFirstNEdges + 1) * (N == 4) + numberOfAddedNodesToFirstNEdges * (N < 4));
+              cell0DIndexBaseHangsOddH -= numberOfAddedVerticesForEachRectangle[3];
+              cell1DVerticalOddH -= numberOfAddedVerticesForEachRectangle[3] + 1;
             }
           }
 
           const unsigned int cell0DIndex = b + h * numBasePoints;
 
-          vector<unsigned int> cell2DVertices(4 + numberOfAddedVerticesForEachRectangle);
-          vector<unsigned int> cell2DEdges(4 + numberOfAddedVerticesForEachRectangle);
+          vector<unsigned int> cell2DVertices(4 + totalAddedHangNodes);
+          vector<unsigned int> cell2DEdges(4 + totalAddedHangNodes);
 
           unsigned int countV = 0;
           unsigned int countE = 0;
           cell2DVertices[countV] = cell0DIndex;
           countV++;
 
-          unsigned int numberOfAddedNodesTolastEdges;
+          //unsigned int numberOfAddedNodesTolastEdges;
 
           if (h % 2 == 0)
           {
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[0]; s++)
             {
               cell2DVertices[countV++] = cell0DIndexBaseHangsEvenB + 1;
               cell0DIndexBaseHangsEvenB++;
@@ -1940,12 +1896,7 @@ namespace Gedim
           }
           else
           {
-            if (N < 3)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[2]; s++)
             {
               cell2DVertices[countV++] = cell0DIndexBaseHangsOddB + 1;
               cell0DIndexBaseHangsOddB++;
@@ -1962,12 +1913,7 @@ namespace Gedim
 
           if(b % 2 == 0)
           {
-            if (N < 4)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[3]; s++)
             {
               cell2DVertices[countV++] = cell0DIndexBaseHangsOddH + 1;
               cell0DIndexBaseHangsOddH++;
@@ -1979,12 +1925,7 @@ namespace Gedim
           }
           else
           {
-            if (N < 2)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[1]; s++)
             {
               cell2DVertices[countV++] = cell0DIndexBaseHangsEvenH + 1;
               cell0DIndexBaseHangsEvenH++;
@@ -2000,33 +1941,28 @@ namespace Gedim
 
           if (h % 2 == 1)
           {
-            numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[0]; s++)
             {
-              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenB + (numberOfAddedNodesTolastEdges - s);
-              cell2DEdges[countE++] = cell1DHorizontalEvenB + (numberOfAddedNodesTolastEdges - s);
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenB + (numberOfAddedVerticesForEachRectangle[0] - s);
+              cell2DEdges[countE++] = cell1DHorizontalEvenB + (numberOfAddedVerticesForEachRectangle[0] - s);
             }
 
             cell2DEdges[countE++] = cell1DHorizontalEvenB;
-            cell1DHorizontalEvenB += numberOfAddedNodesTolastEdges + 1;
-            cell0DIndexBaseHangsEvenB += numberOfAddedNodesTolastEdges;
+            cell1DHorizontalEvenB += numberOfAddedVerticesForEachRectangle[0] + 1;
+            cell0DIndexBaseHangsEvenB += numberOfAddedVerticesForEachRectangle[0];
           }
           else
           {
-            if (N < 3)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
 
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[2]; s++)
             {
-              cell2DVertices[countV++] = cell0DIndexBaseHangsOddB + (numberOfAddedNodesTolastEdges - s);
-              cell2DEdges[countE++] = cell1DHorizontalOddB + (numberOfAddedNodesTolastEdges - s);
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddB + (numberOfAddedVerticesForEachRectangle[2] - s);
+              cell2DEdges[countE++] = cell1DHorizontalOddB + (numberOfAddedVerticesForEachRectangle[2] - s);
             }
 
             cell2DEdges[countE++] = cell1DHorizontalOddB;
-            cell1DHorizontalOddB += numberOfAddedNodesTolastEdges + 1;
-            cell0DIndexBaseHangsOddB += numberOfAddedNodesTolastEdges;
+            cell1DHorizontalOddB += numberOfAddedVerticesForEachRectangle[2] + 1;
+            cell0DIndexBaseHangsOddB += numberOfAddedVerticesForEachRectangle[2];
           }
 
           cell2DVertices[countV] = cell0DIndex + numBasePoints;
@@ -2034,37 +1970,28 @@ namespace Gedim
 
           if(b % 2 == 1)
           {
-            if (N < 4)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
 
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[3]; s++)
             {
-              cell2DVertices[countV++] = cell0DIndexBaseHangsOddH + (numberOfAddedNodesTolastEdges - s);
-              cell2DEdges[countE++] = cell1DVerticalOddH + (numberOfAddedNodesTolastEdges - s);
+              cell2DVertices[countV++] = cell0DIndexBaseHangsOddH + (numberOfAddedVerticesForEachRectangle[3] - s);
+              cell2DEdges[countE++] = cell1DVerticalOddH + (numberOfAddedVerticesForEachRectangle[3] - s);
             }
 
             cell2DEdges[countE++] = cell1DVerticalOddH;
-            cell1DVerticalOddH += numberOfAddedNodesTolastEdges + 1;
-            cell0DIndexBaseHangsOddH += numberOfAddedNodesTolastEdges;
+            cell1DVerticalOddH += numberOfAddedVerticesForEachRectangle[3] + 1;
+            cell0DIndexBaseHangsOddH += numberOfAddedVerticesForEachRectangle[3];
           }
           else
           {
-            if (N < 2)
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges - 1;
-            else
-              numberOfAddedNodesTolastEdges = numberOfAddedNodesToFirstNEdges;
-
-            for(unsigned int s = 0; s < numberOfAddedNodesTolastEdges; s++)
+            for(unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[1]; s++)
             {
-              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenH + (numberOfAddedNodesTolastEdges - s);
-              cell2DEdges[countE++] = cell1DVerticalEvenH + (numberOfAddedNodesTolastEdges - s);
+              cell2DVertices[countV++] = cell0DIndexBaseHangsEvenH + (numberOfAddedVerticesForEachRectangle[1] - s);
+              cell2DEdges[countE++] = cell1DVerticalEvenH + (numberOfAddedVerticesForEachRectangle[1] - s);
             }
 
             cell2DEdges[countE++] = cell1DVerticalEvenH;
-            cell1DVerticalEvenH += numberOfAddedNodesTolastEdges + 1;
-            cell0DIndexBaseHangsEvenH += numberOfAddedNodesTolastEdges;
+            cell1DVerticalEvenH += numberOfAddedVerticesForEachRectangle[1] + 1;
+            cell0DIndexBaseHangsEvenH += numberOfAddedVerticesForEachRectangle[1];
           }
 
           mesh.Cell2DAddVertices(cell2DIndex, cell2DVertices);
@@ -2078,6 +2005,99 @@ namespace Gedim
         }
       }
     }
+  }
+  // ***************************************************************************
+  std::vector<unsigned int> MeshUtilities::SplitCell1D(const unsigned int& cell1DIndex,
+                                                       const Eigen::MatrixXi subCell1Ds,
+                                                       IMeshDAO& mesh) const
+  {
+    const unsigned int numSubCells = subCell1Ds.cols();
+    unsigned int newCell1DsStartingIndex = mesh.Cell1DAppend(numSubCells);
+
+    mesh.Cell1DSetState(cell1DIndex, false);
+
+    vector<unsigned int> newCell1DsIndex(numSubCells);
+
+    for (unsigned int c = 0; c < numSubCells; c++)
+    {
+      newCell1DsIndex[c] = newCell1DsStartingIndex + c;
+
+      const unsigned int& newCell1DIndex = newCell1DsIndex[c];
+
+      mesh.Cell1DInsertExtremes(newCell1DIndex,
+                                subCell1Ds(0, c),
+                                subCell1Ds(1, c));
+
+      mesh.Cell1DSetMarker(newCell1DIndex, mesh.Cell1DMarker(cell1DIndex));
+      mesh.Cell1DSetState(newCell1DIndex, true);
+
+      mesh.Cell1DInsertUpdatedCell1D(cell1DIndex,
+                                     newCell1DIndex);
+
+      const unsigned int numCell1DNumberNeighbourCell2D = mesh.Cell1DNumberNeighbourCell2D(cell1DIndex);
+      if (numCell1DNumberNeighbourCell2D == 0)
+        continue;
+
+      mesh.Cell1DInitializeNeighbourCell2Ds(newCell1DIndex,
+                                            numCell1DNumberNeighbourCell2D);
+
+      for (unsigned int n = 0; n < numCell1DNumberNeighbourCell2D; n++)
+      {
+        if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, n))
+          continue;
+
+        mesh.Cell1DInsertNeighbourCell2D(newCell1DIndex,
+                                         n,
+                                         mesh.Cell1DNeighbourCell2D(cell1DIndex,
+                                                                    n));
+      }
+    }
+
+    return newCell1DsIndex;
+  }
+  // ***************************************************************************
+  std::vector<unsigned int> MeshUtilities::SplitCell2D(const unsigned int& cell2DIndex,
+                                                       const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                                       IMeshDAO& mesh) const
+  {
+    const unsigned int numSubCells = subCell2Ds.size();
+    unsigned int newCell2DsStartingIndex = mesh.Cell2DAppend(numSubCells);
+
+    vector<unsigned int> newCell2DsIndex(numSubCells);
+
+    mesh.Cell2DSetState(cell2DIndex, false);
+
+    for (unsigned int c = 0; c < numSubCells; c++)
+    {
+      newCell2DsIndex[c] = newCell2DsStartingIndex + c;
+
+      const unsigned int& newCell2DIndex = newCell2DsIndex[c];
+      mesh.Cell2DAddVerticesAndEdges(newCell2DIndex,
+                                     subCell2Ds[c]);
+
+      mesh.Cell2DSetMarker(newCell2DIndex, mesh.Cell2DMarker(cell2DIndex));
+      mesh.Cell2DSetState(newCell2DIndex, true);
+
+      mesh.Cell2DInsertUpdatedCell2D(cell2DIndex, newCell2DIndex);
+
+      for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(newCell2DIndex); e++)
+      {
+        const unsigned int cell1DIndex = mesh.Cell2DEdge(newCell2DIndex, e);
+
+        for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell2D(cell1DIndex); n++)
+        {
+          if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, n))
+            continue;
+
+          if (mesh.Cell1DNeighbourCell2D(cell1DIndex, n) == cell2DIndex)
+            mesh.Cell1DInsertNeighbourCell2D(cell1DIndex,
+                                             n,
+                                             newCell2DIndex);
+        }
+      }
+    }
+
+    return newCell2DsIndex;
   }
   // ***************************************************************************
   void MeshUtilities::CreateParallelepipedMesh(const Eigen::Vector3d& parallelepipedOrigin,

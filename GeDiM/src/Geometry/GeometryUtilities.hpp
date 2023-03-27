@@ -534,6 +534,35 @@ namespace Gedim
           Types Type = Types::Unknown;
       };
 
+      struct LinePolygonPositionResult final
+      {
+          enum struct Types
+          {
+            Unknown = 0,
+            Outside = 1,
+            Intersecting = 2
+          };
+
+          struct EdgeIntersection final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                OnEdgeOrigin = 1,
+                InsideEdge = 2,
+                OnEdgeEnd = 3,
+                Parallel = 4
+              };
+
+              Types Type = Types::Unknown;
+              unsigned int Index = 0;
+              double CurvilinearCoordinate = 0.0;
+          };
+
+          std::vector<EdgeIntersection> EdgeIntersections = { };
+          Types Type = Types::Unknown;
+      };
+
       struct PointPolyhedronPositionResult final
       {
           enum struct Types
@@ -821,6 +850,10 @@ namespace Gedim
                                      const Eigen::Vector3d& point) const;
 
       /// \param points the point collection, size 3 x numPoints
+      /// \return the distances between the points collected in matrix, size numPoints x numPoints.
+      Eigen::MatrixXd PointsDistance(const Eigen::MatrixXd& points) const;
+
+      /// \param points the point collection, size 3 x numPoints
       /// \return the maximum distance between the points.
       double PointsMaxDistance(const Eigen::MatrixXd& points) const;
 
@@ -1012,6 +1045,16 @@ namespace Gedim
                                 firstSphereDiameter + secondSphereDiameter);
       }
 
+      /// \param firstLineOrigin first line origin
+      /// \param firstLineTangent first line tangent
+      /// \param secondLineOrigin second line origin
+      /// \param secondLineTangent second line tangent
+      /// \return line coplanarity
+      bool AreLineCoplanar(const Eigen::Vector3d& firstLineOrigin,
+                           const Eigen::Vector3d& firstLineTangent,
+                           const Eigen::Vector3d& secondLineOrigin,
+                           const Eigen::Vector3d& secondLineTangent) const;
+
       /// \brief Compute the intersection between the two segments
       /// \param firstSegmentOrigin first segment origin
       /// \param firstSegmentEnd first segment end
@@ -1145,6 +1188,9 @@ namespace Gedim
       PointPolygonPositionResult PointPolygonPosition(const Eigen::Vector3d& point,
                                                       const Eigen::MatrixXd& polygonVertices) const;
 
+      LinePolygonPositionResult LinePolygonPosition(const Eigen::Vector3d& lineTangent,
+                                                    const Eigen::Vector3d& lineOrigin,
+                                                    const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Check if point is inside a polygon
       /// \param point the point
@@ -1282,6 +1328,13 @@ namespace Gedim
       /// \note the polygon shall be 2D
       /// \warning works only for convex polygons
       double PolygonArea(const Eigen::MatrixXd& polygonVertices) const;
+
+
+      /// \param polygonCentroid the centroid
+      /// \param polygonTriangulationPoints the internal polygon sub-triangulation
+      /// \return the polygon intertia tensor \int_E (x-x_C)^2
+      Eigen::Matrix3d PolygonInertia(const Eigen::Vector3d& polygonCentroid,
+                                     const std::vector<Eigen::Matrix3d>& polygonTriangulationPoints) const;
 
       /// \brief Split a polygon with n vertices numbered from 0 to n unclockwise given a segment contained inside
       /// \param input the input data

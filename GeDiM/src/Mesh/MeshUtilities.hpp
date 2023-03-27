@@ -8,7 +8,8 @@ namespace Gedim
 {
   /// \brief MeshUtilities
   /// \copyright See top level LICENSE file for details.
-  class MeshUtilities final {
+  class MeshUtilities final
+  {
     public:
       struct CheckMesh2DConfiguration final
       {
@@ -331,9 +332,27 @@ namespace Gedim
                                                const Eigen::Vector3d& rectangleHeightTangent,
                                                const std::vector<double>& baseMeshCurvilinearCoordinates,
                                                const std::vector<double>& heightMeshCurvilinearCoordinates,
-                                               const unsigned int& numberOfAddedVerticesForEachRectangle,
+                                               const std::vector<unsigned int>& numberOfAddedVerticesForEachRectangle,
                                                const GeometryUtilities& geometryUtilities,
                                                IMeshDAO& mesh) const;
+
+      /// \brief Split cell2D into subcells
+      /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
+      /// \param subCell1Ds the list of sub-cells 1D mesh vertices indices, size 2 x numSubCells)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell1Ds indices, from 0 to Cell1DTotalNumber()
+      std::vector<unsigned int> SplitCell1D(const unsigned int& cell1DIndex,
+                                            const Eigen::MatrixXi subCell1Ds,
+                                            IMeshDAO& mesh) const;
+
+      /// \brief Split cell2D into subcells
+      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param subCell2Ds the list of sub-cells 2D mesh vertices and edges indices, size numSubCells x (2 x numVertices)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell2Ds indices, from 0 to Cell2DTotalNumber()
+      std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
+                                            const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                            IMeshDAO& mesh) const;
   };
 
 }

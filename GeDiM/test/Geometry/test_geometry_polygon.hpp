@@ -491,6 +491,86 @@ namespace GedimUnitTesting
     }
   }
 
+  TEST(TestGeometryUtilities, TestPolygonInertia_ReferenceTriangle)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      // check inertia of reference triangle 2D
+      {
+        Eigen::Matrix3d polygonVertices;
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+
+        const double polygonArea = 1.0 / 2.0;
+        const Eigen::Vector3d centroid = geometryUtilities.PolygonCentroid(polygonVertices,
+                                                                           polygonArea);
+
+        const vector<unsigned int> polygonTriangulation = { 0, 1, 2 };
+
+        const vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
+                                                                                                                polygonTriangulation);
+
+        const Eigen::Matrix3d polygonInertia = geometryUtilities.PolygonInertia(centroid,
+                                                                                polygonTriangulationPoints);
+
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(0, 0), +1.0 / 36.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(1, 1), +1.0 / 36.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(0, 1), +1.0 / 72.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(1, 0), +1.0 / 72.0));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestPolygonInertia_ReferenceQuadrilateral)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      geometryUtilitiesConfig.Tolerance = 1.0e-12;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      // check inertia of reference triangle 2D
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 1.0, 1.0, 0.0;
+        polygonVertices.col(3)<< 0.0, 1.0, 0.0;
+
+        const double polygonArea = 1.0;
+        const Eigen::Vector3d centroid = geometryUtilities.PolygonCentroid(polygonVertices,
+                                                                           polygonArea);
+
+        const vector<unsigned int> polygonTriangulation = { 0, 1, 2, 0, 2, 3 };
+
+        const vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
+                                                                                                                polygonTriangulation);
+
+        const Eigen::Matrix3d polygonInertia = geometryUtilities.PolygonInertia(centroid,
+                                                                                polygonTriangulationPoints);
+
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(0, 0), +1.0 / 12.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(1, 1), +1.0 / 12.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(0, 1), +0.0));
+        ASSERT_TRUE(geometryUtilities.Are1DValuesEqual(polygonInertia(1, 0), +0.0));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
   TEST(TestGeometryUtilities, TestPolygonInRadius)
   {
     try
@@ -2043,6 +2123,90 @@ namespace GedimUnitTesting
                  0.0000000000000000e+00,  1.8633899812498247e-01,  2.3570226039551584e-01,  2.5000000000000000e-01,  2.3570226039551584e-01,  1.8633899812498247e-01,  0.0000000000000000e+00, -1.8633899812498247e-01, -2.3570226039551584e-01, -2.5000000000000000e-01, -2.3570226039551584e-01, -1.8633899812498247e-01,
                  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00).finished(),
                 ellipse);
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestLinePolygonPosition_ReferenceTriangle)
+  {
+    try
+    {
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      geometryUtilitiesConfig.Tolerance = 1.0e-8;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      Eigen::Matrix3d polygonVertices;
+      polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+      polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+      polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+
+      {
+        // line outside
+        const Gedim::GeometryUtilities::LinePolygonPositionResult result = geometryUtilities.LinePolygonPosition(Eigen::Vector3d(0.0, 1.0, 0.0),
+                                                                                                                 Eigen::Vector3d(-1.0, 0.0, 0.0),
+                                                                                                                 polygonVertices);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::Types::Outside,
+                  result.Type);
+        ASSERT_EQ(0,
+                  result.EdgeIntersections.size());
+      }
+
+      {
+        // line parallel
+        const Gedim::GeometryUtilities::LinePolygonPositionResult result = geometryUtilities.LinePolygonPosition(Eigen::Vector3d(0.0, 1.0, 0.0),
+                                                                                                                 Eigen::Vector3d(0.0, 0.0, 0.0),
+                                                                                                                 polygonVertices);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::Types::Intersecting,
+                  result.Type);
+        ASSERT_EQ(3,
+                  result.EdgeIntersections.size());
+        ASSERT_DOUBLE_EQ(0.0,
+                         result.EdgeIntersections[0].CurvilinearCoordinate);
+        ASSERT_EQ(0,
+                  result.EdgeIntersections[0].Index);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::OnEdgeOrigin,
+                  result.EdgeIntersections[0].Type);
+        ASSERT_DOUBLE_EQ(1.0,
+                         result.EdgeIntersections[1].CurvilinearCoordinate);
+        ASSERT_EQ(1,
+                  result.EdgeIntersections[1].Index);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::OnEdgeEnd,
+                  result.EdgeIntersections[1].Type);
+        ASSERT_DOUBLE_EQ(0.0,
+                         result.EdgeIntersections[2].CurvilinearCoordinate);
+        ASSERT_EQ(2,
+                  result.EdgeIntersections[2].Index);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::Parallel,
+                  result.EdgeIntersections[2].Type);
+      }
+
+      {
+        // line inside
+        const Gedim::GeometryUtilities::LinePolygonPositionResult result = geometryUtilities.LinePolygonPosition(Eigen::Vector3d(0.0, 1.0, 0.0),
+                                                                                                                 Eigen::Vector3d(0.5, 0.0, 0.0),
+                                                                                                                 polygonVertices);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::Types::Intersecting,
+                  result.Type);
+        ASSERT_EQ(2,
+                  result.EdgeIntersections.size());
+        ASSERT_DOUBLE_EQ(0.5,
+                         result.EdgeIntersections[0].CurvilinearCoordinate);
+        ASSERT_EQ(0,
+                  result.EdgeIntersections[0].Index);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::InsideEdge,
+                  result.EdgeIntersections[0].Type);
+        ASSERT_DOUBLE_EQ(0.5,
+                         result.EdgeIntersections[1].CurvilinearCoordinate);
+        ASSERT_EQ(1,
+                  result.EdgeIntersections[1].Index);
+        ASSERT_EQ(Gedim::GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::InsideEdge,
+                  result.EdgeIntersections[1].Type);
+      }
+
     }
     catch (const exception& exception)
     {

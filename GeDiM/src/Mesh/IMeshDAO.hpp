@@ -312,12 +312,24 @@ namespace Gedim
       /// \return the end Cell0D index of Cell1D from 0 to Cell0DTotalNumber()
       virtual unsigned int Cell1DEnd(const unsigned int& cell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
+      /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
+      /// \return the index of the cell0DIndex on the cell1D from 0 to 2
+      /// \throw exception if not found
+      virtual unsigned int Cell1DFindExtreme(const unsigned int& cell1DIndex,
+                                             const unsigned int& cell0DIndex) const = 0;
+      /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return the cell1D marker
       virtual unsigned int Cell1DMarker(const unsigned int& cell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return if the cell1D is active
       virtual bool Cell1DIsActive(const unsigned int& cell1DIndex) const = 0;
 
+      /// \param updatedCell1DIndex the updated cell1D index, from 0 to Cell1DTotalNumber()
+      /// \return true if has an original cell, false otherwise (the original cell is itself)
+      virtual bool Cell1DHasOriginalCell1D(const unsigned int& updatedCell1DIndex) const = 0;
+      /// \param updatedCell1DIndex the updated cell1D index, from 0 to Cell1DTotalNumber()
+      /// \return the original cell1D index, from 0 to Cell1DTotalNumber()
+      virtual unsigned int Cell1DOriginalCell1D(const unsigned int& updatedCell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return if the cell1D has new cell1Ds associated
       virtual bool Cell1DHasUpdatedCell1Ds(const unsigned int& cell1DIndex) const = 0;
@@ -500,10 +512,18 @@ namespace Gedim
                                     const unsigned int& edgeCell1DIndex) = 0;
       /// \brief Add the Cell2D edges
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
-      /// \param edgesCell0DIndices the Cell1D edges indices from 0 to Cell1DTotalNumber()
+      /// \param edgesCell1DIndices the Cell1D edges indices from 0 to Cell1DTotalNumber()
       /// \note No itialization is necessary
       virtual void Cell2DAddEdges(const unsigned int& cell2DIndex,
-                                  const std::vector<unsigned int>& edgesCell0DIndices) = 0;
+                                  const std::vector<unsigned int>& edgesCell1DIndices) = 0;
+
+      /// \brief Cell2D Add Vertices And Edges
+      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param verticesAndEdgesIndices the matrix of Cell0Ds and Cell1Ds indices
+      /// \note No itialization is necessary
+      virtual void Cell2DAddVerticesAndEdges(const unsigned int& cell2DIndex,
+                                             const Eigen::MatrixXi& verticesAndEdgesIndices) = 0;
+
       /// \brief Set the Cell2D Marker
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param marker the marker of the Cell2D
@@ -541,6 +561,12 @@ namespace Gedim
       /// \return the Cell0D coordinates of all the vertices of Cell2D, size 3 x NumberCell2DVertices(cell2DIndex)
       virtual Eigen::MatrixXd Cell2DVerticesCoordinates(const unsigned int& cell2DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
+      /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
+      /// \return the index of the cell0DIndex on the cell2D from 0 to NumberCell2DVertices(cell2DIndex)
+      /// \throw exception if not found
+      virtual unsigned int Cell2DFindVertex(const unsigned int& cell2DIndex,
+                                            const unsigned int& cell0DIndex) const = 0;
+      /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the Cell1D index collections of Cell2D from 0 to Cell1DTotalNumber(), size Cell2DNumberEdges(cell2DIndex)
       virtual std::vector<unsigned int> Cell2DEdges(const unsigned int& cell2DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
@@ -548,6 +574,12 @@ namespace Gedim
       /// \return the Cell1D index of edge of Cell2D from 0 to Cell1DTotalNumber()
       virtual unsigned int Cell2DEdge(const unsigned int& cell2DIndex,
                                       const unsigned int& edgeIndex) const = 0;
+      /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
+      /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
+      /// \return the index of the cell1DIndex on the cell2D from 0 to NumberCell2DEdges(cell2DIndex)
+      /// \throw exception if not found
+      virtual unsigned int Cell2DFindEdge(const unsigned int& cell2DIndex,
+                                          const unsigned int& cell1DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the cell2D marker
       virtual unsigned int Cell2DMarker(const unsigned int& cell2DIndex) const = 0;
