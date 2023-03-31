@@ -434,6 +434,7 @@ namespace Gedim
       }
 
       geometricData.Cell2Ds.EdgesLength[cell2DIndex] = geometryUtilities.PolygonEdgeLengths(convexCell2DVertices);
+
       geometricData.Cell2Ds.EdgesNormal[cell2DIndex] = geometryUtilities.PolygonEdgeNormals(convexCell2DVertices);
       geometricData.Cell2Ds.InRadius[cell2DIndex] = geometryUtilities.PolygonInRadius(convexCell2DVertices,
                                                                                       convexCell2DCentroid,
@@ -442,7 +443,7 @@ namespace Gedim
                                                                                     convexCell2DTriangulationPoints);
 
       geometricData.Cell2Ds.Quality[cell2DIndex] = std::min(geometricData.Cell2Ds.EdgesLength[cell2DIndex].minCoeff(),
-                                                            2.0 * geometricData.Cell2Ds.InRadius[cell2DIndex]);
+                                                            geometricData.Cell2Ds.InRadius[cell2DIndex]);
 
       for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(cell2DIndex); e++)
       {
@@ -732,6 +733,7 @@ namespace Gedim
                                                                       cell1DsQualityWeight,
                                                                       cell1DsQuality[cell1DIndexTwo],
                                                                       mesh);
+
     if (!createNewVertexOne && !createNewVertexTwo)
     {
       // no new vertices
@@ -904,14 +906,16 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
-  std::vector<unsigned int> RefinementUtilities::RefinePolygonCell_UpdateNeighbours(const unsigned int& cell2DIndex,
-                                                                                    const unsigned int& cell1DIndex,
-                                                                                    const unsigned int& newCell0DIndex,
-                                                                                    const std::vector<unsigned int>& splitCell1DsIndex,
-                                                                                    const bool& cell2DEdgeDirection,
-                                                                                    IMeshDAO& mesh) const
+  RefinementUtilities::RefinePolygon_UpdateNeighbour_Result RefinementUtilities::RefinePolygonCell_UpdateNeighbours(const unsigned int& cell2DIndex,
+                                                                                                                    const unsigned int& cell1DIndex,
+                                                                                                                    const unsigned int& newCell0DIndex,
+                                                                                                                    const std::vector<unsigned int>& splitCell1DsIndex,
+                                                                                                                    const std::vector<std::vector<bool>>& cell2DsEdgesDirection,
+                                                                                                                    IMeshDAO& mesh) const
   {
-    std::list<unsigned int> newCell2DsIndex;
+    RefinePolygon_UpdateNeighbour_Result result;
+
+    std::list<RefinePolygon_UpdateNeighbour_Result::UpdatedCell2D> newCell2DsIndex;
 
     // update neighbour cells
     for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell2D(cell1DIndex); n++)
@@ -931,6 +935,8 @@ namespace Gedim
                                                               cell1DIndex);
 
 
+      const bool& cell2DEdgeDirection = cell2DsEdgesDirection[neighCell2DIndex][neighEdgeIndex];
+
       std::vector<Eigen::MatrixXi> subCells(1);
 
       subCells[0].resize(2, neighCell2DNumVertices + 1);
@@ -942,10 +948,10 @@ namespace Gedim
         ne++;
       }
       subCells[0](0, ne) = mesh.Cell2DVertex(neighCell2DIndex, neighEdgeIndex);
-      subCells[0](1, ne) = !cell2DEdgeDirection ? splitCell1DsIndex[0] : splitCell1DsIndex[1];
+      subCells[0](1, ne) = cell2DEdgeDirection ? splitCell1DsIndex[0] : splitCell1DsIndex[1];
       ne++;
       subCells[0](0, ne) = newCell0DIndex;
-      subCells[0](1, ne) = !cell2DEdgeDirection ? splitCell1DsIndex[1] : splitCell1DsIndex[0];
+      subCells[0](1, ne) = cell2DEdgeDirection ? splitCell1DsIndex[1] : splitCell1DsIndex[0];
       ne++;
       for (unsigned int e = neighEdgeIndex + 1; e < neighCell2DNumVertices; e++)
       {
@@ -954,12 +960,23 @@ namespace Gedim
         ne++;
       }
 
-      newCell2DsIndex.push_back(meshUtilities.SplitCell2D(neighCell2DIndex,
-                                                          subCells,
-                                                          mesh)[0]);
+      const std::vector<unsigned int> newCell2Ds = meshUtilities.SplitCell2D(neighCell2DIndex,
+                                                                             subCells,
+                                                                             mesh);
+
+      for (const unsigned int& newCell2D : newCell2Ds)
+      {
+        RefinePolygon_UpdateNeighbour_Result::UpdatedCell2D updatedCell2D;
+        updatedCell2D.OriginalCell2DIndex = neighCell2DIndex;
+        updatedCell2D.NewCell2DIndex = newCell2D;
+        newCell2DsIndex.push_back(updatedCell2D);
+      }
     }
 
-    return std::vector<unsigned int>(newCell2DsIndex.begin(), newCell2DsIndex.end());
+    result.UpdatedCell2Ds = std::vector<RefinePolygon_UpdateNeighbour_Result::UpdatedCell2D>(newCell2DsIndex.begin(),
+                                                                                             newCell2DsIndex.end());
+
+    return result;
   }
   // ***************************************************************************
 }
