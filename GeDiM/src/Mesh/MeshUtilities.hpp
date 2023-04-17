@@ -8,7 +8,8 @@ namespace Gedim
 {
   /// \brief MeshUtilities
   /// \copyright See top level LICENSE file for details.
-  class MeshUtilities final {
+  class MeshUtilities final
+  {
     public:
       struct CheckMesh2DConfiguration final
       {
@@ -39,14 +40,20 @@ namespace Gedim
 
       struct ExtractActiveMeshData final
       {
-          std::map<unsigned int, unsigned int> OldCell0DToNewCell0D; ///< each pair is {old Cell0D index, new Cell0D index}
-          std::map<unsigned int, unsigned int> OldCell1DToNewCell1D; ///< each pair is {old Cell1D index, new Cell1D index}
-          std::map<unsigned int, unsigned int> OldCell2DToNewCell2D; ///< each pair is {old Cell2D index, new Cell2D index}
-          std::map<unsigned int, unsigned int> OldCell3DToNewCell3D; ///< each pair is {old Cell3D index, new Cell3D index}
-          std::map<unsigned int, unsigned int> NewCell0DToOldCell0D; ///< each pair is {new Cell0D index, old Cell0D index}
-          std::map<unsigned int, unsigned int> NewCell1DToOldCell1D; ///< each pair is {new Cell1D index, old Cell1D index}
-          std::map<unsigned int, unsigned int> NewCell2DToOldCell2D; ///< each pair is {new Cell2D index, old Cell2D index}
-          std::map<unsigned int, unsigned int> NewCell3DToOldCell3D; ///< each pair is {new Cell3D index, old Cell3D index}
+          std::unordered_map<unsigned int, unsigned int> OldCell0DToNewCell0D; ///< each pair is {old Cell0D index, new Cell0D index}
+          std::unordered_map<unsigned int, unsigned int> OldCell1DToNewCell1D; ///< each pair is {old Cell1D index, new Cell1D index}
+          std::unordered_map<unsigned int, unsigned int> OldCell2DToNewCell2D; ///< each pair is {old Cell2D index, new Cell2D index}
+          std::unordered_map<unsigned int, unsigned int> OldCell3DToNewCell3D; ///< each pair is {old Cell3D index, new Cell3D index}
+          std::unordered_map<unsigned int, unsigned int> NewCell0DToOldCell0D; ///< each pair is {new Cell0D index, old Cell0D index}
+          std::unordered_map<unsigned int, unsigned int> NewCell1DToOldCell1D; ///< each pair is {new Cell1D index, old Cell1D index}
+          std::unordered_map<unsigned int, unsigned int> NewCell2DToOldCell2D; ///< each pair is {new Cell2D index, old Cell2D index}
+          std::unordered_map<unsigned int, unsigned int> NewCell3DToOldCell3D; ///< each pair is {new Cell3D index, old Cell3D index}
+      };
+
+      struct ComputeMesh2DCell1DsResult final
+      {
+          Eigen::MatrixXi Cell1Ds; /// Cell1Ds vertices, size 2 x Cell1DTotalNumber()
+          std::vector<Eigen::MatrixXi> Cell2Ds; ///< Cell2Ds vertices and edges, size Cell2DTotalNumber()x2xCell2DNumberVertices()
       };
 
       struct MeshGeometricData1D final
@@ -125,7 +132,7 @@ namespace Gedim
                       const std::vector<double>& coordinates,
                       IMeshDAO& mesh) const;
 
-      /// \brief Fill a Mesh 2D with vertices and polygons
+      /// \brief Fill a Mesh 2D with vertices, edges and polygons
       /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
       /// \param cell1Ds the origin and end as Eigen MatrixXd of cell1Ds, size 2xCell1DTotalNumber()
       /// \param cell2Ds the vertices and edges indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()x2xCell2DNumberVertices()
@@ -133,6 +140,13 @@ namespace Gedim
                       const Eigen::MatrixXi& cell1Ds,
                       const std::vector<Eigen::MatrixXi>& cell2Ds,
                       IMeshDAO& mesh) const;
+
+      /// \brief Compute edges in a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
+      /// \return the Cell1Ds data
+      ComputeMesh2DCell1DsResult ComputeMesh2DCell1Ds(const Eigen::MatrixXd& cell0Ds,
+                                                      const std::vector<Eigen::VectorXi>& cell2Ds) const;
 
       /// \brief Check Mesh2D correctness
       /// \param geometryUtilities the geometry utilities
@@ -321,6 +335,24 @@ namespace Gedim
                                                const std::vector<unsigned int>& numberOfAddedVerticesForEachRectangle,
                                                const GeometryUtilities& geometryUtilities,
                                                IMeshDAO& mesh) const;
+
+      /// \brief Split cell2D into subcells
+      /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
+      /// \param subCell1Ds the list of sub-cells 1D mesh vertices indices, size 2 x numSubCells)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell1Ds indices, from 0 to Cell1DTotalNumber()
+      std::vector<unsigned int> SplitCell1D(const unsigned int& cell1DIndex,
+                                            const Eigen::MatrixXi subCell1Ds,
+                                            IMeshDAO& mesh) const;
+
+      /// \brief Split cell2D into subcells
+      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param subCell2Ds the list of sub-cells 2D mesh vertices and edges indices, size numSubCells x (2 x numVertices)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell2Ds indices, from 0 to Cell2DTotalNumber()
+      std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
+                                            const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                            IMeshDAO& mesh) const;
   };
 
 }

@@ -1,5 +1,6 @@
 #include "IOUtilities.hpp"
 #include "GeometryUtilities.hpp"
+#include "MapTriangle.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -1171,6 +1172,64 @@ namespace Gedim
                   xPoints.segment(1, numVertices).dot(yPoints.segment(0, numVertices)));
   }
   // ***************************************************************************
+  Matrix3d GeometryUtilities::PolygonInertia(const Eigen::Vector3d& polygonCentroid,
+                                             const std::vector<Eigen::Matrix3d>& polygonTriangulationPoints) const
+  {
+    // Create reference quadrature points
+    Eigen::Matrix3d referencePoints = Eigen::Matrix3d::Zero();
+    referencePoints(0,0) = 6.666666666666666297e-01;
+    referencePoints(1,0) = 1.666666666666666574e-01;
+    referencePoints(0,1) = 1.666666666666666574e-01;
+    referencePoints(1,1) = 6.666666666666666297e-01;
+    referencePoints(0,2) = 1.666666666666666574e-01;
+    referencePoints(1,2) = 1.666666666666666574e-01;
+    Eigen::Vector3d referenceWeights;
+    referenceWeights[0] = 1.666666666666666574e-01;
+    referenceWeights[1] = 1.666666666666666574e-01;
+    referenceWeights[2] = 1.666666666666666574e-01;
+
+    // Create polygon quadrature points
+    const unsigned int numPolygonTriangles = polygonTriangulationPoints.size();
+
+    const unsigned int numTriangleQuadraturePoints = referencePoints.cols();
+    const unsigned int numPolygonQuadraturePoints = numPolygonTriangles * numTriangleQuadraturePoints;
+
+    Eigen::MatrixXd polygonQuadraturePoints = Eigen::MatrixXd::Zero(3, numPolygonQuadraturePoints);
+    Eigen::VectorXd polygonQuadratureWeights = Eigen::VectorXd::Zero(numPolygonQuadraturePoints);
+
+    Gedim::MapTriangle mapTriangle;
+
+    for (unsigned int t = 0; t < numPolygonTriangles; t++)
+    {
+      const Eigen::Matrix3d& triangleVertices = polygonTriangulationPoints[t];
+
+      Gedim::MapTriangle::MapTriangleData mapData = mapTriangle.Compute(triangleVertices);
+      polygonQuadraturePoints.block(0,
+                                    numTriangleQuadraturePoints * t,
+                                    3,
+                                    numTriangleQuadraturePoints) = mapTriangle.F(mapData,
+                                                                                 referencePoints);
+      polygonQuadratureWeights.segment(numTriangleQuadraturePoints * t,
+                                       numTriangleQuadraturePoints) = referenceWeights *
+                                                                      abs(mapData.DetB);
+
+    }
+
+    // Compute Inertia Matrix
+    Eigen::Matrix3d inertia = Eigen::Matrix3d::Zero();
+
+    inertia(0, 0) = ((polygonQuadraturePoints.row(1).array() - polygonCentroid.y()).square() *
+                     polygonQuadratureWeights.transpose().array()).sum();
+    inertia(1, 1) = ((polygonQuadraturePoints.row(0).array() - polygonCentroid.x()).square() *
+                     polygonQuadratureWeights.transpose().array()).sum();
+    inertia(0, 1) = - ((polygonQuadraturePoints.row(0).array() - polygonCentroid.x()) *
+                       (polygonQuadraturePoints.row(1).array() - polygonCentroid.y()) *
+                       polygonQuadratureWeights.transpose().array()).sum();
+    inertia(1, 0) = inertia(0, 1);
+
+    return inertia;
+  }
+  // ***************************************************************************
   GeometryUtilities::PolygonCirclePositionTypes GeometryUtilities::PolygonCirclePosition(const Eigen::MatrixXd& polygonVertices,
                                                                                          const Eigen::Vector3d& circleCenter,
                                                                                          const double& ,
@@ -1259,6 +1318,99 @@ namespace Gedim
     }
 
     throw runtime_error("PolygonCirclePosition failed");
+  }
+  // ***************************************************************************
+  GeometryUtilities::LinePolygonPositionResult GeometryUtilities::LinePolygonPosition(const Eigen::Vector3d& lineTangent,
+                                                                                      const Eigen::Vector3d& lineOrigin,
+                                                                                      const Eigen::MatrixXd& polygonVertices) const
+  {
+    LinePolygonPositionResult result;
+
+    result.Type = LinePolygonPositionResult::Types::Outside;
+
+    const unsigned int numVertices = polygonVertices.cols();
+    list<LinePolygonPositionResult::EdgeIntersection> edgeIntersections;
+
+    for (unsigned int e = 0; e < numVertices; e++)
+    {
+      const Eigen::VectorXd edgeOrigin = polygonVertices.col(e);
+      const Eigen::VectorXd edgeEnd = polygonVertices.col((e + 1) % numVertices);
+
+      const IntersectionSegmentSegmentResult intersectionResult = IntersectionSegmentSegment(edgeOrigin,
+                                                                                             edgeEnd,
+                                                                                             lineOrigin,
+                                                                                             lineOrigin + lineTangent);
+
+      if (intersectionResult.IntersectionLinesType ==
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::OnDifferentPlanes)
+        continue;
+
+      if (intersectionResult.IntersectionLinesType ==
+          IntersectionSegmentSegmentResult::IntersectionLineTypes::CoPlanarParallel &&
+          intersectionResult.IntersectionSegmentsType ==
+          IntersectionSegmentSegmentResult::IntersectionSegmentTypes::NoIntersection)
+        continue;
+
+      switch (intersectionResult.IntersectionSegmentsType)
+      {
+        case IntersectionSegmentSegmentResult::IntersectionSegmentTypes::MultipleIntersections:
+        {
+          result.Type = LinePolygonPositionResult::Types::Intersecting;
+          edgeIntersections.push_back(LinePolygonPositionResult::EdgeIntersection());
+          LinePolygonPositionResult::EdgeIntersection& edgeIntersection = edgeIntersections.back();
+          edgeIntersection.Type = LinePolygonPositionResult::EdgeIntersection::Types::Parallel;
+          edgeIntersection.Index = e;
+          continue;
+        }
+          break;
+        case IntersectionSegmentSegmentResult::IntersectionSegmentTypes::NoIntersection:
+        case IntersectionSegmentSegmentResult::IntersectionSegmentTypes::SingleIntersection:
+        {
+          const IntersectionSegmentSegmentResult::IntersectionPosition& position = intersectionResult.FirstSegmentIntersections[0];
+
+          switch (position.Type)
+          {
+            case PointSegmentPositionTypes::OnSegmentLineBeforeOrigin:
+            case PointSegmentPositionTypes::OnSegmentLineAfterEnd:
+            case PointSegmentPositionTypes::LeftTheSegment:
+            case PointSegmentPositionTypes::RightTheSegment:
+            {
+              continue;
+            }
+              break;
+            case PointSegmentPositionTypes::OnSegmentOrigin:
+            case PointSegmentPositionTypes::InsideSegment:
+            case PointSegmentPositionTypes::OnSegmentEnd:
+            {
+              result.Type = LinePolygonPositionResult::Types::Intersecting;
+              edgeIntersections.push_back(LinePolygonPositionResult::EdgeIntersection());
+              LinePolygonPositionResult::EdgeIntersection& edgeIntersection = edgeIntersections.back();
+              edgeIntersection.Index = e;
+              edgeIntersection.CurvilinearCoordinate = position.CurvilinearCoordinate;
+
+              if (position.Type == PointSegmentPositionTypes::OnSegmentOrigin)
+                edgeIntersection.Type = LinePolygonPositionResult::EdgeIntersection::Types::OnEdgeOrigin;
+              else if (position.Type == PointSegmentPositionTypes::OnSegmentEnd)
+                edgeIntersection.Type = LinePolygonPositionResult::EdgeIntersection::Types::OnEdgeEnd;
+              else
+                edgeIntersection.Type = LinePolygonPositionResult::EdgeIntersection::Types::InsideEdge;
+              continue;
+            }
+              break;
+            default:
+              throw runtime_error("Unknown IntersectionPosition");
+          }
+        }
+          break;
+        default:
+          throw runtime_error("Unknown IntersectionSegmentsType");
+      }
+    }
+
+    result.EdgeIntersections = vector<LinePolygonPositionResult::EdgeIntersection>(edgeIntersections.begin(),
+                                                                                   edgeIntersections.end());
+
+    return result;
   }
   // ***************************************************************************
 }

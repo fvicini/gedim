@@ -374,6 +374,18 @@ namespace Gedim
         Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.Cell1DVertices[2 * cell1DIndex + 1];
       }
+      inline unsigned int Cell1DFindExtreme(const unsigned int& cell1DIndex,
+                                            const unsigned int& cell0DIndex) const
+      {
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(cell0DIndex < Cell0DTotalNumber());
+        if (_mesh.Cell1DVertices[2 * cell1DIndex] == cell0DIndex)
+          return 0;
+        else if (_mesh.Cell1DVertices[2 * cell1DIndex + 1] == cell0DIndex)
+          return 1;
+        else
+          throw std::runtime_error("Not found");
+      }
       inline Eigen::MatrixXd Cell1DCoordinates(const unsigned int& cell1DIndex) const
       {
         return (Eigen::MatrixXd(3, 2)<< Cell1DOriginCoordinates(cell1DIndex), Cell1DEndCoordinates(cell1DIndex)).finished();
@@ -424,6 +436,16 @@ namespace Gedim
       {
         Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         return _mesh.ActiveCell1D[cell1DIndex];
+      }
+      inline bool Cell1DHasOriginalCell1D(const unsigned int& updatedCell1DIndex) const
+      {
+        Gedim::Output::Assert(updatedCell1DIndex < Cell1DTotalNumber());
+        return _mesh.Cell1DOriginalCell1Ds.at(updatedCell1DIndex) < _mesh.NumberCell1D;
+      }
+      inline unsigned int Cell1DOriginalCell1D(const unsigned int& updatedCell1DIndex) const
+      {
+        Gedim::Output::Assert(updatedCell1DIndex < Cell1DTotalNumber());
+        return _mesh.Cell1DOriginalCell1Ds.at(updatedCell1DIndex);
       }
       inline bool Cell1DHasUpdatedCell1Ds(const unsigned int& cell1DIndex) const
       {
@@ -563,7 +585,9 @@ namespace Gedim
       void Cell2DAddVertices(const unsigned int& cell2DIndex,
                              const std::vector<unsigned int>& verticesCell0DIndices);
       void Cell2DAddEdges(const unsigned int& cell2DIndex,
-                          const std::vector<unsigned int>& edgesCell0DIndices);
+                          const std::vector<unsigned int>& edgesCell1DIndices);
+      void Cell2DAddVerticesAndEdges(const unsigned int& cell2DIndex,
+                                     const Eigen::MatrixXi& verticesAndEdgesIndices);
 
       inline unsigned int Cell2DTotalNumber() const
       { return _mesh.NumberCell2D; }
@@ -579,7 +603,11 @@ namespace Gedim
         return _mesh.NumberCell2DEdges[cell2DIndex + 1] - _mesh.NumberCell2DEdges[cell2DIndex];
       }
 
-      std::vector<unsigned int> Cell2DVertices(const unsigned int& cell2DIndex) const;
+      inline std::vector<unsigned int> Cell2DVertices(const unsigned int& cell2DIndex) const
+      {
+        return std::vector<unsigned int>(_mesh.Cell2DVertices.begin() + _mesh.NumberCell2DVertices[cell2DIndex],
+                                         _mesh.Cell2DVertices.begin() + _mesh.NumberCell2DVertices[cell2DIndex] + Cell2DNumberVertices(cell2DIndex));
+      }
       std::vector<std::vector<unsigned int>> Cell2DsVertices() const;
 
       inline unsigned int Cell2DVertex(const unsigned int& cell2DIndex,
@@ -597,8 +625,14 @@ namespace Gedim
         return Cell0DCoordinates(Cell2DVertex(cell2DIndex, vertexIndex));
       }
       Eigen::MatrixXd Cell2DVerticesCoordinates(const unsigned int& cell2DIndex) const;
+      unsigned int Cell2DFindVertex(const unsigned int& cell2DIndex,
+                                    const unsigned int& cell0DIndex) const;
 
-      std::vector<unsigned int> Cell2DEdges(const unsigned int& cell2DIndex) const;
+      inline std::vector<unsigned int> Cell2DEdges(const unsigned int& cell2DIndex) const
+      {
+        return std::vector<unsigned int>(_mesh.Cell2DEdges.begin() + _mesh.NumberCell2DEdges[cell2DIndex],
+                                         _mesh.Cell2DEdges.begin() + _mesh.NumberCell2DEdges[cell2DIndex] + Cell2DNumberEdges(cell2DIndex));
+      }
 
       inline unsigned int Cell2DEdge(const unsigned int& cell2DIndex,
                                      const unsigned int& edgeIndex) const
@@ -607,6 +641,8 @@ namespace Gedim
         Gedim::Output::Assert(edgeIndex < Cell2DNumberEdges(cell2DIndex));
         return _mesh.Cell2DEdges[_mesh.NumberCell2DEdges[cell2DIndex] + edgeIndex];
       }
+      unsigned int Cell2DFindEdge(const unsigned int& cell2DIndex,
+                                                const unsigned int& cell1DIndex) const;
       inline unsigned int Cell2DMarker(const unsigned int& cell2DIndex) const
       {
         Gedim::Output::Assert(cell2DIndex < Cell2DTotalNumber());
