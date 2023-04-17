@@ -1522,7 +1522,6 @@ namespace Gedim
               baseMeshCurvilinearCoordinates[b+1],
               false);
           for (unsigned int s = 0; s < numberOfAddedVerticesForEachRectangle[0]; s++)
-
           {
             const Eigen::Vector3d coordinate = rectangleOrigin +
                                                curvilinearPoints[s] * rectangleBaseTangent +
