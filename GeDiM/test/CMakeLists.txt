@@ -63,7 +63,9 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
 ## VTK
-find_package(VTK CONFIG REQUIRED)
+if(${ENABLE_VTK})
+    find_package(VTK CONFIG REQUIRED)
+endif()
 
 ## triangle
 find_package(triangle CONFIG REQUIRED)
@@ -71,12 +73,18 @@ find_package(triangle CONFIG REQUIRED)
 ## tetgen
 find_package(tetgen CONFIG REQUIRED)
 
+## METIS
+if(${ENABLE_METIS})
+    find_package(metis CONFIG REQUIRED)
+endif()
+
 # Insert Sources
 ###############################################################################################
 add_subdirectory(Geometry)
 add_subdirectory(Algebra)
 add_subdirectory(Mesh)
 add_subdirectory(IO)
+add_subdirectory(MpiTools)
 add_subdirectory(Quadrature)
 
 list(APPEND ${GEDIM_LIBRARY_TEST_PUBLIC_HEADERS} ${gedim_test_src_headers})
