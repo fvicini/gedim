@@ -4,6 +4,7 @@
 #include "TetgenInterface.hpp"
 #include "VTKUtilities.hpp"
 #include "MapTetrahedron.hpp"
+#include "OpenVolumeMeshInterface.hpp"
 
 #include "numeric"
 
@@ -2536,6 +2537,26 @@ namespace Gedim
                                options);
   }
   // ***************************************************************************
+  void MeshUtilities::ImportOpenVolumeMesh(const std::string& ovmFilePath,
+                                           IMeshDAO& mesh,
+                                           std::vector<std::vector<bool>>& meshCell3DsFacesOrientation) const
+  {
+    OpenVolumeMeshInterface openVolumeMeshInterface;
+    openVolumeMeshInterface.ImportMeshFromFile(ovmFilePath,
+                                               mesh,
+                                               meshCell3DsFacesOrientation);
+  }
+  // ***************************************************************************
+  void MeshUtilities::ExportMeshToOpenVolume(const IMeshDAO& mesh,
+                                             const std::vector<std::vector<bool>>& meshCell3DsFacesOrientation,
+                                             const std::string& ovmFilePath) const
+  {
+    OpenVolumeMeshInterface openVolumeMeshInterface;
+    openVolumeMeshInterface.ExportMeshToFile(mesh,
+                                             meshCell3DsFacesOrientation,
+                                             ovmFilePath);
+  }
+  // ***************************************************************************
   void MeshUtilities::ChangePolygonMeshMarkers(const Eigen::MatrixXd& polygonVertices,
                                                const vector<unsigned int>& cell0DMarkers,
                                                const vector<unsigned int>& cell1DMarkers,
@@ -2579,14 +2600,16 @@ namespace Gedim
     {
       vector<double> id(mesh.Cell0DTotalNumber());
       vector<double> marker(mesh.Cell0DTotalNumber());
+      vector<double> active(mesh.Cell0DTotalNumber());
 
       for (unsigned int g = 0; g < mesh.Cell0DTotalNumber(); g++)
       {
         id[g] = g;
         marker[g] = mesh.Cell0DMarker(g);
+        active[g] = mesh.Cell0DIsActive(g);
       }
 
-      vector<VTPProperty> properties(2 + mesh.Cell0DNumberDoubleProperties());
+      vector<VTPProperty> properties(3 + mesh.Cell0DNumberDoubleProperties());
       vector<vector<double>> propertyValues(mesh.Cell0DNumberDoubleProperties());
 
       properties[0] = {
@@ -2601,6 +2624,12 @@ namespace Gedim
         static_cast<unsigned int>(marker.size()),
         marker.data()
       };
+      properties[2] = {
+        "Active",
+        Gedim::VTPProperty::Formats::Cells,
+        static_cast<unsigned int>(active.size()),
+        active.data()
+      };
 
       for (unsigned int p = 0; p < mesh.Cell0DNumberDoubleProperties(); p++)
       {
@@ -2611,7 +2640,7 @@ namespace Gedim
                                                                             0.0;
         }
 
-        properties[2 + p] = {
+        properties[3 + p] = {
           mesh.Cell0DDoublePropertyId(p),
           Gedim::VTPProperty::Formats::Cells,
           static_cast<unsigned int>(propertyValues[p].size()),
@@ -2630,14 +2659,16 @@ namespace Gedim
     {
       vector<double> id(mesh.Cell1DTotalNumber());
       vector<double> marker(mesh.Cell1DTotalNumber());
+      vector<double> active(mesh.Cell1DTotalNumber());
 
       for (unsigned int g = 0; g < mesh.Cell1DTotalNumber(); g++)
       {
         id[g] = g;
         marker[g] = mesh.Cell1DMarker(g);
+        active[g] = mesh.Cell1DIsActive(g);
       }
 
-      vector<VTPProperty> properties(2 + mesh.Cell1DNumberDoubleProperties());
+      vector<VTPProperty> properties(3 + mesh.Cell1DNumberDoubleProperties());
       vector<vector<double>> propertyValues(mesh.Cell1DNumberDoubleProperties());
 
       properties[0] = {
@@ -2646,12 +2677,17 @@ namespace Gedim
         static_cast<unsigned int>(id.size()),
         id.data()
       };
-
       properties[1] = {
         "Marker",
         Gedim::VTPProperty::Formats::Cells,
         static_cast<unsigned int>(marker.size()),
         marker.data()
+      };
+      properties[2] = {
+        "Active",
+        Gedim::VTPProperty::Formats::Cells,
+        static_cast<unsigned int>(active.size()),
+        active.data()
       };
 
       for (unsigned int p = 0; p < mesh.Cell1DNumberDoubleProperties(); p++)
@@ -2663,7 +2699,7 @@ namespace Gedim
                                                                             0.0;
         }
 
-        properties[2 + p] = {
+        properties[3 + p] = {
           mesh.Cell1DDoublePropertyId(p),
           Gedim::VTPProperty::Formats::Cells,
           static_cast<unsigned int>(propertyValues[p].size()),
@@ -2683,14 +2719,16 @@ namespace Gedim
     {
       vector<double> id(mesh.Cell2DTotalNumber());
       vector<double> marker(mesh.Cell2DTotalNumber());
+      vector<double> active(mesh.Cell2DTotalNumber());
 
       for (unsigned int g = 0; g < mesh.Cell2DTotalNumber(); g++)
       {
         id[g] = g;
         marker[g] = mesh.Cell2DMarker(g);
+        active[g] = mesh.Cell2DIsActive(g);
       }
 
-      vector<VTPProperty> properties(2 + mesh.Cell2DNumberDoubleProperties());
+      vector<VTPProperty> properties(3 + mesh.Cell2DNumberDoubleProperties());
       vector<vector<double>> propertyValues(mesh.Cell2DNumberDoubleProperties());
 
       properties[0] = {
@@ -2699,12 +2737,17 @@ namespace Gedim
         static_cast<unsigned int>(id.size()),
         id.data()
       };
-
       properties[1] = {
         "Marker",
         Gedim::VTPProperty::Formats::Cells,
         static_cast<unsigned int>(marker.size()),
         marker.data()
+      };
+      properties[2] = {
+        "Active",
+        Gedim::VTPProperty::Formats::Cells,
+        static_cast<unsigned int>(active.size()),
+        active.data()
       };
 
       for (unsigned int p = 0; p < mesh.Cell2DNumberDoubleProperties(); p++)
@@ -2716,7 +2759,7 @@ namespace Gedim
                                                                             0.0;
         }
 
-        properties[2 + p] = {
+        properties[3 + p] = {
           mesh.Cell2DDoublePropertyId(p),
           Gedim::VTPProperty::Formats::Cells,
           static_cast<unsigned int>(propertyValues[p].size()),
@@ -2736,14 +2779,16 @@ namespace Gedim
     {
       vector<double> id(mesh.Cell3DTotalNumber());
       vector<double> marker(mesh.Cell3DTotalNumber());
+      vector<double> active(mesh.Cell3DTotalNumber());
 
       for (unsigned int g = 0; g < mesh.Cell3DTotalNumber(); g++)
       {
         id[g] = g;
         marker[g] = mesh.Cell3DMarker(g);
+        active[g] = mesh.Cell3DIsActive(g);
       }
 
-      vector<VTPProperty> properties(2 + mesh.Cell3DNumberDoubleProperties());
+      vector<VTPProperty> properties(3 + mesh.Cell3DNumberDoubleProperties());
       vector<vector<double>> propertyValues(mesh.Cell3DNumberDoubleProperties());
 
       properties[0] = {
@@ -2752,12 +2797,17 @@ namespace Gedim
         static_cast<unsigned int>(id.size()),
         id.data()
       };
-
       properties[1] = {
         "Marker",
         Gedim::VTPProperty::Formats::Cells,
         static_cast<unsigned int>(marker.size()),
         marker.data()
+      };
+      properties[2] = {
+        "Active",
+        Gedim::VTPProperty::Formats::Cells,
+        static_cast<unsigned int>(active.size()),
+        active.data()
       };
 
       for (unsigned int p = 0; p < mesh.Cell3DNumberDoubleProperties(); p++)
@@ -2769,7 +2819,7 @@ namespace Gedim
                                                                             0.0;
         }
 
-        properties[2 + p] = {
+        properties[3 + p] = {
           mesh.Cell3DDoublePropertyId(p),
           Gedim::VTPProperty::Formats::Cells,
           static_cast<unsigned int>(propertyValues[p].size()),

@@ -217,6 +217,10 @@ namespace GedimUnitTesting
     const std::vector<double> cell2DsQualityParameter = { meshGeometricData.Cell2DsEdgeLengths[0].minCoeff() };
     const double cell1DsQualityWeight = 1.0;
     const std::vector<double> cell1DsQualityParameter(meshDAO.Cell1DTotalNumber(), cell2DsQualityParameter[0]);
+    std::vector<unsigned int> cell1DsAligned(meshDAO.Cell1DTotalNumber());
+    std::iota(std::begin(cell1DsAligned),
+              std::end(cell1DsAligned),
+              0);
 
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(1.0, 1.0, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(0.25, 0.25, 0.0);
@@ -227,7 +231,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             cell1DsQualityParameter,
+                                                                                                                            cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -283,6 +289,10 @@ namespace GedimUnitTesting
                                                           meshGeometricData.Cell2DsEdgeLengths[1].minCoeff() };
     const double cell1DsQualityWeight = 1.0;
     const std::vector<double> cell1DsQualityParameter(meshDAO.Cell1DTotalNumber(), 0.0);
+    std::vector<unsigned int> cell1DsAligned(meshDAO.Cell1DTotalNumber());
+    std::iota(std::begin(cell1DsAligned),
+              std::end(cell1DsAligned),
+              0);
 
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(-1.0, 0.5, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(1.0, 0.5, 0.0);
@@ -293,7 +303,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             cell1DsQualityParameter,
+                                                                                                                            cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -349,6 +361,10 @@ namespace GedimUnitTesting
                                                           meshGeometricData.Cell2DsEdgeLengths[1].minCoeff() };
     const double cell1DsQualityWeight = 1.0;
     const std::vector<double> cell1DsQualityParameter(meshDAO.Cell1DTotalNumber(), 0.0);
+    std::vector<unsigned int> cell1DsAligned(meshDAO.Cell1DTotalNumber());
+    std::iota(std::begin(cell1DsAligned),
+              std::end(cell1DsAligned),
+              0);
 
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(1.0, 1.0, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(0.25, 0.25, 0.0);
@@ -359,7 +375,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             cell1DsQualityParameter,
+                                                                                                                            cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -415,6 +433,10 @@ namespace GedimUnitTesting
                                                           meshGeometricData.Cell2DsEdgeLengths[1].minCoeff() };
     const double cell1DsQualityWeight = 1.0;
     const std::vector<double> cell1DsQualityParameter(meshDAO.Cell1DTotalNumber(), 0.0);
+    std::vector<unsigned int> cell1DsAligned(meshDAO.Cell1DTotalNumber());
+    std::iota(std::begin(cell1DsAligned),
+              std::end(cell1DsAligned),
+              0);
 
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(0.5, 0.0, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(0.5, 0.5, 0.0);
@@ -425,7 +447,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             cell1DsQualityParameter,
+                                                                                                                            cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -492,7 +516,7 @@ namespace GedimUnitTesting
 
     Gedim::RefinementUtilities::Cell2Ds_GeometricData meshGeometricData = refinementUtilities.RefinePolygonCell_InitializeGeometricData(meshDAO);
 
-    const double cell1DsQualityWeight = 1.0;
+    const double cell1DsQualityWeight = 1.1;
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(1.0, 0.0, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(0.5, 0.5, 0.0);
     const unsigned int cell2DToRefineIndex = 1;
@@ -502,7 +526,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -529,8 +555,8 @@ namespace GedimUnitTesting
                                   "Mesh_Refined");
 
     EXPECT_EQ(8, meshDAO.Cell0DTotalNumber());
-    EXPECT_EQ(10, meshDAO.Cell1DTotalNumber());
-    EXPECT_EQ(3, meshDAO.Cell2DTotalNumber());
+    EXPECT_EQ(11, meshDAO.Cell1DTotalNumber());
+    EXPECT_EQ(4, meshDAO.Cell2DTotalNumber());
   }
 
   TEST(TestRefinementUtilities, TestRefinePolygons_CheckQuality_NewVertexOne)
@@ -569,7 +595,7 @@ namespace GedimUnitTesting
 
     Gedim::RefinementUtilities::Cell2Ds_GeometricData meshGeometricData = refinementUtilities.RefinePolygonCell_InitializeGeometricData(meshDAO);
 
-    const double cell1DsQualityWeight = 1.0;
+    const double cell1DsQualityWeight = 1.1;
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(-0.5, -0.05, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(0.5, 0.55, 0.0);
     const unsigned int cell2DToRefineIndex = 1;
@@ -579,7 +605,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -646,7 +674,7 @@ namespace GedimUnitTesting
 
     Gedim::RefinementUtilities::Cell2Ds_GeometricData meshGeometricData = refinementUtilities.RefinePolygonCell_InitializeGeometricData(meshDAO);
 
-    const double cell1DsQualityWeight = 1.0;
+    const double cell1DsQualityWeight = 1.1;
     const Eigen::Vector3d lineTangent = Eigen::Vector3d(-0.5, 0.04, 0.0).normalized();
     const Eigen::Vector3d lineOrigin = Eigen::Vector3d(1.0, 0.51, 0.0);
     const unsigned int cell2DToRefineIndex = 1;
@@ -656,7 +684,9 @@ namespace GedimUnitTesting
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
                                                                                                                             meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
+                                                                                                                            meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
@@ -761,7 +791,9 @@ namespace GedimUnitTesting
                                                                                                                                  direction.LineTangent,
                                                                                                                                  direction.LineOrigin,
                                                                                                                                  meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                 meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                  cell1DsQualityWeight,
+                                                                                                                                 meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                  meshDAO);
@@ -840,7 +872,7 @@ namespace GedimUnitTesting
 
     const unsigned int seed = 10;
     const unsigned int maxRefinements = 6;
-    const double cell1DsQualityWeight = 1.0;
+    const double cell1DsQualityWeight = 1.01;
 
     Gedim::RefinementUtilities::Cell2Ds_GeometricData meshGeometricData = refinementUtilities.RefinePolygonCell_InitializeGeometricData(meshDAO);
 
@@ -895,7 +927,9 @@ namespace GedimUnitTesting
                                                                                                                                  direction.LineTangent,
                                                                                                                                  direction.LineOrigin,
                                                                                                                                  meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                 meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                  cell1DsQualityWeight,
+                                                                                                                                 meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                  meshDAO);
@@ -1061,7 +1095,7 @@ namespace GedimUnitTesting
 
       const unsigned int seed = 10;
       const unsigned int maxRefinements = 6;
-      const double cell1DsQualityWeight = 0.5;
+      const double cell1DsQualityWeight = 0.51;
 
       Gedim::RefinementUtilities::Cell2Ds_GeometricData meshGeometricData = refinementUtilities.RefinePolygonCell_InitializeGeometricData(meshDAO);
 
@@ -1108,7 +1142,9 @@ namespace GedimUnitTesting
                                                                                                                                   direction.LineTangent,
                                                                                                                                   direction.LineOrigin,
                                                                                                                                   meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                  meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                   cell1DsQualityWeight,
+                                                                                                                                  meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
                                                                                                                                   meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
                                                                                                                                   meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                   meshDAO);
