@@ -39,6 +39,14 @@ namespace Gedim
 
       struct SplitPolygon_Result final
       {
+          enum struct Types
+          {
+            Unknown = 0,
+            Split = 1,
+            NoSplit = 2
+          };
+
+          Types Type = Types::Unknown;
           unsigned int NewCell1DIndex = 0;
           std::vector<unsigned int> NewCell2DsIndex = {};
       };
@@ -61,6 +69,18 @@ namespace Gedim
               unsigned int OriginalCell2DEdgeIndex = 0;
           };
 
+          struct Cell1DToSplit final
+          {
+              bool IsIntersectionInside = false;
+              bool IsEdgeLengthEnough = false;
+              bool IsQualityEnough = false;
+              bool IsAligned = false;
+              bool IsToSplit = false;
+              unsigned int Cell2DEdgeIndex = 0;
+          };
+
+          std::vector<Cell1DToSplit> Cell1DsToSplit = {};
+
           std::vector<unsigned int> NewCell0DsIndex = {};
           std::vector<RefinedCell1D> NewCell1DsIndex = {};
           std::vector<unsigned int> NewCell2DsIndex = {};
@@ -81,23 +101,26 @@ namespace Gedim
       {
           struct Cell2D_GeometricData final
           {
-              std::vector<Eigen::MatrixXd> Vertices;
-              std::vector<double> Area;
-              std::vector<Eigen::Vector3d> Centroid;
-              std::vector<std::vector<bool>> EdgesDirection;
-              std::vector<Eigen::MatrixXd> EdgesNormal;
-              std::vector<Eigen::VectorXd> EdgesLength;
-              std::vector<std::vector<Eigen::Matrix3d>> Triangulations;
-              std::vector<Eigen::Matrix3d> Inertia;
-              std::vector<Eigen::MatrixXd> UnalignedVertices;
-              std::vector<Eigen::VectorXd> UnalignedEdgesLength;
-              std::vector<double> InRadius;
-              std::vector<double> Quality;
+              std::vector<std::vector<unsigned int>> UnalignedVerticesIndex = {};
+              std::vector<Eigen::MatrixXd> Vertices = {};
+              std::vector<double> Area = {};
+              std::vector<Eigen::Vector3d> Centroid = {};
+              std::vector<std::vector<bool>> EdgesDirection = {};
+              std::vector<Eigen::MatrixXd> EdgesNormal = {};
+              std::vector<Eigen::VectorXd> EdgesLength = {};
+              std::vector<std::vector<Eigen::Matrix3d>> Triangulations = {};
+              std::vector<Eigen::Matrix3d> Inertia = {};
+              std::vector<Eigen::MatrixXd> UnalignedVertices = {};
+              std::vector<Eigen::VectorXd> UnalignedEdgesLength = {};
+              std::vector<Eigen::VectorXd> CentroidEdgesDistance = {};
+              std::vector<double> InRadius = {};
+              std::vector<double> Quality = {};
           };
 
           struct Cell1D_GeometricData final
           {
-              std::vector<double> Quality;
+              std::vector<double> Quality = {};
+              std::vector<unsigned int> Aligned = {};
           };
 
           Cell1D_GeometricData Cell1Ds;
@@ -115,6 +138,9 @@ namespace Gedim
 
       SplitCell1D_Result SplitCell1D_MiddlePoint(const unsigned int& cell1DIndex,
                                                  IMeshDAO& mesh) const;
+
+      bool SplitPolygon_CheckArea(const Eigen::VectorXi& newCell2DVertices,
+                                  IMeshDAO& mesh) const;
 
       SplitPolygon_Result SplitPolygon_NoNewVertices(const unsigned int& cell2DIndex,
                                                      const unsigned int cell2DNumVertices,
@@ -191,7 +217,9 @@ namespace Gedim
                                                          const Eigen::Vector3d& lineTangent,
                                                          const Eigen::Vector3d& lineOrigin,
                                                          const std::vector<double>& cell1DsQuality,
+                                                         const std::vector<unsigned int>& cell1DsAligned,
                                                          const double& cell1DsQualityWeight,
+                                                         const double& cell2DArea,
                                                          const Eigen::VectorXd& cell2DEdgesLength,
                                                          const std::vector<bool>& cell2DEdgesDirection,
                                                          IMeshDAO& mesh) const;
@@ -211,14 +239,15 @@ namespace Gedim
                                                  const std::vector<unsigned int>& cell2DsIndex,
                                                  Cell2Ds_GeometricData& geometricData) const;
 
-      bool RefinePolygonCell_IsCell1DToSplit(const unsigned int& cell1DIndex,
-                                             const unsigned int& cell2DIndex,
-                                             const unsigned int& cell2DNumVertices,
-                                             const GeometryUtilities::LinePolygonPositionResult::EdgeIntersection& edgeIntersection,
-                                             const Eigen::VectorXd& cell2DEdgesLength,
-                                             const double& cell1DsQualityWeight,
-                                             const double& cell1DQuality,
-                                             const IMeshDAO& mesh) const;
+      RefinePolygon_Result::Cell1DToSplit RefinePolygonCell_IsCell1DToSplit(const unsigned int& cell1DIndex,
+                                                                            const unsigned int& cell2DIndex,
+                                                                            const unsigned int& cell2DNumVertices,
+                                                                            const GeometryUtilities::LinePolygonPositionResult::EdgeIntersection& edgeIntersection,
+                                                                            const Eigen::VectorXd& cell2DEdgesLength,
+                                                                            const double& cell1DsQualityWeight,
+                                                                            const double& cell1DQuality,
+                                                                            const std::vector<unsigned int>& cell1DsAligned,
+                                                                            const IMeshDAO& mesh) const;
   };
 
 }

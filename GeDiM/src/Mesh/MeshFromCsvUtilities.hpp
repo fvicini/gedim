@@ -14,7 +14,8 @@ namespace Gedim
   class MeshFromCsvUtilities final
   {
     public:
-      struct Configuration {
+      struct Configuration
+      {
           string Folder = "./";
           string FileCell0DsName = "Cell0Ds";
           string FileCell1DsName = "Cell1Ds";
@@ -28,12 +29,18 @@ namespace Gedim
           string FileCell2DPropertiesName = "Cell2DProperties";
           string FileCell3DPropertiesName = "Cell3DProperties";
           string FileCell2DSubDivisionsName = "Cell2DSubDivisions";
+          string FileCell0DUpdatedCellsName = "Cell0DUpdatedCells";
+          string FileCell1DUpdatedCellsName = "Cell1DUpdatedCells";
+          string FileCell2DUpdatedCellsName = "Cell2DUpdatedCells";
+          string FileCell3DUpdatedCellsName = "Cell3DUpdatedCells";
           char Separator = ';';
           string FileExtension = "csv";
       };
 
-      struct CellDoubleProperty {
-          struct Value {
+      struct CellDoubleProperty
+      {
+          struct Value
+          {
               unsigned int CellId;
               vector<double> Values;
           };
@@ -43,7 +50,8 @@ namespace Gedim
           vector<Value> Values;
       };
 
-      struct Cell0D {
+      struct Cell0D
+      {
           unsigned int Id;
           double X;
           double Y;
@@ -52,14 +60,22 @@ namespace Gedim
           bool Active;
       };
 
-      struct Cell0DNeighbours {
+      struct Cell0DNeighbours
+      {
           unsigned int Id;
           vector<unsigned int> Cell1DNeighbours;
           vector<unsigned int> Cell2DNeighbours;
           vector<unsigned int> Cell3DNeighbours;
       };
 
-      struct Cell1D {
+      struct CellUpdatedCells
+      {
+          unsigned int Id;
+          vector<unsigned int> UpdatedCells;
+      };
+
+      struct Cell1D
+      {
           unsigned int Id;
           unsigned int Origin;
           unsigned int End;
@@ -67,13 +83,15 @@ namespace Gedim
           bool Active;
       };
 
-      struct Cell1DNeighbours {
+      struct Cell1DNeighbours
+      {
           unsigned int Id;
           vector<unsigned int> Cell2DNeighbours;
           vector<unsigned int> Cell3DNeighbours;
       };
 
-      struct Cell2D {
+      struct Cell2D
+      {
           unsigned int Id;
           vector<unsigned int> Vertices;
           vector<unsigned int> Edges;
@@ -81,17 +99,20 @@ namespace Gedim
           bool Active;
       };
 
-      struct Cell2DNeighbours {
+      struct Cell2DNeighbours
+      {
           unsigned int Id;
           vector<unsigned int> Cell3DNeighbours;
       };
 
-      struct Cell2DSubDivision {
+      struct Cell2DSubDivision
+      {
           unsigned int Id;
           vector<unsigned int> SubDivision;
       };
 
-      struct Cell3D {
+      struct Cell3D
+      {
           unsigned int Id;
           vector<unsigned int> Vertices;
           vector<unsigned int> Edges;
@@ -185,6 +206,27 @@ namespace Gedim
       void ConvertCell3DDoubleProperties(const vector<MeshFromCsvUtilities::CellDoubleProperty> cell3DDoubleProperties,
                                          IMeshDAO& mesh) const;
 
+      /// \brief Convert the imported Cell0D updated cells to mesh
+      /// \param cell0DUpdatedCells the container of cell0D updated cells
+      /// \param mesh the mesh
+      void ConvertCell0DUpdatedCells(const vector<MeshFromCsvUtilities::CellUpdatedCells> cell0DUpdatedCells,
+                                     IMeshDAO& mesh) const;
+      /// \brief Convert the imported Cell1D updated cells to mesh
+      /// \param cell1DUpdatedCells the container of cell1D updated cells
+      /// \param mesh the mesh
+      void ConvertCell1DUpdatedCells(const vector<MeshFromCsvUtilities::CellUpdatedCells> cell1DUpdatedCells,
+                                     IMeshDAO& mesh) const;
+      /// \brief Convert the imported Cell2D updated cells to mesh
+      /// \param cell2DUpdatedCells the container of cell2D updated cells
+      /// \param mesh the mesh
+      void ConvertCell2DUpdatedCells(const vector<MeshFromCsvUtilities::CellUpdatedCells> cell2DUpdatedCells,
+                                     IMeshDAO& mesh) const;
+      /// \brief Convert the imported Cell3D updated cells to mesh
+      /// \param cell3DUpdatedCells the container of cell3D updated cells
+      /// \param mesh the mesh
+      void ConvertCell3DUpdatedCells(const vector<MeshFromCsvUtilities::CellUpdatedCells> cell3DUpdatedCells,
+                                     IMeshDAO& mesh) const;
+
       /// \brief Import Cell0Ds; format: Id, Marker, Active, X, Y, Z
       /// \param csvFileReader the file reader
       /// \param separator the file separator
@@ -235,6 +277,12 @@ namespace Gedim
       /// \param separator the file separator
       vector<CellDoubleProperty> ImportCellDoubleProperties(IFileReader& csvFileReader,
                                                             const char& separator) const;
+
+      /// \brief Import CellUpdatedCells; format: Id, NumUpdatedCells, UpdatedCells
+      /// \param csvFileReader the file reader
+      /// \param separator the file separator
+      vector<CellUpdatedCells> ImportCellUpdatedCells(IFileReader& csvFileReader,
+                                                      const char& separator) const;
 
       /// \brief Export Cell0Ds; format: Id, Marker, Active, X, Y, Z
       /// \param filePath the path of the file
@@ -379,6 +427,35 @@ namespace Gedim
       /// \param separator the file separator
       /// \param mesh the mesh to be exported
       void ExportCell2DSubDivisions(const string& filePath,
+                                    const char& separator,
+                                    const IMeshDAO& mesh) const;
+
+      /// \brief Export Cell0DUpdatedCells; format: Id, NumUpdatedCells, UpdatedCells
+      /// \param filePath the path of the file
+      /// \param separator the file separator
+      /// \param mesh the mesh to be exported
+      void ExportCell0DUpdatedCells(const string& filePath,
+                                    const char& separator,
+                                    const IMeshDAO& mesh) const;
+      /// \brief Export Cell1DUpdatedCells; format: Id, NumUpdatedCells, UpdatedCells
+      /// \param filePath the path of the file
+      /// \param separator the file separator
+      /// \param mesh the mesh to be exported
+      void ExportCell1DUpdatedCells(const string& filePath,
+                                    const char& separator,
+                                    const IMeshDAO& mesh) const;
+      /// \brief Export Cell2DUpdatedCells; format: Id, NumUpdatedCells, UpdatedCells
+      /// \param filePath the path of the file
+      /// \param separator the file separator
+      /// \param mesh the mesh to be exported
+      void ExportCell2DUpdatedCells(const string& filePath,
+                                    const char& separator,
+                                    const IMeshDAO& mesh) const;
+      /// \brief Export Cell3DUpdatedCells; format: Id, NumUpdatedCells, UpdatedCells
+      /// \param filePath the path of the file
+      /// \param separator the file separator
+      /// \param mesh the mesh to be exported
+      void ExportCell3DUpdatedCells(const string& filePath,
                                     const char& separator,
                                     const IMeshDAO& mesh) const;
   };

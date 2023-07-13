@@ -204,26 +204,24 @@ namespace Gedim
     return centroid;
   }
   // ***************************************************************************
-  double GeometryUtilities::PolygonInRadius(const Eigen::MatrixXd& polygonVertices,
-                                            const Eigen::Vector3d& polygonCentroid,
-                                            const Eigen::MatrixXd& polygonEdgeNormals) const
+  VectorXd GeometryUtilities::PolygonCentroidEdgesDistance(const Eigen::MatrixXd& polygonVertices,
+                                                           const Eigen::Vector3d& polygonCentroid,
+                                                           const Eigen::MatrixXd& polygonEdgeNormals) const
   {
     Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
 
-    double inRadius = numeric_limits<double>::max();
-    const unsigned int numEdges = polygonVertices.cols();
+    const unsigned int& numEdges = polygonVertices.cols();
+
+    Eigen::VectorXd centroidEdgesDistance(numEdges);
 
     for (unsigned int e = 0; e < numEdges; e++)
     {
-      const double inRadiusTemp = PointLineDistance(polygonCentroid,
-                                                    polygonVertices.col(e),
-                                                    polygonEdgeNormals.col(e));
-
-      if (inRadiusTemp < inRadius)
-        inRadius = inRadiusTemp;
+      centroidEdgesDistance[e] = PointLineDistance(polygonCentroid,
+                                                   polygonVertices.col(e),
+                                                   polygonEdgeNormals.col(e));
     }
 
-    return inRadius;
+    return centroidEdgesDistance;
   }
   // ***************************************************************************
   Matrix3d GeometryUtilities::PolygonRotationMatrix(const Eigen::MatrixXd& polygonVertices,
@@ -1170,6 +1168,20 @@ namespace Gedim
 
     return 0.5 * (xPoints.segment(0, numVertices).dot(yPoints.segment(1, numVertices)) -
                   xPoints.segment(1, numVertices).dot(yPoints.segment(0, numVertices)));
+  }
+  // ***************************************************************************
+  double GeometryUtilities::PolygonArea3D(const Eigen::MatrixXd& polygonVertices) const
+  {
+    Output::Assert(polygonVertices.cols() > 2);
+
+    Eigen::Vector3d crossProduct = Eigen::Vector3d::Zero();
+
+    const unsigned int& numVertices = polygonVertices.cols();
+
+    for (unsigned int v = 0; v < numVertices; v++)
+      crossProduct += Eigen::Vector3d(polygonVertices.col(v)).cross(Eigen::Vector3d(polygonVertices.col((v + 1) % numVertices)));
+
+    return 0.5 * crossProduct.norm();
   }
   // ***************************************************************************
   Matrix3d GeometryUtilities::PolygonInertia(const Eigen::Vector3d& polygonCentroid,

@@ -589,10 +589,12 @@ namespace GedimUnitTesting
                                                                                   polygonArea);
         const Eigen::MatrixXd polygonEdgeNormals = geometryUtilities.PolygonEdgeNormals(polygonVertices);
 
+        const Eigen::VectorXd polygonCentroidEdgesDistance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                            polygonCentroid,
+                                                                                                            polygonEdgeNormals);
+
         ASSERT_DOUBLE_EQ(sqrt(1.0 / 18.0),
-                         geometryUtilities.PolygonInRadius(polygonVertices,
-                                                           polygonCentroid,
-                                                           polygonEdgeNormals));
+                         geometryUtilities.PolygonInRadius(polygonCentroidEdgesDistance));
       }
 
       // check in radius of reference quadrilateral 2D
@@ -606,11 +608,12 @@ namespace GedimUnitTesting
         const Eigen::Vector3d polygonCentroid = geometryUtilities.PolygonCentroid(polygonVertices,
                                                                                   polygonArea);
         const Eigen::MatrixXd polygonEdgeNormals = geometryUtilities.PolygonEdgeNormals(polygonVertices);
+        const Eigen::VectorXd polygonCentroidEdgesDistance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                            polygonCentroid,
+                                                                                                            polygonEdgeNormals);
 
         ASSERT_DOUBLE_EQ(0.5,
-                         geometryUtilities.PolygonInRadius(polygonVertices,
-                                                           polygonCentroid,
-                                                           polygonEdgeNormals));
+                         geometryUtilities.PolygonInRadius(polygonCentroidEdgesDistance));
       }
 
       // check in radius of reference triangle 2D with aligned edges
@@ -625,10 +628,12 @@ namespace GedimUnitTesting
         const Eigen::Vector3d polygonCentroid(1.0 / 3.0, 1.0 / 3.0, 0.0);
         const Eigen::MatrixXd polygonEdgeNormals = geometryUtilities.PolygonEdgeNormals(polygonVertices);
 
+        const Eigen::VectorXd polygonCentroidEdgesDistance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                            polygonCentroid,
+                                                                                                            polygonEdgeNormals);
+
         ASSERT_DOUBLE_EQ(sqrt(1.0 / 18.0),
-                         geometryUtilities.PolygonInRadius(polygonVertices,
-                                                           polygonCentroid,
-                                                           polygonEdgeNormals));
+                         geometryUtilities.PolygonInRadius(polygonCentroidEdgesDistance));
       }
     }
     catch (const exception& exception)
@@ -725,9 +730,11 @@ namespace GedimUnitTesting
         const Eigen::Vector3d polygonCentroid = geometryUtilities.PolygonCentroid(polygonVertices,
                                                                                   polygonArea);
         const Eigen::MatrixXd polygonEdgeNormals = geometryUtilities.PolygonEdgeNormals(polygonVertices);
-        const double polygonInRadius = geometryUtilities.PolygonInRadius(polygonVertices,
-                                                                         polygonCentroid,
-                                                                         polygonEdgeNormals);
+        const Eigen::VectorXd polygonCentroidEdgesDistance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                            polygonCentroid,
+                                                                                                            polygonEdgeNormals);
+
+        const double polygonInRadius = geometryUtilities.PolygonInRadius(polygonCentroidEdgesDistance);
         const double polygonDiameter = geometryUtilities.PolygonDiameter(polygonVertices);
 
         ASSERT_DOUBLE_EQ(sqrt(2.0) / (2.0 * sqrt(1.0 / 18.0)),
@@ -746,9 +753,11 @@ namespace GedimUnitTesting
         const Eigen::Vector3d polygonCentroid = geometryUtilities.PolygonCentroid(polygonVertices,
                                                                                   polygonArea);
         const Eigen::MatrixXd polygonEdgeNormals = geometryUtilities.PolygonEdgeNormals(polygonVertices);
-        const double polygonInRadius = geometryUtilities.PolygonInRadius(polygonVertices,
-                                                                         polygonCentroid,
-                                                                         polygonEdgeNormals);
+        const Eigen::VectorXd polygonCentroidEdgesDistance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                            polygonCentroid,
+                                                                                                            polygonEdgeNormals);
+
+        const double polygonInRadius = geometryUtilities.PolygonInRadius(polygonCentroidEdgesDistance);
         const double polygonDiameter = geometryUtilities.PolygonDiameter(polygonVertices);
 
         ASSERT_DOUBLE_EQ(sqrt(2.0),
@@ -779,8 +788,11 @@ namespace GedimUnitTesting
 
         vector<unsigned int> polygonTriangulation = geometryUtilities.PolygonTriangulationByFirstVertex(polygonVertices);
 
-        double area = geometryUtilities.PolygonArea(polygonVertices);
+        const double area = geometryUtilities.PolygonArea(polygonVertices);
         ASSERT_DOUBLE_EQ(area, 0.5);
+
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area3D, 0.5);
 
         vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
                                                                                                           polygonTriangulation);
@@ -807,6 +819,9 @@ namespace GedimUnitTesting
         double area = geometryUtilities.PolygonArea(polygonVertices);
         ASSERT_DOUBLE_EQ(area, 1.0);
 
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area3D, 1.0);
+
         vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
                                                                                                           polygonTriangulation);
 
@@ -830,6 +845,9 @@ namespace GedimUnitTesting
 
         double area = geometryUtilities.PolygonArea(polygonVertices);
         ASSERT_DOUBLE_EQ(area, 1.850000000000000e+01);
+
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area3D, 1.850000000000000e+01);
 
         vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
                                                                                                           polygonTriangulation);
@@ -855,6 +873,9 @@ namespace GedimUnitTesting
         double area = geometryUtilities.PolygonArea(polygonVertices);
         ASSERT_DOUBLE_EQ(area, 1.511000000000000e+01);
 
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area3D, 1.511000000000000e+01);
+
         vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
                                                                                                           polygonTriangulation);
 
@@ -878,6 +899,9 @@ namespace GedimUnitTesting
 
         double area = geometryUtilities.PolygonArea(polygonVertices);
         ASSERT_DOUBLE_EQ(area, 1.511000000000000e+01);
+
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area3D, 1.511000000000000e+01);
 
         vector<Eigen::Matrix3d> polygonTriangulationPoints = geometryUtilities.ExtractTriangulationPoints(polygonVertices,
                                                                                                           polygonTriangulation);
@@ -905,12 +929,19 @@ namespace GedimUnitTesting
       Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
       Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
+      std::string exportFolder = "./Export/TestPolygonType";
+      Gedim::Output::CreateFolder(exportFolder);
+
       // check triangle
       {
         Eigen::Matrix3d polygonVertices;
         polygonVertices.col(0)<< 0.0, 0.0, 0.0;
         polygonVertices.col(1)<< 1.0, 0.0, 0.0;
         polygonVertices.col(2)<< 0.0, 1.0, 0.0;
+
+        Gedim::VTKUtilities vtuExporter;
+        vtuExporter.AddPolygon(polygonVertices);
+        vtuExporter.Export(exportFolder + "/Triangle.vtu");
 
         ASSERT_EQ(geometryUtilities.PolygonType(polygonVertices),
                   Gedim::GeometryUtilities::PolygonTypes::Triangle);
@@ -924,6 +955,10 @@ namespace GedimUnitTesting
         polygonVertices.col(2)<< 0.25, 0.25, 0.0;
         polygonVertices.col(3)<< 0.0, 1.0, 0.0;
 
+        Gedim::VTKUtilities vtuExporter;
+        vtuExporter.AddPolygon(polygonVertices);
+        vtuExporter.Export(exportFolder + "/Quadrilateral.vtu");
+
         ASSERT_EQ(geometryUtilities.PolygonType(polygonVertices),
                   Gedim::GeometryUtilities::PolygonTypes::Quadrilateral);
       }
@@ -936,6 +971,10 @@ namespace GedimUnitTesting
         polygonVertices.col(2)<< 0.5, 0.5, 0.0;
         polygonVertices.col(3)<< 0.0, 1.0, 0.0;
 
+        Gedim::VTKUtilities vtuExporter;
+        vtuExporter.AddPolygon(polygonVertices);
+        vtuExporter.Export(exportFolder + "/Triangle_Aligned_FourVertices.vtu");
+
         vector<unsigned int> unalignedPoint = geometryUtilities.UnalignedPoints(polygonVertices);
 
         Eigen::MatrixXd extraction = geometryUtilities.ExtractPoints(polygonVertices,
@@ -944,6 +983,32 @@ namespace GedimUnitTesting
         ASSERT_EQ(geometryUtilities.PolygonType(extraction),
                   Gedim::GeometryUtilities::PolygonTypes::Triangle);
       }
+
+      // check triangle with aligned edges polygon 2D
+      {
+        Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+        geometryUtilitiesConfig.Tolerance = 1.0e-6;
+
+        Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+        Eigen::MatrixXd polygonVertices(3, 5);
+        polygonVertices.row(0)<< -6.7551755846909700e+01,  2.1213463915286457e+02,  1.9749033740485797e+02,  9.3224746337499681e+01, -6.9256931141854736e+01;
+        polygonVertices.row(1)<<  6.1426943651822239e+02,  5.2548340521713953e+02,  6.2453837475848638e+02,  6.2073605870592917e+02,  6.1481074188566845e+02;
+        polygonVertices.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
+
+        Gedim::VTKUtilities vtuExporter;
+        vtuExporter.AddPolygon(polygonVertices);
+        vtuExporter.Export(exportFolder + "/Triangle_Aligned_FiveVertices.vtu");
+
+        vector<unsigned int> unalignedPoint = geometryUtilities.UnalignedPoints(polygonVertices);
+
+        Eigen::MatrixXd extraction = geometryUtilities.ExtractPoints(polygonVertices,
+                                                                     unalignedPoint);
+
+        ASSERT_EQ(geometryUtilities.PolygonType(extraction),
+                  Gedim::GeometryUtilities::PolygonTypes::Triangle);
+      }
+
     }
     catch (const exception& exception)
     {
@@ -1022,6 +1087,13 @@ namespace GedimUnitTesting
         ASSERT_DOUBLE_EQ(rotationMatrix(0, 0), 1.0);
         ASSERT_DOUBLE_EQ(rotationMatrix(1, 1), 1.0);
         ASSERT_DOUBLE_EQ(rotationMatrix(2, 2), 1.0);
+
+        const Eigen::MatrixXd polygonVertices2D = geometryUtilities.RotatePointsFrom3DTo2D(polygonVertices,
+                                                                                           rotationMatrix.transpose(),
+                                                                                           translation);
+        const double area2D = geometryUtilities.PolygonArea(polygonVertices2D);
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area2D, area3D);
       }
 
       // check rotation matrix of polygon 3D
@@ -1044,6 +1116,13 @@ namespace GedimUnitTesting
         ASSERT_DOUBLE_EQ(rotationMatrix(0, 0), -7.0710678118654724e-01);
         ASSERT_DOUBLE_EQ(rotationMatrix(1, 1), -4.0824829046386313e-01);
         ASSERT_DOUBLE_EQ(rotationMatrix(2, 2), 5.7735026918962651e-01);
+
+        const Eigen::MatrixXd polygonVertices2D = geometryUtilities.RotatePointsFrom3DTo2D(polygonVertices,
+                                                                                           rotationMatrix.transpose(),
+                                                                                           translation);
+        const double area2D = geometryUtilities.PolygonArea(polygonVertices2D);
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area2D, area3D);
       }
 
       // check rotation matrix of other polygon 3D
@@ -1065,6 +1144,13 @@ namespace GedimUnitTesting
         ASSERT_DOUBLE_EQ(rotationMatrix(0, 0), -5.551115123125783e-17);
         ASSERT_DOUBLE_EQ(rotationMatrix(1, 1), -4.0824829046386296e-01);
         ASSERT_DOUBLE_EQ(rotationMatrix(2, 2), -5.7735026918962562e-01);
+
+        const Eigen::MatrixXd polygonVertices2D = geometryUtilities.RotatePointsFrom3DTo2D(polygonVertices,
+                                                                                           rotationMatrix.transpose(),
+                                                                                           translation);
+        const double area2D = geometryUtilities.PolygonArea(polygonVertices2D);
+        const double area3D = geometryUtilities.PolygonArea3D(polygonVertices);
+        ASSERT_DOUBLE_EQ(area2D, area3D);
       }
     }
     catch (const exception& exception)
