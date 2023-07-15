@@ -367,6 +367,24 @@ namespace Gedim
       std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
                                             const std::vector<Eigen::MatrixXi> subCell2Ds,
                                             IMeshDAO& mesh) const;
+
+      void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,
+                                                const Eigen::Vector3d& rectangleOrigin,
+                                                const Eigen::Vector3d& rectangleBaseTangent,
+                                                const Eigen::Vector3d& rectangleHeightTangent,
+                                                const unsigned int& numQuadrilateralsBaseTangent,
+                                                const unsigned int& numQuadrilateralsHeightTangent,
+                                                const double& maxDeformingPercentageBase,
+                                                const double& maxDeformingPercentageHeight,
+                                                IMeshDAO& mesh) const;
+
+      void CreateDistortedQuadrilaterals(const GeometryUtilities& geometryUtilities,
+                                         const Eigen::Vector3d& rectangleOrigin,
+                                         const Eigen::Vector3d& rectangleBaseTangent,
+                                         const Eigen::Vector3d& rectangleHeightTangent,
+                                         const unsigned int& numQuadrilateralsBaseTangent,
+                                         const unsigned int& numQuadrilateralsHeightTangent,
+                                         IMeshDAO& mesh) const;
   };
 
 }
