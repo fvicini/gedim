@@ -413,6 +413,23 @@ namespace Gedim
                                             const std::vector<Eigen::MatrixXi> subCell2Ds,
                                             IMeshDAO& mesh) const;
 
+      void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,
+                                                const Eigen::Vector3d& rectangleOrigin,
+                                                const Eigen::Vector3d& rectangleBaseTangent,
+                                                const Eigen::Vector3d& rectangleHeightTangent,
+                                                const unsigned int& numQuadrilateralsBaseTangent,
+                                                const unsigned int& numQuadrilateralsHeightTangent,
+                                                const double& maxDeformingPercentageBase,
+                                                const double& maxDeformingPercentageHeight,
+                                                IMeshDAO& mesh) const;
+
+      void CreateDistortedQuadrilaterals(const GeometryUtilities& geometryUtilities,
+                                         const Eigen::Vector3d& rectangleOrigin,
+                                         const Eigen::Vector3d& rectangleBaseTangent,
+                                         const Eigen::Vector3d& rectangleHeightTangent,
+                                         const unsigned int& numQuadrilateralsBaseTangent,
+                                         const unsigned int& numQuadrilateralsHeightTangent,
+                                         IMeshDAO& mesh) const;
       /// \brief Given a set of Cell2Ds find the common Cell0Ds
       /// \param cell2DsIndex the cell2Ds index
       /// \param mesh the mesh
