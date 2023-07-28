@@ -112,9 +112,29 @@ namespace Gedim
           std::vector<std::vector<unsigned int>> PolyhedronFaces; /// size numFaces x numFaceVertices
       };
 
+      struct AgglomerateTrianglesResult final
+      {
+          std::vector<unsigned int> RemovedEdges;
+          std::vector<unsigned int> VerticesIndex;
+          std::vector<unsigned int> EdgesIndex;
+      };
+
+      struct AgglomerateMeshFromTriangularMeshResult final
+      {
+          struct ConcaveCell2D
+          {
+              unsigned int Cell2DIndex;
+              std::vector<unsigned int> ConvexCell2DsIndex;
+          };
+
+          std::vector<ConcaveCell2D> ConcaveCell2Ds;
+          std::vector<unsigned int> RemovedCell1Ds;
+          std::vector<unsigned int> RemovedCell2Ds;
+      };
+
     public:
-      MeshUtilities();
-      ~MeshUtilities();
+      MeshUtilities() { };
+      ~MeshUtilities() { };
 
       /// \brief Extract Active Cells from mesh
       /// \note the resulting mesh has no inactive elements
@@ -410,6 +430,41 @@ namespace Gedim
                                          const unsigned int& numQuadrilateralsBaseTangent,
                                          const unsigned int& numQuadrilateralsHeightTangent,
                                          IMeshDAO& mesh) const;
+      /// \brief Given a set of Cell2Ds find the common Cell0Ds
+      /// \param cell2DsIndex the cell2Ds index
+      /// \param mesh the mesh
+      /// \return the Cell0D indices
+      std::vector<unsigned int> FindCell2DsCommonVertices(const std::vector<unsigned int>& cell2DsIndex,
+                                                          const IMeshDAO& mesh) const;
+
+      /// \brief Given a set of Cell2Ds find the common Cell1Ds
+      /// \param cell2DsIndex the cell2Ds index
+      /// \param mesh the mesh
+      /// \return the Cell1D indices
+      std::vector<unsigned int> FindCell2DsCommonEdges(const std::vector<unsigned int>& cell2DsIndex,
+                                                       const IMeshDAO& mesh) const;
+
+      /// \brief Agglomerate Triangles with one vertex in common
+      /// \param trianglesIndexToAgglomerate the cell2Ds triangular index in the mesh
+      /// \param triangularMesh the triangular mesh
+      /// \return the agglomearted polygon indices
+      /// \note the triangular index shall be done counterclockwise
+      AgglomerateTrianglesResult AgglomerateTriangles(const std::vector<unsigned int>& trianglesIndexToAgglomerate,
+                                                      IMeshDAO& triangularMesh) const;
+
+      AgglomerateMeshFromTriangularMeshResult AgglomerateMeshFromTriangularMesh(const std::vector<std::vector<unsigned int>>& trianglesIndicesToAgglomerate,
+                                                                                IMeshDAO& triangularMesh) const;
+
+      /// \brief Export mesh to csv file
+      void ExportMeshToCsv(const IMeshDAO& mesh,
+                           const char& separator,
+                           const std::string& exportFolderPath) const;
+
+      /// \brief Export 2D concave mesh to csv file
+      void ExportConcaveMesh2DToCsv(const IMeshDAO& mesh,
+                                    const std::vector<std::vector<unsigned int>>& convexCell2DsIndex,
+                                    const char& separator,
+                                    const std::string& exportFolderPath) const;
   };
 
 }
