@@ -234,7 +234,7 @@ namespace GedimUnitTesting
                                                                                                                             cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2DsEdgeLengths,
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -306,7 +306,7 @@ namespace GedimUnitTesting
                                                                                                                             cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2DsEdgeLengths,
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -378,7 +378,7 @@ namespace GedimUnitTesting
                                                                                                                             cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2DsEdgeLengths,
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -450,7 +450,7 @@ namespace GedimUnitTesting
                                                                                                                             cell1DsAligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2DsEdgeLengths,
                                                                                                                             meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -525,11 +525,11 @@ namespace GedimUnitTesting
                                                                                                                             meshGeometricData.Cell2Ds.Vertices[cell2DToRefineIndex],
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
-                                                                                                                            meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell2Ds.Quality,
                                                                                                                             meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -604,11 +604,11 @@ namespace GedimUnitTesting
                                                                                                                             meshGeometricData.Cell2Ds.Vertices[cell2DToRefineIndex],
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
-                                                                                                                            meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell2Ds.Quality,
                                                                                                                             meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -683,11 +683,11 @@ namespace GedimUnitTesting
                                                                                                                             meshGeometricData.Cell2Ds.Vertices[cell2DToRefineIndex],
                                                                                                                             lineTangent,
                                                                                                                             lineOrigin,
-                                                                                                                            meshGeometricData.Cell1Ds.Quality,
+                                                                                                                            meshGeometricData.Cell2Ds.Quality,
                                                                                                                             meshGeometricData.Cell1Ds.Aligned,
                                                                                                                             cell1DsQualityWeight,
                                                                                                                             meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                            meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                             meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                             meshDAO);
 
@@ -790,11 +790,11 @@ namespace GedimUnitTesting
                                                                                                                                  meshGeometricData.Cell2Ds.Vertices[cell2DToRefineIndex],
                                                                                                                                  direction.LineTangent,
                                                                                                                                  direction.LineOrigin,
-                                                                                                                                 meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                 meshGeometricData.Cell2Ds.Quality,
                                                                                                                                  meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                  cell1DsQualityWeight,
                                                                                                                                  meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                                 meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                                 meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                  meshDAO);
 
@@ -926,11 +926,11 @@ namespace GedimUnitTesting
                                                                                                                                  meshGeometricData.Cell2Ds.Vertices[cell2DToRefineIndex],
                                                                                                                                  direction.LineTangent,
                                                                                                                                  direction.LineOrigin,
-                                                                                                                                 meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                 meshGeometricData.Cell2Ds.Quality,
                                                                                                                                  meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                  cell1DsQualityWeight,
                                                                                                                                  meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                                 meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                                 meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                                  meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                  meshDAO);
 
@@ -1141,11 +1141,11 @@ namespace GedimUnitTesting
                                                                                                                                   meshGeometricData.Cell2Ds.Vertices.at(cell2DToRefineIndex),
                                                                                                                                   direction.LineTangent,
                                                                                                                                   direction.LineOrigin,
-                                                                                                                                  meshGeometricData.Cell1Ds.Quality,
+                                                                                                                                  meshGeometricData.Cell2Ds.Quality,
                                                                                                                                   meshGeometricData.Cell1Ds.Aligned,
                                                                                                                                   cell1DsQualityWeight,
                                                                                                                                   meshGeometricData.Cell2Ds.Area.at(cell2DToRefineIndex),
-                                                                                                                                  meshGeometricData.Cell2Ds.EdgesLength.at(cell2DToRefineIndex),
+                                                                                                                                  meshGeometricData.Cell2Ds.EdgesLength,
                                                                                                                                   meshGeometricData.Cell2Ds.EdgesDirection.at(cell2DToRefineIndex),
                                                                                                                                   meshDAO);
           for (unsigned int rnc = 0; rnc < refineResult.NewCell2DsIndex.size(); rnc++)
@@ -1196,14 +1196,291 @@ namespace GedimUnitTesting
                                 geometryUtilities,
                                 meshDAO);
 
-      EXPECT_EQ(64, meshDAO.Cell0DTotalNumber());
-      EXPECT_EQ(105, meshDAO.Cell1DTotalNumber());
+      EXPECT_EQ(63, meshDAO.Cell0DTotalNumber());
+      EXPECT_EQ(104, meshDAO.Cell1DTotalNumber());
       EXPECT_EQ(42, meshDAO.Cell2DTotalNumber());
     }
     catch (const exception& exception)
     {
       cerr<< exception.what()<< endl;
       FAIL();
+    }
+  }
+
+  TEST(TestRefinementUtilities, TestCheckSplit)
+  {
+    string exportFolder = "./Export";
+    Gedim::Output::CreateFolder(exportFolder);
+    exportFolder = "./Export/TestRefinementUtilities/TestCheckSplit";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance = 1.0e-8;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+    Gedim::MeshUtilities meshUtilities;
+
+    Gedim::ConformMeshUtilities conformMeshUtilities(geometryUtilities,
+                                                     meshUtilities);
+    Gedim::RefinementUtilities refinementUtilities(geometryUtilities,
+                                                   meshUtilities);
+
+    {
+      // both not inside
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = false;
+      cell1DSplitOne.IsEdgeLengthEnough = false;
+      cell1DSplitOne.IsLocalQualityEnough = false;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = {};
+      cell1DSplitOne.IsLocalAlignedRespect = false;
+      cell1DSplitOne.IsAlignedRespect = false;
+      cell1DSplitOne.IsNeighAlignedRespect = {};
+      cell1DSplitOne.IsToSplit = false;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::NotInside;
+
+      cell1DSplitTwo.IsIntersectionInside = false;
+      cell1DSplitTwo.IsEdgeLengthEnough = false;
+      cell1DSplitTwo.IsLocalQualityEnough = false;
+      cell1DSplitTwo.IsQualityEnough = false;
+      cell1DSplitTwo.IsNeighQualityEnough = {};
+      cell1DSplitTwo.IsLocalAlignedRespect = false;
+      cell1DSplitTwo.IsAlignedRespect = false;
+      cell1DSplitTwo.IsNeighAlignedRespect = {};
+      cell1DSplitTwo.IsToSplit = false;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::NotInside;
+
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                  cell1DSplitTwo));
+    }
+
+    {
+      // one not inside and the other inside
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = false;
+      cell1DSplitOne.IsEdgeLengthEnough = false;
+      cell1DSplitOne.IsLocalQualityEnough = false;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = {};
+      cell1DSplitOne.IsLocalAlignedRespect = false;
+      cell1DSplitOne.IsAlignedRespect = false;
+      cell1DSplitOne.IsNeighAlignedRespect = {};
+      cell1DSplitOne.IsToSplit = false;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::NotInside;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = true;
+      cell1DSplitTwo.IsAlignedRespect = true;
+      cell1DSplitTwo.IsNeighAlignedRespect = { true, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
+
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                  cell1DSplitTwo));
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                  cell1DSplitOne));
+    }
+
+    {
+      // both inside
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = true;
+      cell1DSplitOne.IsQualityEnough = true;
+      cell1DSplitOne.IsNeighQualityEnough = { true, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = true;
+      cell1DSplitOne.IsNeighAlignedRespect = { true, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = true;
+      cell1DSplitTwo.IsAlignedRespect = true;
+      cell1DSplitTwo.IsNeighAlignedRespect = { true, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
+
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                  cell1DSplitTwo));
+    }
+
+    {
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = false;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = { false, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = true;
+      cell1DSplitOne.IsNeighAlignedRespect = { true, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::BothQualityNotEnough;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = true;
+      cell1DSplitTwo.IsAlignedRespect = true;
+      cell1DSplitTwo.IsNeighAlignedRespect = { true, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
+
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                  cell1DSplitTwo));
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                  cell1DSplitOne));
+    }
+
+    {
+      // one not neigh quality
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = true;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = { false, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = true;
+      cell1DSplitOne.IsNeighAlignedRespect = { true, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = true;
+      cell1DSplitTwo.IsAlignedRespect = true;
+      cell1DSplitTwo.IsNeighAlignedRespect = { true, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough;
+
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                   cell1DSplitTwo));
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                   cell1DSplitOne));
+    }
+
+    {
+      // both not neigh quality
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = true;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = { false, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = true;
+      cell1DSplitOne.IsNeighAlignedRespect = { true, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = true;
+      cell1DSplitTwo.IsAlignedRespect = false;
+      cell1DSplitTwo.IsNeighAlignedRespect = { false, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighAlignedNotRespect;
+
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                   cell1DSplitTwo));
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                   cell1DSplitOne));
+    }
+
+    {
+      // one not neigh quality and the other not local quality
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = true;
+      cell1DSplitOne.IsQualityEnough = false;
+      cell1DSplitOne.IsNeighQualityEnough = { false, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = true;
+      cell1DSplitOne.IsNeighAlignedRespect = { true, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough;
+
+      cell1DSplitTwo.IsIntersectionInside = true;
+      cell1DSplitTwo.IsEdgeLengthEnough = true;
+      cell1DSplitTwo.IsLocalQualityEnough = true;
+      cell1DSplitTwo.IsQualityEnough = true;
+      cell1DSplitTwo.IsNeighQualityEnough = { true, true };
+      cell1DSplitTwo.IsLocalAlignedRespect = false;
+      cell1DSplitTwo.IsAlignedRespect = false;
+      cell1DSplitTwo.IsNeighAlignedRespect = { false, true };
+      cell1DSplitTwo.IsToSplit = true;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::BothAlignedNotRespect;
+
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                  cell1DSplitTwo));
+      ASSERT_TRUE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                  cell1DSplitOne));
+    }
+
+    {
+      // one not neigh quality and the other not inside
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitOne;
+      Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit cell1DSplitTwo;
+
+      cell1DSplitOne.IsIntersectionInside = true;
+      cell1DSplitOne.IsEdgeLengthEnough = true;
+      cell1DSplitOne.IsLocalQualityEnough = true;
+      cell1DSplitOne.IsQualityEnough = true;
+      cell1DSplitOne.IsNeighQualityEnough = { true, true };
+      cell1DSplitOne.IsLocalAlignedRespect = true;
+      cell1DSplitOne.IsAlignedRespect = false;
+      cell1DSplitOne.IsNeighAlignedRespect = { false, true };
+      cell1DSplitOne.IsToSplit = true;
+      cell1DSplitOne.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighAlignedNotRespect;
+
+      cell1DSplitTwo.IsIntersectionInside = false;
+      cell1DSplitTwo.IsEdgeLengthEnough = false;
+      cell1DSplitTwo.IsLocalQualityEnough = false;
+      cell1DSplitTwo.IsQualityEnough = false;
+      cell1DSplitTwo.IsNeighQualityEnough = {  };
+      cell1DSplitTwo.IsLocalAlignedRespect = false;
+      cell1DSplitTwo.IsAlignedRespect = false;
+      cell1DSplitTwo.IsNeighAlignedRespect = { };
+      cell1DSplitTwo.IsToSplit = false;
+      cell1DSplitTwo.Type = Gedim::RefinementUtilities::RefinePolygon_Result::Cell1DToSplit::Types::NotInside;
+
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitOne,
+                                                                   cell1DSplitTwo));
+      ASSERT_FALSE(refinementUtilities.SplitPolygon_CheckIsToSplit(cell1DSplitTwo,
+                                                                   cell1DSplitOne));
     }
   }
 }

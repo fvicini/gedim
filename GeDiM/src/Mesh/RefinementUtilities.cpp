@@ -43,6 +43,30 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
+  bool RefinementUtilities::SplitPolygon_CheckIsToSplit(const RefinePolygon_Result::Cell1DToSplit& cell1DSplitOne,
+                                                        const RefinePolygon_Result::Cell1DToSplit& cell1DSplitTwo) const
+  {
+    if ((cell1DSplitOne.Type == RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough ||
+         cell1DSplitOne.Type == RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighAlignedNotRespect) &&
+        (cell1DSplitTwo.Type != RefinePolygon_Result::Cell1DToSplit::Types::BothQualityNotEnough &&
+         cell1DSplitTwo.Type != RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalQualityNotEnough &&
+         cell1DSplitTwo.Type != RefinePolygon_Result::Cell1DToSplit::Types::BothAlignedNotRespect &&
+         cell1DSplitTwo.Type != RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalAlignedNotRespect)
+        )
+      return false;
+
+    if ((cell1DSplitTwo.Type == RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough ||
+         cell1DSplitTwo.Type == RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighAlignedNotRespect) &&
+        (cell1DSplitOne.Type != RefinePolygon_Result::Cell1DToSplit::Types::BothQualityNotEnough &&
+         cell1DSplitOne.Type != RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalQualityNotEnough &&
+         cell1DSplitOne.Type != RefinePolygon_Result::Cell1DToSplit::Types::BothAlignedNotRespect &&
+         cell1DSplitOne.Type != RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalAlignedNotRespect)
+        )
+      return false;
+
+    return true;
+  }
+  // ***************************************************************************
   bool RefinementUtilities::SplitPolygon_CheckArea(const Eigen::VectorXi& newCell2DVertices,
                                                    IMeshDAO& mesh) const
   {
@@ -536,7 +560,6 @@ namespace Gedim
                                                                   const std::vector<unsigned int>& cell2DsIndex,
                                                                   Cell2Ds_GeometricData& geometricData) const
   {
-    geometricData.Cell1Ds.Quality.resize(mesh.Cell1DTotalNumber());
     geometricData.Cell1Ds.Aligned.resize(mesh.Cell1DTotalNumber(), 0);
 
     geometricData.Cell2Ds.Vertices.resize(mesh.Cell2DTotalNumber());
@@ -561,6 +584,7 @@ namespace Gedim
     {
       const unsigned int cell2DIndex = cell2DsIndex.at(c);
 
+      const unsigned int numCell2DEdges = mesh.Cell2DNumberEdges(cell2DIndex);
       Eigen::MatrixXd& convexCell2DVertices = geometricData.Cell2Ds.Vertices.at(cell2DIndex);
       double& convexCell2DArea = geometricData.Cell2Ds.Area.at(cell2DIndex);
       std::vector<Eigen::Matrix3d>& convexCell2DTriangulationPoints = geometricData.Cell2Ds.Triangulations.at(cell2DIndex);
@@ -599,15 +623,16 @@ namespace Gedim
                                                                convexCell2DTriangulationAreas,
                                                                convexCell2DArea);
 
-      geometricData.Cell2Ds.EdgesDirection[cell2DIndex].resize(mesh.Cell2DNumberEdges(cell2DIndex));
-      for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(cell2DIndex); e++)
+      geometricData.Cell2Ds.EdgesDirection[cell2DIndex].resize(numCell2DEdges);
+      for (unsigned int e = 0; e < numCell2DEdges; e++)
       {
         const unsigned int origin = mesh.Cell2DVertex(cell2DIndex, e);
         const unsigned int end = mesh.Cell2DVertex(cell2DIndex,
-                                                   (e + 1) % mesh.Cell2DNumberEdges(cell2DIndex));
+                                                   (e + 1) % numCell2DEdges);
 
-        geometricData.Cell2Ds.EdgesDirection[cell2DIndex][e] = mesh.Cell1DExists(origin,
-                                                                                 end);
+        geometricData.Cell2Ds.EdgesDirection[cell2DIndex][e] = (mesh.Cell2DFindEdgeByExtremes(cell2DIndex,
+                                                                                              origin,
+                                                                                              end) == e);
       }
 
       geometricData.Cell2Ds.UnalignedEdgesLength[cell2DIndex] = geometryUtilities.PolygonEdgeLengths(convexCell2DUnalignedVertices);
@@ -624,10 +649,9 @@ namespace Gedim
       geometricData.Cell2Ds.Quality[cell2DIndex] = std::min(geometricData.Cell2Ds.EdgesLength[cell2DIndex].minCoeff(),
                                                             geometricData.Cell2Ds.InRadius[cell2DIndex]);
 
-      for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(cell2DIndex); e++)
+      for (unsigned int e = 0; e < numCell2DEdges; e++)
       {
         const unsigned int cell1DIndex = mesh.Cell2DEdge(cell2DIndex, e);
-        geometricData.Cell1Ds.Quality[cell1DIndex] = 0.0;
 
         if (mesh.Cell1DHasOriginalCell1D(cell1DIndex))
         {
@@ -636,28 +660,16 @@ namespace Gedim
         }
         else if (geometricData.Cell1Ds.Aligned[cell1DIndex] == 0)
           geometricData.Cell1Ds.Aligned[cell1DIndex] = maxCell1DAligned++;
-
-
-        for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell2D(cell1DIndex); n++)
-        {
-          if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, n))
-            continue;
-
-          const unsigned int neighCell2DIndex = mesh.Cell1DNeighbourCell2D(cell1DIndex, n);
-          if (geometricData.Cell1Ds.Quality[cell1DIndex] < geometricData.Cell2Ds.Quality[neighCell2DIndex])
-            geometricData.Cell1Ds.Quality[cell1DIndex] = geometricData.Cell2Ds.Quality[neighCell2DIndex];
-        }
       }
     }
   }
   // ***************************************************************************
   RefinementUtilities::RefinePolygon_Result::Cell1DToSplit RefinementUtilities::RefinePolygonCell_IsCell1DToSplit(const unsigned int& cell1DIndex,
                                                                                                                   const unsigned int& cell2DIndex,
-                                                                                                                  const unsigned int& cell2DNumVertices,
                                                                                                                   const GeometryUtilities::LinePolygonPositionResult::EdgeIntersection& edgeIntersection,
-                                                                                                                  const Eigen::VectorXd& cell2DEdgesLength,
+                                                                                                                  const std::vector<Eigen::VectorXd>& cell2DsEdgesLength,
                                                                                                                   const double& cell1DsQualityWeight,
-                                                                                                                  const double& cell1DQuality,
+                                                                                                                  const std::vector<double>& cell2DsQuality,
                                                                                                                   const std::vector<unsigned int>& cell1DsAligned,
                                                                                                                   const IMeshDAO& mesh) const
   {
@@ -666,49 +678,127 @@ namespace Gedim
     result.Cell2DEdgeIndex = edgeIntersection.Index;
 
     // check if the edge intersection is inside edge
-    result.IsIntersectionInside = (edgeIntersection.Type == GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::InsideEdge);
+    result.IsIntersectionInside = (edgeIntersection.Type ==
+                                   GeometryUtilities::LinePolygonPositionResult::EdgeIntersection::Types::InsideEdge);
 
     if (!result.IsIntersectionInside)
+    {
+      result.Type = RefinePolygon_Result::Cell1DToSplit::Types::NotInside;
       return result;
+    }
+
+    const double cell1DLength = cell2DsEdgesLength[cell2DIndex][edgeIntersection.Index];
 
     // check if the edge length is enough
-    result.IsEdgeLengthEnough = !geometryUtilities.IsValue1DZero(0.5 * cell2DEdgesLength[edgeIntersection.Index]);
+    result.IsEdgeLengthEnough = !geometryUtilities.IsValue1DZero(0.5 * cell1DLength);
 
     if (!result.IsEdgeLengthEnough)
+    {
+      result.Type = RefinePolygon_Result::Cell1DToSplit::Types::EdgeLengthNotEnough;
       return result;
+    }
 
     // check if the edge quality is enough
-    result.IsQualityEnough = geometryUtilities.IsValue1DGreaterOrEqual(0.5 * cell2DEdgesLength[edgeIntersection.Index],
-        cell1DsQualityWeight * cell1DQuality);
+    result.IsLocalQualityEnough = true;
+    result.IsQualityEnough = true;
+    result.IsNeighQualityEnough.resize(mesh.Cell1DNumberNeighbourCell2D(cell1DIndex),
+                                       true);
+
+    for (unsigned int c2Dn = 0; c2Dn < mesh.Cell1DNumberNeighbourCell2D(cell1DIndex); c2Dn++)
+    {
+      if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, c2Dn))
+        continue;
+
+      const unsigned int cell2DNeighIndex = mesh.Cell1DNeighbourCell2D(cell1DIndex, c2Dn);
+
+      result.IsNeighQualityEnough[c2Dn] = geometryUtilities.IsValue1DGreaterOrEqual(0.5 * cell1DLength,
+                                                                                    cell1DsQualityWeight * cell2DsQuality[cell2DNeighIndex]);
+
+      if (cell2DNeighIndex == cell2DIndex &&
+          !result.IsNeighQualityEnough[c2Dn])
+      {
+        if (!result.IsQualityEnough)
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::BothQualityNotEnough;
+        else
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalQualityNotEnough;
+
+        result.IsLocalQualityEnough = false;
+      }
+
+      if (!result.IsNeighQualityEnough[c2Dn])
+      {
+        if (!result.IsLocalQualityEnough)
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::BothQualityNotEnough;
+        else
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighQualityNotEnough;
+
+        result.IsQualityEnough = false;
+      }
+    }
 
     if (!result.IsQualityEnough)
       return result;
 
-    // check if edge is part of aligned edges
+    // check if edge is part of aligned edges in cell2D or neighbours
     const unsigned int aligned = cell1DsAligned.at(cell1DIndex);
 
-    unsigned int numAligned = 0;
-    double alignedEdgesLength = 0.0;
-    for (unsigned int ed = 0; ed < cell2DNumVertices; ed++)
-    {
-      const unsigned int cell1DEdgeIndex = mesh.Cell2DEdge(cell2DIndex, ed);
+    result.IsLocalAlignedRespect = true;
+    result.IsAlignedRespect = true;
+    result.IsNeighAlignedRespect.resize(mesh.Cell1DNumberNeighbourCell2D(cell1DIndex),
+                                        true);
 
-      if (cell1DsAligned.at(cell1DEdgeIndex) == aligned)
+    for (unsigned int c2Dn = 0; c2Dn < mesh.Cell1DNumberNeighbourCell2D(cell1DIndex); c2Dn++)
+    {
+      if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, c2Dn))
+        continue;
+
+      const unsigned int cell2DNeighIndex = mesh.Cell1DNeighbourCell2D(cell1DIndex, c2Dn);
+
+      unsigned int numAligned = 0;
+      double alignedEdgesLength = 0.0;
+      for (unsigned int ed = 0; ed < mesh.Cell2DNumberEdges(cell2DNeighIndex); ed++)
       {
-        numAligned++;
-        alignedEdgesLength += cell2DEdgesLength[ed];
+        const unsigned int cell1DEdgeIndex = mesh.Cell2DEdge(cell2DNeighIndex, ed);
+
+        if (cell1DsAligned.at(cell1DEdgeIndex) == aligned)
+        {
+          numAligned++;
+          alignedEdgesLength += cell2DsEdgesLength[cell2DNeighIndex][ed];
+        }
+      }
+
+      // check if the length of the aligned splited edge (|l|) is higher than the mean length (|L|) after the cut
+      // |l| / 2 > |L| / (N_aligned + 1)
+      result.IsNeighAlignedRespect[c2Dn] = geometryUtilities.IsValue1DGreaterOrEqual(cell1DLength,
+                                                                                     2.0 * alignedEdgesLength / double(numAligned + 1));
+
+
+      if (cell2DNeighIndex == cell2DIndex &&
+          !result.IsNeighAlignedRespect[c2Dn])
+      {
+        if (!result.IsAlignedRespect)
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::BothAlignedNotRespect;
+        else
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::OnlyLocalAlignedNotRespect;
+
+        result.IsLocalAlignedRespect = false;
+      }
+
+      if (!result.IsNeighAlignedRespect[c2Dn])
+      {
+        if (!result.IsLocalAlignedRespect)
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::BothAlignedNotRespect;
+        else
+          result.Type = RefinePolygon_Result::Cell1DToSplit::Types::OnlyNeighAlignedNotRespect;
+
+        result.IsAlignedRespect = false;
       }
     }
 
-    result.IsAligned = (numAligned > 1);
-
-    // check if the length of the aligned splited edge (|l|) is higher than the mean length (|L|) after the cut
-    // |l| / 2 > |L| / (N_aligned + 1)
-    if (result.IsAligned &&
-        !geometryUtilities.IsValue1DGreaterOrEqual(cell2DEdgesLength[edgeIntersection.Index],
-                                                   2.0 * alignedEdgesLength / double(numAligned + 1)))
+    if (!result.IsAlignedRespect)
       return result;
 
+    result.Type = RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
     result.IsToSplit = true;
     return result;
   }
@@ -820,9 +910,16 @@ namespace Gedim
     }
 
     result.Cell1DsToSplit.resize(1);
+    result.Cell1DsToSplit[0].Type = RefinePolygon_Result::Cell1DToSplit::Types::ToSplit;
     result.Cell1DsToSplit[0].IsIntersectionInside = true;
+    result.Cell1DsToSplit[0].IsLocalQualityEnough = true;
     result.Cell1DsToSplit[0].IsQualityEnough = true;
-    result.Cell1DsToSplit[0].IsAligned = false;
+    result.Cell1DsToSplit[0].IsNeighQualityEnough.resize(mesh.Cell1DNumberNeighbourCell2D(cell1DIndex),
+                                                         true);
+    result.Cell1DsToSplit[0].IsLocalAlignedRespect = true;
+    result.Cell1DsToSplit[0].IsAlignedRespect = true;
+    result.Cell1DsToSplit[0].IsNeighAlignedRespect.resize(mesh.Cell1DNumberNeighbourCell2D(cell1DIndex),
+                                                          true);
     result.Cell1DsToSplit[0].IsToSplit = true;
     result.Cell1DsToSplit[0].Cell2DEdgeIndex = edgeIndex;
 
@@ -880,11 +977,11 @@ namespace Gedim
                                                                                                const Eigen::MatrixXd& cell2DVertices,
                                                                                                const Eigen::Vector3d& lineTangent,
                                                                                                const Eigen::Vector3d& lineOrigin,
-                                                                                               const std::vector<double>& cell1DsQuality,
+                                                                                               const std::vector<double>& cell2DsQuality,
                                                                                                const std::vector<unsigned int>& cell1DsAligned,
                                                                                                const double& cell1DsQualityWeight,
                                                                                                const double& cell2DArea,
-                                                                                               const Eigen::VectorXd& cell2DEdgesLength,
+                                                                                               const std::vector<Eigen::VectorXd>& cell2DsEdgesLength,
                                                                                                const std::vector<bool>& cell2DEdgesDirection,
                                                                                                IMeshDAO& mesh) const
   {
@@ -969,26 +1066,28 @@ namespace Gedim
 
     const RefinePolygon_Result::Cell1DToSplit createNewVertexOne = RefinePolygonCell_IsCell1DToSplit(cell1DIndexOne,
                                                                                                      cell2DIndex,
-                                                                                                     cell2DNumVertices,
                                                                                                      edgeIntersectionOne,
-                                                                                                     cell2DEdgesLength,
+                                                                                                     cell2DsEdgesLength,
                                                                                                      cell1DsQualityWeight,
-                                                                                                     cell1DsQuality[cell1DIndexOne],
+                                                                                                     cell2DsQuality,
                                                                                                      cell1DsAligned,
                                                                                                      mesh);
     const RefinePolygon_Result::Cell1DToSplit createNewVertexTwo = RefinePolygonCell_IsCell1DToSplit(cell1DIndexTwo,
                                                                                                      cell2DIndex,
-                                                                                                     cell2DNumVertices,
                                                                                                      edgeIntersectionTwo,
-                                                                                                     cell2DEdgesLength,
+                                                                                                     cell2DsEdgesLength,
                                                                                                      cell1DsQualityWeight,
-                                                                                                     cell1DsQuality[cell1DIndexTwo],
+                                                                                                     cell2DsQuality,
                                                                                                      cell1DsAligned,
                                                                                                      mesh);
 
     result.Cell1DsToSplit.reserve(2);
     result.Cell1DsToSplit.push_back(createNewVertexOne);
     result.Cell1DsToSplit.push_back(createNewVertexTwo);
+
+    if (!SplitPolygon_CheckIsToSplit(createNewVertexOne,
+                                     createNewVertexTwo))
+      return result;
 
     if (!createNewVertexOne.IsToSplit &&
         !createNewVertexTwo.IsToSplit)
