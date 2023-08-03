@@ -195,13 +195,13 @@ namespace Gedim
         case Output::Files:
           if (is_directory)
             continue;
-        break;
+          break;
         case Output::Directories:
           if (!is_directory)
             continue;
-        break;
+          break;
         default:
-        break;
+          break;
       }
 
       out.push_back(file_name);
@@ -241,13 +241,13 @@ namespace Gedim
         case Output::Files:
           if (is_directory)
             continue;
-        break;
+          break;
         case Output::Directories:
           if (!is_directory)
             continue;
-        break;
+          break;
         default:
-        break;
+          break;
       }
 
       if (file_name != objectNameToFind)
@@ -959,24 +959,14 @@ namespace Gedim
       return;
     }
 
-    double startTime = timeFound->second;
-    double localStartTime = localTimeFound->second;
-#if USE_MPI == 1
-    double timeDifference = endTime - startTime;
-    double localTimeDifference = localEndTime - localStartTime;
-#elif USE_MPI == 0
-    double timeDifference = (endTime - startTime) / (double)CLOCKS_PER_SEC;
-    double localTimeDifference = (localEndTime - localStartTime) / (double)CLOCKS_PER_SEC;
-#endif // USE_MPI
-
-    globalTime = timeDifference;
-    localTime = localTimeDifference;
+    globalTime = ComputeTime(timeFound->second, endTime);
+    localTime = ComputeTime(localTimeFound->second, localEndTime);
   }
   // *************************************************************************
-  void Profiler::StopTime(const string& nameTime, const bool& printTime)
+  double Profiler::StopTime(const string& nameTime, const bool& printTime)
   {
     if (!ActivateProfiler)
-      return;
+      return 0.0;
 
     double endTime = 0.0, localEndTime = 0.0;
 
@@ -993,31 +983,34 @@ namespace Gedim
     if(timeFound == times.end())
     {
       Output::PrintErrorMessage(" -- Profiling: No time '" + nameTime + "' exists --", true);
-      return;
+      return 0.0;
     }
     if(localTimeFound == localTimes.end())
     {
       Output::PrintErrorMessage(" -- Profiling: No local time '" + nameTime + "' exists --", true);
-      return;
+      return 0.0;
     }
 
-    double startTime = timeFound->second;
-    double localStartTime = localTimeFound->second;
-
-#if USE_MPI == 1
-    double timeDifference = endTime - startTime;
-    double localTimeDifference = localEndTime - localStartTime;
-#elif USE_MPI == 0
-    double timeDifference = (endTime - startTime) / (double)CLOCKS_PER_SEC;
-    double localTimeDifference = (localEndTime - localStartTime) / (double)CLOCKS_PER_SEC;
-#endif // USE_MPI
+    const double timeDifference = ComputeTime(timeFound->second, endTime);
+    const double localTimeDifference = ComputeTime(localTimeFound->second, localEndTime);
 
     times[nameTime] = timeDifference;
     localTimes[nameTime] = localTimeDifference;
 
     if (!printTime)
-      return;
+      return timeDifference;
 
+    WriteTime(nameTime,
+              timeDifference,
+              localTimeDifference);
+
+    return timeDifference;
+  }
+  // *************************************************************************
+  void Profiler::WriteTime(const std::string& nameTime,
+                           const double& globalTime,
+                           const double& localTime)
+  {
     ostringstream nameFolder;
 
     nameFolder<< LogFile::LogFolder<< "/";
@@ -1027,10 +1020,10 @@ namespace Gedim
     if (MpiParallelEnvironment::Process().Rank() == 0)
     {
 #if LOGGING==1 || LOGGING==3
-      int hours = timeDifference / 3600;
-      int minutes = (timeDifference - hours * 3600) / 60;
-      int seconds = (timeDifference - hours * 3600 - minutes * 60);
-      double milliseconds = (timeDifference - hours * 3600 - minutes * 60 - seconds) * 1000;
+      int hours = globalTime / 3600;
+      int minutes = (globalTime - hours * 3600) / 60;
+      int seconds = (globalTime - hours * 3600 - minutes * 60);
+      double milliseconds = (globalTime - hours * 3600 - minutes * 60 - seconds) * 1000;
       cout<< " -- "<< Output::BlueColor<< "Profiling"<< Output::EndColor<< ": Time '"<< nameTime<< "': "<< hours<< " h "<< minutes<< " m "<< seconds<< " s "<< milliseconds<< " ms --"<< endl;
 #endif
 
@@ -1051,7 +1044,7 @@ namespace Gedim
         outFile<< "Time"<< endl;
       }
 
-      outFile<< scientific<< MpiParallelEnvironment::Process().NumberProcesses()<< " "<< nameTime<< " "<< timeDifference<< endl;
+      outFile<< scientific<< MpiParallelEnvironment::Process().NumberProcesses()<< " "<< nameTime<< " "<< globalTime<< endl;
     }
 
     // Print local time files
@@ -1075,7 +1068,7 @@ namespace Gedim
       outFile<< "Time"<< endl;
     }
 
-    outFile<< scientific<< MpiParallelEnvironment::Process().NumberProcesses()<< " "<< nameTime<< " "<< localTimeDifference<< endl;
+    outFile<< scientific<< MpiParallelEnvironment::Process().NumberProcesses()<< " "<< nameTime<< " "<< localTime<< endl;
   }
   // *************************************************************************
   int Profiler::ParseLine(char* line)
