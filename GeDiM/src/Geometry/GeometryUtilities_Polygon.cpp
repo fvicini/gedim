@@ -1,6 +1,8 @@
 #include "IOUtilities.hpp"
 #include "GeometryUtilities.hpp"
 #include "MapTriangle.hpp"
+#include "Eigen_Utilities.hpp"
+#include <numeric>
 
 using namespace std;
 using namespace Eigen;
@@ -281,17 +283,19 @@ namespace Gedim
     return true;
   }
   // ***************************************************************************
-  GeometryUtilities::PolygonTypes GeometryUtilities::PolygonType(const Eigen::MatrixXd& polygonVertices) const
+  GeometryUtilities::PolygonTypes GeometryUtilities::PolygonType(const unsigned int& numPolygonVertices,
+                                                                 const bool& isPolygonConvex) const
   {
-    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+    Output::Assert(numPolygonVertices > 2);
 
-    const unsigned int& numVertices = polygonVertices.cols();
-    if (numVertices == 3)
+    if (numPolygonVertices == 3)
       return PolygonTypes::Triangle;
-    else if (numVertices == 4)
-      return PolygonTypes::Quadrilateral;
+    else if (numPolygonVertices == 4)
+      return isPolygonConvex ? PolygonTypes::Quadrilateral_Convex :
+                               PolygonTypes::Quadrilateral_Concave;
     else
-      return PolygonTypes::Generic;
+      return isPolygonConvex ? PolygonTypes::Generic_Convex :
+                               PolygonTypes::Generic_Concave;
   }
   // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const
@@ -320,6 +324,105 @@ namespace Gedim
       triangleList.push_back(nextVertex);
       triangleList.push_back(nextNextVertex);
     }
+
+    Output::Assert(triangleList.size() % 3 == 0);
+
+    return vector<unsigned int>(triangleList.begin(), triangleList.end());
+  }
+  // ***************************************************************************
+  std::vector<unsigned int> GeometryUtilities::PolygonTriangulationByEarClipping(const Eigen::MatrixXd& polygonVertices) const
+  {
+    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+
+    list<unsigned int> triangleList;
+
+    list<unsigned int> earVertices;
+    Eigen::MatrixXd vertices = polygonVertices;
+    unsigned int numVertices = polygonVertices.cols();
+    std::vector<unsigned int> unalignedVertices(numVertices);
+    std::iota(unalignedVertices.begin(),
+              unalignedVertices.end(), 0);
+
+    do
+    {
+      std::vector<unsigned int> newUnalignedVertices = UnalignedPoints(vertices);
+      Output::Assert(newUnalignedVertices.size() > 2);
+
+      numVertices = newUnalignedVertices.size();
+
+      for (unsigned int v = 0; v < numVertices; v++)
+        newUnalignedVertices[v] = unalignedVertices[newUnalignedVertices[v]];
+      unalignedVertices = newUnalignedVertices;
+
+      if (numVertices == 3)
+      {
+        triangleList.push_back(unalignedVertices[0]);
+        triangleList.push_back(unalignedVertices[1]);
+        triangleList.push_back(unalignedVertices[2]);
+        break;
+      }
+
+      vertices = ExtractPoints(polygonVertices,
+                               unalignedVertices);
+
+      for (unsigned int v = 0; v < numVertices; v++)
+      {
+        const unsigned int v_prev = (v == 0) ? numVertices - 1 : v - 1;
+        const unsigned int v_next = (v + 1) % numVertices;
+
+        const double polarAngle = PolarAngle(vertices.col(v_prev),
+                                             vertices.col(v),
+                                             vertices.col(v_next));
+
+        if (IsValue1DNegative(polarAngle))
+          continue;
+
+        // test ear
+        bool isEar = true;
+        const Eigen::MatrixXd triangle = ExtractPoints(vertices,
+                                                       { v_prev, v, v_next });
+        const Eigen::MatrixXd boundingBox = PointsBoundingBox(triangle);
+        for (unsigned int ov = 0; ov < numVertices; ov++)
+        {
+          if (ov == v || ov == v_prev || ov == v_next)
+            continue;
+
+          if (!IsPointInBoundingBox(vertices.col(ov),
+                                    boundingBox))
+            continue;
+
+          if (!IsPointInsidePolygon(vertices.col(ov),
+                                    triangle))
+            continue;
+
+          isEar = false;
+          break;
+        }
+
+        if (isEar)
+        {
+          earVertices.push_back(v);
+          break;
+        }
+      }
+
+      Output::Assert(earVertices.size() > 0);
+
+      const unsigned int earVertex = earVertices.front();
+      earVertices.pop_front();
+
+      const unsigned int v = earVertex;
+      const unsigned int v_prev = (earVertex == 0) ? numVertices - 1 : earVertex - 1;
+      const unsigned int v_next = (earVertex + 1) % numVertices;
+
+      triangleList.push_back(unalignedVertices[v]);
+      triangleList.push_back(unalignedVertices[v_next]);
+      triangleList.push_back(unalignedVertices[v_prev]);
+
+      unalignedVertices.erase(unalignedVertices.begin() + v);
+      Eigen_Utilities::RemoveColumn(vertices, v);
+    }
+    while (vertices.cols() > 2);
 
     Output::Assert(triangleList.size() % 3 == 0);
 

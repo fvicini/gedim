@@ -31,8 +31,10 @@ namespace Gedim
       {
         Unknown = 0,
         Triangle = 1,
-        Quadrilateral = 2,
-        Generic = 3
+        Quadrilateral_Convex = 2,
+        Quadrilateral_Concave = 3,
+        Generic_Convex = 4,
+        Generic_Concave = 5
       };
 
       enum struct PointSegmentPositionTypes
@@ -832,6 +834,16 @@ namespace Gedim
                                                const double& end,
                                                const bool& insertExtremes) const;
 
+      /// \param v_prev the previous point
+      /// \param v the middle point
+      /// \param v_next the next point
+      /// \return the polar angle between the three points, computed as the cross product (v_next-v) x (v_prev-v)
+      /// \note positive is convex, negative is concave, zero is collinear
+      inline double PolarAngle(const Eigen::Vector3d& v_prev,
+                               const Eigen::Vector3d& v,
+                               const Eigen::Vector3d& v_next) const
+      { return v.x() * (v_next.y() - v_prev.y()) + v_next.x() * (v_prev.y() - v.y()) + v_prev.x() * (v.y() - v_next.y()); }
+
       /// \brief compute the Point distance
       /// \param firstPoint the first point
       /// \param secondPoint the second point
@@ -852,6 +864,19 @@ namespace Gedim
       /// \param points the point collection, size 3 x numPoints
       /// \return the distances between the points collected in matrix, size numPoints x numPoints.
       Eigen::MatrixXd PointsDistance(const Eigen::MatrixXd& points) const;
+
+      /// \param points the point collection, size 3 x numPoints
+      /// \return the extreme bounding box points (xmin, ymin, zmin) and (xmax, ymax, zmax), size 2 x numPoints
+      Eigen::MatrixXd PointsBoundingBox(const Eigen::MatrixXd& points) const;
+
+      /// \param point the point
+      /// \param boudingBox the bounding box points (xmin, ymin, zmin) and (xmax, ymax, zmax), size 2 x numPoints
+      /// \return false if the point is outside the bounding box, true otherwise (border or inside)
+      inline bool IsPointInBoundingBox(const Eigen::Vector3d& point,
+                                       const Eigen::MatrixXd& boudingBox) const
+      { return (IsValue1DGreaterOrEqual(point.x(), boudingBox(0, 0)) && IsValue1DGreaterOrEqual(boudingBox(0, 1), point.x())) &&
+            (IsValue1DGreaterOrEqual(point.y(), boudingBox(1, 0)) && IsValue1DGreaterOrEqual(boudingBox(1, 1), point.y())) &&
+            (IsValue1DGreaterOrEqual(point.z(), boudingBox(2, 0)) && IsValue1DGreaterOrEqual(boudingBox(2, 1), point.z())); }
 
       /// \param points the point collection, size 3 x numPoints
       /// \return the maximum distance between the points.
@@ -1194,10 +1219,32 @@ namespace Gedim
       /// \brief Check if point is inside a polygon
       /// \param point the point
       /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
-      /// \param result the resulting position
-      /// \warning works only in 2D
+      /// \return the resulting position
+      /// \warning works only in 2D with convex polygons
       PointPolygonPositionResult PointPolygonPosition(const Eigen::Vector3d& point,
                                                       const Eigen::MatrixXd& polygonVertices) const;
+
+      PointPolygonPositionResult PointPolygonPosition_RayCasting(const Eigen::Vector3d& point,
+                                                                 const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \param point the point
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \return false if it is outside, true the other cases
+      /// \warning works only in 2D with convex polygons
+      inline bool IsPointInsidePolygon(const Eigen::Vector3d& point,
+                                       const Eigen::MatrixXd& polygonVertices) const
+      { return !(PointPolygonPosition(point,
+                                      polygonVertices).Type == PointPolygonPositionResult::Types::Outside); }
+
+      /// \brief IsPointInsidePolygon using RayCasting algorithm
+      /// (see https://en.wikipedia.org/wiki/Point_in_polygon)
+      /// \param point the point
+      /// \param polygonVertices the matrix of vertices of the polygon (size 3 x numVertices)
+      /// \return false if it is outside, true the other cases
+      inline bool IsPointInsidePolygon_RayCasting(const Eigen::Vector3d& point,
+                                                  const Eigen::MatrixXd& polygonVertices) const
+      { return !(PointPolygonPosition_RayCasting(point,
+                                                 polygonVertices).Type == PointPolygonPositionResult::Types::Outside); }
 
       LinePolygonPositionResult LinePolygonPosition(const Eigen::Vector3d& lineTangent,
                                                     const Eigen::Vector3d& lineOrigin,
@@ -1274,6 +1321,11 @@ namespace Gedim
       /// \return the sub-division triangulation, size 1 x 3 * numTriangles
       /// \note works only for convex polygon
       std::vector<unsigned int> PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const;
+
+      /// \brief Concave Polygon Triangulation with ear clipping algorithm
+      /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
+      /// \return the sub-division triangulation, size 1 x 3 * numTriangles
+      std::vector<unsigned int> PolygonTriangulationByEarClipping(const Eigen::MatrixXd& polygonVertices) const;
 
       /// \brief Convex Polygon simple Triangulation from an internal point
       /// \param polygonVertices the polygon vertices, size 3 x numPolygonVertices
@@ -1558,7 +1610,11 @@ namespace Gedim
       bool PolygonIsConvex(const Eigen::MatrixXd& polygonVertices,
                            const Eigen::MatrixXd& convexHull) const;
 
-      PolygonTypes PolygonType(const Eigen::MatrixXd& polygonVertices) const;
+      /// \param numPolygonVertices the number of polygon vertices
+      /// \param isPolygonConvex true if the polygon is convex
+      /// \return the polygon type
+      PolygonTypes PolygonType(const unsigned int& numPolygonVertices,
+                               const bool& isPolygonConvex) const;
 
       /// \brief Compute the rotation matrix of a plane from 2D to 3D
       /// \param planeNormal the normalized normal of the plane
@@ -1770,6 +1826,22 @@ namespace Gedim
                                                 const Eigen::Vector3d& heightVector,
                                                 const Eigen::Vector3d& widthVector) const;
 
+      /// \brief Create Polyhedron With Extrusion
+      /// \param polygon the 2D polygon vertices
+      /// \param heightVector  the height vector
+      /// \return the polyhedron created
+      inline Polyhedron CreatePolyhedronWithExtrusion(const Eigen::MatrixXd& polygonVertices,
+                                                      const Eigen::Vector3d& heightVector) const
+      { return CreatePolyhedronWithExtrusion(polygonVertices,
+                                             std::vector<Eigen::Vector3d>(polygonVertices.cols(), heightVector)); }
+
+      /// \brief Create Polyhedron With Extrusion
+      /// \param polygon the 2D polygon vertices, size 3 x numPolygonVertices
+      /// \param heightVectors the height vector to be used for each polygon vertex, size numPolygonVertices
+      /// \return the polyhedron created
+      Polyhedron CreatePolyhedronWithExtrusion(const Eigen::MatrixXd& polygonVertices,
+                                               const std::vector<Eigen::Vector3d>& heightVectors) const;
+
       /// \brief Create a Cube with origin aligned to axis
       /// \param origin the origin
       /// \param edgeLength the edge length
@@ -1908,9 +1980,26 @@ namespace Gedim
       /// \param pointInsidePolyhedron a point inside polyhedron
       /// \param polyhedronFaceNormals the normal of each face
       /// \return true if the face has normal outgoing
+      /// \warning works only for convex polyhedrons
       std::vector<bool> PolyhedronFaceNormalDirections(const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                        const Eigen::Vector3d& pointInsidePolyhedron,
                                                        const std::vector<Eigen::Vector3d>& polyhedronFaceNormals) const;
+      /// \brief Compute Polyhedron Face Normal Directions for generic polyhedron (slower)
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \param pointInsidePolyhedron a point inside polyhedron
+      /// \param polyhedronFaceNormals the normal of each face
+      /// \return true if the face has normal outgoing
+      /// \warning NOT WORKING in all cases
+      std::vector<bool> PolyhedronFaceNormalDirections(const Eigen::MatrixXd& polyhedronVertices,
+                                                       const Eigen::MatrixXi& polyhedronEdges,
+                                                       const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                       const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                       const std::vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
+                                                       const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices,
+                                                       const std::vector<Eigen::Vector3d>& polyhedronFaceNormals,
+                                                       const std::vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                       const std::vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const;
+
       /// \brief Polyhedron Face Triangulations of each face
       /// \param polyhedronFaces the polyhedron faces
       /// \param localFaceTriangulations the local faces triangulations indices, size 1xnumFaces x (3xnumTriangles)
@@ -1924,8 +2013,15 @@ namespace Gedim
       std::vector<std::vector<unsigned int>> PolyhedronFaceTriangulationsByFirstVertex(const std::vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                                        const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices) const;
 
-      std::vector<std::vector<Eigen::Matrix3d>> PolyhedronFaceTriangulationPointsByFirstVertex(const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                                                                               const std::vector<std::vector<unsigned int>>& polyhedronFaceTriangulations) const;
+      /// \brief Polyhedron Face Triangulations by ear clipping of each face
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param polyhedronFaceVertices the polyhedron faces vertices
+      /// \return for each face the triangulation indices by first vertex, size 1xnumFaces x (3xnumTriangles)
+      std::vector<std::vector<unsigned int>> PolyhedronFaceTriangulationsByEarClipping(const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                       const std::vector<Eigen::MatrixXd>& polyhedronFaces2DVertices) const;
+
+      std::vector<std::vector<Eigen::Matrix3d>> PolyhedronFaceExtractTriangulationPoints(const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                         const std::vector<std::vector<unsigned int>>& polyhedronFaceTriangulations) const;
 
       std::vector<std::vector<Eigen::Matrix3d>> PolyhedronFaceTriangulationPointsByInternalPoint(const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                                                                  const std::vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
@@ -2002,6 +2098,29 @@ namespace Gedim
       void ExportPolyhedronToVTU(const Eigen::MatrixXd& polyhedronVertices,
                                  const Eigen::MatrixXi& polyhedronEdges,
                                  const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                 const std::string& exportFolder) const;
+
+      /// \brief Export Polyhedron To VTU
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
+      /// \param polyhedronFaces the polyhedron faces
+      /// \param exportFolder the folder in which to export
+      void ExportPolyhedronToVTU(const unsigned int& index,
+                                 const Eigen::MatrixXd& polyhedronVertices,
+                                 const Eigen::MatrixXi& polyhedronEdges,
+                                 const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                 const std::vector<Eigen::MatrixXd>& polyhedronTetra,
+                                 const double& polyhedronVolume,
+                                 const Eigen::Vector3d& polyhedronCentroid,
+                                 const std::vector<Eigen::MatrixXd>& polyhedronFaces3DVertices,
+                                 const std::vector<double>& polyhedronFacesArea,
+                                 const std::vector<Eigen::Vector3d>& polyhedronFaces2DCentroid,
+                                 const std::vector<Eigen::Vector3d>& polyhedronFacesTranslation,
+                                 const std::vector<Eigen::Matrix3d>& polyhedronFacesRotationMatrix,
+                                 const std::vector<std::vector<Eigen::Matrix3d>>& polyhedronFaces3DTriangles,
+                                 const std::vector<Eigen::Vector3d>& polyhedronFaces3DInternalPoint,
+                                 const std::vector<Eigen::Vector3d>& polyhedronFaces3DNormal,
+                                 const std::vector<bool>& polyhedronFaces3DNormalDirection,
                                  const std::string& exportFolder) const;
   };
 }

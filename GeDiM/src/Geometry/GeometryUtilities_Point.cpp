@@ -36,6 +36,20 @@ namespace Gedim
     return distances;
   }
   // ***************************************************************************
+  MatrixXd GeometryUtilities::PointsBoundingBox(const Eigen::MatrixXd& points) const
+  {
+    Eigen::MatrixXd boundingBox(3, 2);
+
+    boundingBox(0, 0) = points.row(0).minCoeff();
+    boundingBox(0, 1) = points.row(0).maxCoeff();
+    boundingBox(1, 0) = points.row(1).minCoeff();
+    boundingBox(1, 1) = points.row(1).maxCoeff();
+    boundingBox(2, 0) = points.row(2).minCoeff();
+    boundingBox(2, 1) = points.row(2).maxCoeff();
+
+    return boundingBox;
+  }
+  // ***************************************************************************
   double GeometryUtilities::PointsMaxDistance(const Eigen::MatrixXd& points) const
   {
     Output::Assert(points.rows() == 3);
@@ -200,6 +214,148 @@ namespace Gedim
     }
 
     result.Type = GeometryUtilities::PointPolygonPositionResult::Types::Inside;
+    return result;
+  }
+  // ***************************************************************************
+  GeometryUtilities::PointPolygonPositionResult GeometryUtilities::PointPolygonPosition_RayCasting(const Eigen::Vector3d& point,
+                                                                                                   const Eigen::MatrixXd& polygonVertices) const
+  {
+    Output::Assert(polygonVertices.cols() > 2 && PointsAre2D(point));
+
+    GeometryUtilities::PointPolygonPositionResult result;
+
+    const unsigned int numVertices =  polygonVertices.cols();
+    unsigned int numIntersections = 0;
+
+    for (unsigned int v = 0; v < numVertices; v++)
+    {
+      const unsigned int v_next = (v + 1) % numVertices;
+      const Vector3d& edgeOrigin = polygonVertices.col(v);
+      const Vector3d& edgeEnd = polygonVertices.col(v_next);
+      const Vector3d edgeTangent = SegmentTangent(edgeOrigin,
+                                                  edgeEnd);
+
+      if (IsValue1DZero(edgeTangent.y()))
+      {
+        if (IsValue1DZero(point.y() - edgeOrigin.y()))
+        {
+          const double intersection_point_curvilinearCoordinate = PointLineCurvilinearCoordinate(point,
+                                                                                                 edgeOrigin,
+                                                                                                 edgeTangent,
+                                                                                                 edgeTangent.squaredNorm());
+          const PointSegmentPositionTypes intersection_point_position = PointSegmentPosition(intersection_point_curvilinearCoordinate);
+
+          switch (intersection_point_position)
+          {
+            case PointSegmentPositionTypes::OnSegmentLineBeforeOrigin:
+              continue; // intersection parallel on edge
+            case PointSegmentPositionTypes::OnSegmentLineAfterEnd:
+              continue; // intersection not interesting
+            case PointSegmentPositionTypes::OnSegmentOrigin:
+            {
+              result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
+              result.BorderIndex = v;
+              return result;
+            }
+            case PointSegmentPositionTypes::InsideSegment:
+            {
+              result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge;
+              result.BorderIndex = v;
+              return result;
+            }
+            case PointSegmentPositionTypes::OnSegmentEnd:
+            {
+              result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
+              result.BorderIndex = v_next;
+              return result;
+            }
+            default:
+              throw runtime_error("Intersection point not expected");
+          }
+        }
+        else
+          continue;
+      }
+
+      const double intersection_edge_curvilinearCoordinate = (point.y() - edgeOrigin.y()) / edgeTangent.y();
+
+      const PointSegmentPositionTypes intersection_edge_position = PointSegmentPosition(intersection_edge_curvilinearCoordinate);
+
+      switch (intersection_edge_position)
+      {
+        case PointSegmentPositionTypes::OnSegmentLineBeforeOrigin:
+        case PointSegmentPositionTypes::OnSegmentLineAfterEnd:
+          continue; // intersection outside the edge
+        case PointSegmentPositionTypes::OnSegmentOrigin:
+        case PointSegmentPositionTypes::InsideSegment:
+        case PointSegmentPositionTypes::OnSegmentEnd:
+        {
+          const double x_intersection = edgeOrigin.x() +
+                                        intersection_edge_curvilinearCoordinate * edgeTangent.x();
+
+          const double intersection_point_curvilinearCoordinate = (x_intersection - point.x());
+          const PointSegmentPositionTypes intersection_point_position = PointSegmentPosition(intersection_point_curvilinearCoordinate);
+
+          switch (intersection_point_position)
+          {
+            case PointSegmentPositionTypes::OnSegmentLineBeforeOrigin:
+              continue; // intersection not interesting
+            case PointSegmentPositionTypes::OnSegmentOrigin:
+            {
+              if (intersection_edge_position == PointSegmentPositionTypes::OnSegmentOrigin)
+              {
+                result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
+                result.BorderIndex = v;
+                return result;
+              }
+
+              if (intersection_edge_position == PointSegmentPositionTypes::OnSegmentEnd)
+              {
+                result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderVertex;
+                result.BorderIndex = v_next;
+                return result;
+              }
+
+              result.Type = GeometryUtilities::PointPolygonPositionResult::Types::BorderEdge;
+              result.BorderIndex = v;
+              return result;
+            }
+            case PointSegmentPositionTypes::InsideSegment:
+            case PointSegmentPositionTypes::OnSegmentEnd:
+            case PointSegmentPositionTypes::OnSegmentLineAfterEnd:
+            {
+              if (intersection_edge_position == PointSegmentPositionTypes::OnSegmentOrigin)
+              {
+                // the inserction count only if the other edge vertex is uder the ray
+                if (IsValue1DGreater(point.y(), edgeEnd.y()))
+                  numIntersections++;
+                continue;
+              }
+
+              if (intersection_edge_position == PointSegmentPositionTypes::OnSegmentEnd)
+              {
+                // the inserction count only if the other edge vertex is uder the ray
+                if (IsValue1DGreater(point.y(), edgeOrigin.y()))
+                  numIntersections++;
+                continue;
+              }
+
+              numIntersections++;
+              continue;
+            }
+            default:
+              throw runtime_error("Intersection point not expected");
+          }
+
+          break;
+        }
+        default:
+          throw runtime_error("Intersection edge not expected");
+      }
+    }
+
+    result.Type = (numIntersections % 2) == 1 ? GeometryUtilities::PointPolygonPositionResult::Types::Inside :
+                                                GeometryUtilities::PointPolygonPositionResult::Types::Outside;
     return result;
   }
   // ***************************************************************************

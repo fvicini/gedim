@@ -141,6 +141,58 @@ namespace Gedim
     return parallelpiped;
   }
   // ***************************************************************************
+  GeometryUtilities::Polyhedron GeometryUtilities::CreatePolyhedronWithExtrusion(const Eigen::MatrixXd& polygonVertices,
+                                                                                 const std::vector<Eigen::Vector3d>& heightVectors) const
+  {
+    Output::Assert(static_cast<unsigned int>(polygonVertices.cols()) ==
+                   static_cast<unsigned int>(heightVectors.size()) &&
+                   polygonVertices.rows() == 3);
+
+    Gedim::GeometryUtilities::Polyhedron polyhedron;
+
+    const unsigned int numPolygonVertices = polygonVertices.cols();
+
+    // create vertices
+    const unsigned int numPolyhedronVertices = 2 * numPolygonVertices;
+    polyhedron.Vertices.setZero(3, numPolyhedronVertices);
+    for (unsigned int v = 0; v < numPolygonVertices; v++)
+    {
+      polyhedron.Vertices.col(v)<< polygonVertices.col(v);
+      polyhedron.Vertices.col(numPolygonVertices + v)<< polygonVertices.col(v) + heightVectors[v];
+    }
+
+    // create edges
+    const unsigned int numPolyhedronEdges = 3 * numPolygonVertices;
+    polyhedron.Edges.setZero(2, numPolyhedronEdges);
+    for (unsigned int v = 0; v < numPolygonVertices; v++)
+    {
+      polyhedron.Edges.col(v)<< v, (v + 1) % numPolygonVertices;
+      polyhedron.Edges.col(numPolygonVertices + v)<< numPolygonVertices + v, numPolygonVertices + (v + 1) % numPolygonVertices;
+      polyhedron.Edges.col(2 * numPolygonVertices + v)<< v, numPolygonVertices + v;
+    }
+
+    // create faces
+    const unsigned int numPolyhedronFaces = 2 + numPolygonVertices;
+    polyhedron.Faces.reserve(numPolyhedronFaces);
+
+    polyhedron.Faces.push_back(MatrixXi::Zero(2, numPolygonVertices));
+    polyhedron.Faces.push_back(MatrixXi::Zero(2, numPolygonVertices));
+    for (unsigned int v = 0; v < numPolygonVertices; v++)
+    {
+      polyhedron.Faces[0](0, v) = v;
+      polyhedron.Faces[0](1, v) = v;
+      polyhedron.Faces[1](0, v) = numPolygonVertices + v;
+      polyhedron.Faces[1](1, v) = numPolygonVertices + v;
+
+      polyhedron.Faces.push_back(MatrixXi::Zero(2, 4));
+      polyhedron.Faces[2 + v].row(0)<< v, (v + 1) % numPolygonVertices, numPolygonVertices + (v + 1) % numPolygonVertices, numPolygonVertices + v;
+      polyhedron.Faces[2 + v].row(1)<< v, 2 * numPolygonVertices + (v + 1) % numPolygonVertices, numPolygonVertices + v, 2 * numPolygonVertices + v;
+    }
+
+    return polyhedron;
+
+  }
+  // ***************************************************************************
   double GeometryUtilities::PolyhedronVolume(const std::vector<std::vector<Eigen::Matrix3d> >& polyhedronFaceRotatedTriangulationPoints,
                                              const std::vector<Eigen::Vector3d>& polyhedronFaceNormals,
                                              const std::vector<bool>& polyhedronFaceNormalDirections,
@@ -459,6 +511,128 @@ namespace Gedim
     return faceDirections;
   }
   // ***************************************************************************
+  std::vector<bool> GeometryUtilities::PolyhedronFaceNormalDirections(const Eigen::MatrixXd& polyhedronVertices,
+                                                                      const Eigen::MatrixXi& polyhedronEdges,
+                                                                      const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                      const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                      const std::vector<Eigen::Vector3d>& polyhedronFaceInternalPoints,
+                                                                      const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices,
+                                                                      const std::vector<Eigen::Vector3d>& polyhedronFaceNormals,
+                                                                      const std::vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                                      const std::vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const
+  {
+    std::vector<bool> vertices_intersection(polyhedronVertices.cols(), false);
+    std::vector<bool> edges_intersection(polyhedronEdges.cols(), false);
+    vector<bool> faceDirections(polyhedronFaceVertices.size(), true);
+
+    for (unsigned int f1 = 0; f1 < polyhedronFaceVertices.size(); f1++)
+    {
+      const Eigen::Vector3d& normal = polyhedronFaceNormals[f1];
+      const Eigen::Vector3d segmentOrigin = polyhedronFaceInternalPoints[f1];
+      const Eigen::Vector3d segmentEnd = segmentOrigin + normal;
+      list<double> curvilinearCoordinates;
+
+      for (unsigned int f2 = 0; f2 < polyhedronFaceVertices.size(); f2++)
+      {
+        if (f2 == f1)
+          continue;
+
+        const IntersectionSegmentPlaneResult intersections = IntersectionSegmentPlane(segmentOrigin,
+                                                                                      segmentEnd,
+                                                                                      polyhedronFaceNormals[f2],
+                                                                                      polyhedronFaceVertices[f2].col(0));
+
+        switch (intersections.Type)
+        {
+          case IntersectionSegmentPlaneResult::Types::NoIntersection:
+            continue;
+          case IntersectionSegmentPlaneResult::Types::MultipleIntersections:
+            continue;
+          case IntersectionSegmentPlaneResult::Types::SingleIntersection:
+          {
+            if (intersections.SingleIntersection.Type == PointSegmentPositionTypes::OnSegmentLineBeforeOrigin)
+              continue;
+
+            switch (intersections.SingleIntersection.Type)
+            {
+              case PointSegmentPositionTypes::OnSegmentLineBeforeOrigin:
+              case PointSegmentPositionTypes::OnSegmentOrigin:
+                continue;
+              case PointSegmentPositionTypes::OnSegmentLineAfterEnd:
+              case PointSegmentPositionTypes::OnSegmentEnd:
+              case PointSegmentPositionTypes::InsideSegment:
+              {
+                bool intersectionAlreadyConsidered = false;
+                for (const double& curvilinearCoordinate : curvilinearCoordinates)
+                {
+                  if (Are1DValuesEqual(curvilinearCoordinate,
+                                       intersections.SingleIntersection.CurvilinearCoordinate))
+                  {
+                    intersectionAlreadyConsidered = true;
+                    break;
+                  }
+                }
+
+                if (intersectionAlreadyConsidered)
+                  continue;
+
+                const Eigen::Vector3d pointIntersection = segmentOrigin +
+                                                          intersections.SingleIntersection.CurvilinearCoordinate * normal;
+
+                const Eigen::Vector3d pointIntersection2D = RotatePointsFrom3DTo2D(pointIntersection,
+                                                                                   polyhedronFaceRotationMatrices[f2].transpose(),
+                                                                                   polyhedronFaceTranslations[f2]);
+                const PointPolygonPositionResult& intersectionPosition = PointPolygonPosition_RayCasting(pointIntersection2D,
+                                                                                                         polyhedronFaceRotatedVertices[f2]);
+
+                switch (intersectionPosition.Type)
+                {
+                  case PointPolygonPositionResult::Types::Outside:
+                    continue;
+                  case PointPolygonPositionResult::Types::BorderVertex:
+                  {
+                    const unsigned int faceVertexIndex = polyhedronFaces[f2](0, intersectionPosition.BorderIndex);
+                    if (!vertices_intersection[faceVertexIndex])
+                    {
+                      curvilinearCoordinates.push_back(intersections.SingleIntersection.CurvilinearCoordinate);
+                      vertices_intersection[faceVertexIndex] = true;
+                    }
+                    continue;
+                  }
+                  case PointPolygonPositionResult::Types::BorderEdge:
+                  {
+                    const unsigned int faceEdgeIndex = polyhedronFaces[f2](1, intersectionPosition.BorderIndex);
+                    if (!edges_intersection[faceEdgeIndex])
+                    {
+                      curvilinearCoordinates.push_back(intersections.SingleIntersection.CurvilinearCoordinate);
+                      edges_intersection[faceEdgeIndex] = true;
+                    }
+                    continue;
+                  }
+                  case PointPolygonPositionResult::Types::Inside:
+                    curvilinearCoordinates.push_back(intersections.SingleIntersection.CurvilinearCoordinate);
+                    continue;
+                  default:
+                    throw runtime_error("intersectionPosition.Type not expected");
+                }
+              }
+                break;
+              default:
+                throw runtime_error("intersection.SingleIntersection.Type not expected");
+            }
+          }
+            break;
+          default:
+            throw runtime_error("Intersection not expected");
+        }
+      }
+
+      faceDirections[f1] = (curvilinearCoordinates.size() % 2 == 0);
+    }
+
+    return faceDirections;
+  }
+  // ***************************************************************************
   vector<vector<unsigned int> > GeometryUtilities::PolyhedronFaceTriangulations(const vector<Eigen::MatrixXi>& polyhedronFaces,
                                                                                 const vector<vector<unsigned int>>& localFaceTriangulations) const
   {
@@ -488,8 +662,18 @@ namespace Gedim
     return polyhedronFacesTriangulations;
   }
   // ***************************************************************************
-  std::vector<std::vector<Matrix3d>> GeometryUtilities::PolyhedronFaceTriangulationPointsByFirstVertex(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
-                                                                                                       const std::vector<std::vector<unsigned int> >& polyhedronFaceTriangulations) const
+  std::vector<std::vector<unsigned int> > GeometryUtilities::PolyhedronFaceTriangulationsByEarClipping(const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                                                       const std::vector<Eigen::MatrixXd>& polyhedronFaces2DVertices) const
+  {
+    vector<vector<unsigned int>> polyhedronFacesTriangulations(polyhedronFaces.size());
+    for (unsigned int f = 0; f < polyhedronFaces.size(); f++)
+      polyhedronFacesTriangulations[f] = PolygonTriangulationByEarClipping(polyhedronFaces2DVertices[f]);
+
+    return polyhedronFacesTriangulations;
+  }
+  // ***************************************************************************
+  std::vector<std::vector<Matrix3d>> GeometryUtilities::PolyhedronFaceExtractTriangulationPoints(const vector<Eigen::MatrixXd>& polyhedronFaceVertices,
+                                                                                                 const std::vector<std::vector<unsigned int> >& polyhedronFaceTriangulations) const
   {
     const unsigned int numFaces = polyhedronFaceTriangulations.size();
     vector<std::vector<Matrix3d>> faceTriangulationsPoints(numFaces);
@@ -732,6 +916,216 @@ namespace Gedim
                              facesVertices);
       exporter.Export(exportFolder +
                       "/Polyhedron.vtu");
+    }
+  }
+  // ***************************************************************************
+  void GeometryUtilities::ExportPolyhedronToVTU(const unsigned int& index,
+                                                const Eigen::MatrixXd& polyhedronVertices,
+                                                const Eigen::MatrixXi& polyhedronEdges,
+                                                const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                const std::vector<Eigen::MatrixXd>& polyhedronTetra,
+                                                const double& polyhedronVolume,
+                                                const Eigen::Vector3d& polyhedronCentroid,
+                                                const std::vector<Eigen::MatrixXd>& polyhedronFaces3DVertices,
+                                                const std::vector<double>& polyhedronFacesArea,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFaces2DCentroid,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFacesTranslation,
+                                                const std::vector<Eigen::Matrix3d>& polyhedronFacesRotationMatrix,
+                                                const std::vector<std::vector<Eigen::Matrix3d>>& polyhedronFaces3DTriangles,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFaces3DInternalPoint,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFaces3DNormal,
+                                                const std::vector<bool>& polyhedronFaces3DNormalDirection,
+                                                const std::string& exportFolder) const
+  {
+    {
+      Gedim::VTKUtilities exporter;
+
+      vector<double> id(1, index);
+      vector<double> volume(1, polyhedronVolume);
+
+      // Export Polyhedron
+      exporter.AddPolyhedron(polyhedronVertices,
+                             polyhedronEdges,
+                             polyhedronFaces,
+                             {
+                               {
+                                 "Id",
+                                 Gedim::VTPProperty::Formats::Cells,
+                                 static_cast<unsigned int>(id.size()),
+                                 id.data()
+                               },
+                               {
+                                 "Volume",
+                                 Gedim::VTPProperty::Formats::Cells,
+                                 static_cast<unsigned int>(volume.size()),
+                                 volume.data()
+                               }
+                             });
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      // Export Polyhedron tetra
+      for (unsigned int t = 0; t < polyhedronTetra.size(); t++)
+      {
+        vector<double> id(1, t);
+
+        const GeometryUtilities::Polyhedron polyhedron = CreateTetrahedronWithVertices(polyhedronTetra[t].col(0),
+                                                                                       polyhedronTetra[t].col(1),
+                                                                                       polyhedronTetra[t].col(2),
+                                                                                       polyhedronTetra[t].col(3));
+
+        exporter.AddPolyhedron(polyhedron.Vertices,
+                               polyhedron.Edges,
+                               polyhedron.Faces,
+                               {
+                                 {
+                                   "Id",
+                                   Gedim::VTPProperty::Formats::Cells,
+                                   static_cast<unsigned int>(id.size()),
+                                   id.data()
+                                 }
+                               });
+      }
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_Tetra.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      for (unsigned int f = 0; f < polyhedronFaces3DVertices.size(); f++)
+      {
+        vector<double> id(1, f);
+        vector<double> area(1, polyhedronFacesArea[f]);
+
+        // Export faces
+        exporter.AddPolygon(polyhedronFaces3DVertices[f],
+                            {
+                              {
+                                "Id",
+                                Gedim::VTPProperty::Formats::Cells,
+                                static_cast<unsigned int>(id.size()),
+                                id.data()
+                              },
+                              {
+                                "Area",
+                                Gedim::VTPProperty::Formats::Cells,
+                                static_cast<unsigned int>(area.size()),
+                                area.data()
+                              }
+                            });
+      }
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_Faces.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      // Export faces triangles
+      unsigned int numFaceTriangles = 0;
+      for (unsigned int f = 0; f < polyhedronFaces3DTriangles.size(); f++)
+      {
+        vector<double> face(1, f);
+
+        for (unsigned int t = 0; t < polyhedronFaces3DTriangles[f].size(); t++)
+        {
+          vector<double> id(1, numFaceTriangles++);
+          exporter.AddPolygon(polyhedronFaces3DTriangles[f][t],
+                              {
+                                {
+                                  "Face",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(face.size()),
+                                  face.data()
+                                },
+                                {
+                                  "Id",
+                                  Gedim::VTPProperty::Formats::Cells,
+                                  static_cast<unsigned int>(id.size()),
+                                  id.data()
+                                }
+                              });
+        }
+      }
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_FacesTriangles.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      // Export faces normal
+      for (unsigned int f = 0; f < polyhedronFaces3DNormal.size(); f++)
+      {
+        vector<double> face(1, f);
+        vector<double> normalDirection(1, polyhedronFaces3DNormalDirection[f] ? 1.0 : -1.0);
+
+        exporter.AddSegment(polyhedronFaces3DInternalPoint[f],
+                            polyhedronFaces3DInternalPoint[f] +
+                            normalDirection[0] * polyhedronFaces3DNormal[f],
+        {
+          {
+            "Face",
+            Gedim::VTPProperty::Formats::Cells,
+                static_cast<unsigned int>(face.size()),
+                face.data()
+          },
+          {
+            "NormalDirection",
+            Gedim::VTPProperty::Formats::Cells,
+                static_cast<unsigned int>(normalDirection.size()),
+                normalDirection.data()
+          }
+        });
+      }
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_FacesNormal.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      // Export Polyhedron centroid
+      exporter.AddPoint(polyhedronCentroid);
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_Centroid.vtu");
+    }
+
+    {
+      Gedim::VTKUtilities exporter;
+
+      // Export faces centroids
+      for (unsigned int f = 0; f < polyhedronFaces2DCentroid.size(); f++)
+      {
+        vector<double> face(1, f);
+
+        const Eigen::Vector3d rotatedCentroid = RotatePointsFrom2DTo3D(polyhedronFaces2DCentroid[f],
+                                                                       polyhedronFacesRotationMatrix[f],
+                                                                       polyhedronFacesTranslation[f]);
+        exporter.AddPoint(rotatedCentroid,
+                          {
+                            {
+                              "Face",
+                              Gedim::VTPProperty::Formats::Cells,
+                              static_cast<unsigned int>(face.size()),
+                              face.data()
+                            }
+                          });
+      }
+
+      exporter.Export(exportFolder + "/" +
+                      "Polyhedron_FacesCentroid.vtu");
     }
   }
   // ***************************************************************************

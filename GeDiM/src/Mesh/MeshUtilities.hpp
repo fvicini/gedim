@@ -97,6 +97,7 @@ namespace Gedim
 
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFaces3DVertices; ///< faces vertices 3D coordinates
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFaces2DVertices; ///< faces vertices 2D coordinates
+          std::vector<std::vector<std::vector<Eigen::Matrix3d>>> Cell3DsFaces3DTriangulations; ///< faces triangulations 2D
           std::vector<std::vector<std::vector<Eigen::Matrix3d>>> Cell3DsFaces2DTriangulations; ///< faces triangulations 2D
           std::vector<std::vector<double>> Cell3DsFacesAreas; ///< faces areas
           std::vector<std::vector<Eigen::Vector3d>> Cell3DsFaces2DCentroids; ///< faces centroids
@@ -253,6 +254,14 @@ namespace Gedim
       MeshGeometricData2D FillMesh2DGeometricData(const GeometryUtilities& geometryUtilities,
                                                   const IMeshDAO& convexMesh) const;
 
+      /// \brief Fill Mesh2D Geometric Data given a mesh with mesh cells type
+      /// \param mesh the mesh
+      /// \param meshCell2DsPolygonType the cell2D polygon type
+      /// \return the MeshGeometricData computed
+      MeshGeometricData2D FillMesh2DGeometricData(const GeometryUtilities& geometryUtilities,
+                                                  const IMeshDAO& mesh,
+                                                  const std::vector<GeometryUtilities::PolygonTypes>& meshCell2DsPolygonType) const;
+
       /// \brief Fill Mesh2D Geometric Data starting given a mesh with non convex mesh cells and its convex sub-mesh cells
       /// \param mesh the mesh
       /// \param convexMesh the convex mesh cells of mesh
@@ -278,8 +287,6 @@ namespace Gedim
       MeshGeometricData3D FillMesh3DGeometricData(const GeometryUtilities& geometryUtilities,
                                                   const IMeshDAO& mesh,
                                                   const IMeshDAO& convexMesh,
-                                                  const std::vector<std::vector<unsigned int>>& meshCell2DToConvexCell2DIndices,
-                                                  const std::vector<std::vector<unsigned int>>& meshCell2DToConvexCell3DIndices,
                                                   const std::vector<std::vector<unsigned int>>& meshCell3DToConvexCell3DIndices) const;
 
       /// \brief Compute Cell1D Cell2DNeighbours with given mesh data

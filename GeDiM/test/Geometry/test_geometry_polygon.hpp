@@ -929,86 +929,16 @@ namespace GedimUnitTesting
       Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
       Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
-      std::string exportFolder = "./Export/TestPolygonType";
-      Gedim::Output::CreateFolder(exportFolder);
-
-      // check triangle
-      {
-        Eigen::Matrix3d polygonVertices;
-        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
-        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
-        polygonVertices.col(2)<< 0.0, 1.0, 0.0;
-
-        Gedim::VTKUtilities vtuExporter;
-        vtuExporter.AddPolygon(polygonVertices);
-        vtuExporter.Export(exportFolder + "/Triangle.vtu");
-
-        ASSERT_EQ(geometryUtilities.PolygonType(polygonVertices),
-                  Gedim::GeometryUtilities::PolygonTypes::Triangle);
-      }
-
-      // check quadrilateral polygon 2D
-      {
-        Eigen::MatrixXd polygonVertices(3, 4);
-        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
-        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
-        polygonVertices.col(2)<< 0.25, 0.25, 0.0;
-        polygonVertices.col(3)<< 0.0, 1.0, 0.0;
-
-        Gedim::VTKUtilities vtuExporter;
-        vtuExporter.AddPolygon(polygonVertices);
-        vtuExporter.Export(exportFolder + "/Quadrilateral.vtu");
-
-        ASSERT_EQ(geometryUtilities.PolygonType(polygonVertices),
-                  Gedim::GeometryUtilities::PolygonTypes::Quadrilateral);
-      }
-
-      // check triangle with aligned edges polygon 2D
-      {
-        Eigen::MatrixXd polygonVertices(3, 4);
-        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
-        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
-        polygonVertices.col(2)<< 0.5, 0.5, 0.0;
-        polygonVertices.col(3)<< 0.0, 1.0, 0.0;
-
-        Gedim::VTKUtilities vtuExporter;
-        vtuExporter.AddPolygon(polygonVertices);
-        vtuExporter.Export(exportFolder + "/Triangle_Aligned_FourVertices.vtu");
-
-        vector<unsigned int> unalignedPoint = geometryUtilities.UnalignedPoints(polygonVertices);
-
-        Eigen::MatrixXd extraction = geometryUtilities.ExtractPoints(polygonVertices,
-                                                                     unalignedPoint);
-
-        ASSERT_EQ(geometryUtilities.PolygonType(extraction),
-                  Gedim::GeometryUtilities::PolygonTypes::Triangle);
-      }
-
-      // check triangle with aligned edges polygon 2D
-      {
-        Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
-        geometryUtilitiesConfig.Tolerance = 1.0e-6;
-
-        Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
-
-        Eigen::MatrixXd polygonVertices(3, 5);
-        polygonVertices.row(0)<< -6.7551755846909700e+01,  2.1213463915286457e+02,  1.9749033740485797e+02,  9.3224746337499681e+01, -6.9256931141854736e+01;
-        polygonVertices.row(1)<<  6.1426943651822239e+02,  5.2548340521713953e+02,  6.2453837475848638e+02,  6.2073605870592917e+02,  6.1481074188566845e+02;
-        polygonVertices.row(2)<<  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00;
-
-        Gedim::VTKUtilities vtuExporter;
-        vtuExporter.AddPolygon(polygonVertices);
-        vtuExporter.Export(exportFolder + "/Triangle_Aligned_FiveVertices.vtu");
-
-        vector<unsigned int> unalignedPoint = geometryUtilities.UnalignedPoints(polygonVertices);
-
-        Eigen::MatrixXd extraction = geometryUtilities.ExtractPoints(polygonVertices,
-                                                                     unalignedPoint);
-
-        ASSERT_EQ(geometryUtilities.PolygonType(extraction),
-                  Gedim::GeometryUtilities::PolygonTypes::Triangle);
-      }
-
+      ASSERT_EQ(Gedim::GeometryUtilities::PolygonTypes::Triangle,
+                geometryUtilities.PolygonType(3, true));
+      ASSERT_EQ(Gedim::GeometryUtilities::PolygonTypes::Quadrilateral_Convex,
+                geometryUtilities.PolygonType(4, true));
+      ASSERT_EQ(Gedim::GeometryUtilities::PolygonTypes::Quadrilateral_Concave,
+                geometryUtilities.PolygonType(4, false));
+      ASSERT_EQ(Gedim::GeometryUtilities::PolygonTypes::Generic_Convex,
+                geometryUtilities.PolygonType(5, true));
+      ASSERT_EQ(Gedim::GeometryUtilities::PolygonTypes::Generic_Concave,
+                geometryUtilities.PolygonType(5, false));
     }
     catch (const exception& exception)
     {
@@ -1164,6 +1094,9 @@ namespace GedimUnitTesting
   {
     try
     {
+      std::string exportFolder = "./Export/TestPolygonTriangulation";
+      Gedim::Output::CreateFolder(exportFolder);
+
       Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
       Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
@@ -1179,6 +1112,7 @@ namespace GedimUnitTesting
         ASSERT_EQ(geometryUtilities.PolygonTriangulationByFirstVertex(polygonVertices), vector<unsigned int>({ 0, 1, 2 }));
         ASSERT_EQ(geometryUtilities.PolygonTriangulationByInternalPoint(polygonVertices,
                                                                         internalPoint), vector<unsigned int>({ 3, 0, 1, 3, 1, 2, 3, 2, 0 }));
+        ASSERT_EQ(geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices), vector<unsigned int>({ 0, 1, 2 }));
       }
 
       // check square triangulation
@@ -1194,6 +1128,108 @@ namespace GedimUnitTesting
         ASSERT_EQ(geometryUtilities.PolygonTriangulationByFirstVertex(polygonVertices), vector<unsigned int>({ 0, 1, 2, 0, 2, 3 }));
         ASSERT_EQ(geometryUtilities.PolygonTriangulationByInternalPoint(polygonVertices,
                                                                         internalPoint), vector<unsigned int>({ 4, 0, 1, 4, 1, 2, 4, 2, 3, 4, 3, 0 }));
+        ASSERT_EQ(geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices), vector<unsigned int>({ 0, 1, 3, 1, 2, 3 }));
+      }
+
+      // check pentagon triangulation
+      {
+        Eigen::MatrixXd polygonVertices(3, 5);
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(2)<< 1.0, 1.0, 0.0;
+        polygonVertices.col(3)<< 0.5, 1.5, 0.0;
+        polygonVertices.col(4)<< 0.0, 1.0, 0.0;
+
+        ASSERT_EQ(geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices), vector<unsigned int>({ 0, 1, 4, 1, 2, 4, 2, 3, 4 }));
+      }
+    }
+    catch (const exception& exception)
+    {
+      cerr<< exception.what()<< endl;
+      FAIL();
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestConcavePolygonTriangulation)
+  {
+    try
+    {
+      std::string exportFolder = "./Export/TestConcavePolygonTriangulation";
+      Gedim::Output::CreateFolder(exportFolder);
+
+      Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+      Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+      // check simple cocanve triangulation
+      {
+        Eigen::MatrixXd polygonVertices(3, 4);
+        polygonVertices.col(0)<< 0.0, 0.0, 0.0;
+        polygonVertices.col(1)<< -1.0, -1.0, 0.0;
+        polygonVertices.col(2)<< 1.0, 0.0, 0.0;
+        polygonVertices.col(3)<< -1.0, 1.0, 0.0;
+
+        {
+          Gedim::VTKUtilities vtuExporter;
+          vtuExporter.AddPolygon(polygonVertices);
+          vtuExporter.Export(exportFolder + "/Concave_Simple.vtu");
+        }
+
+        const std::vector<unsigned int> triangles = geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices);
+
+        {
+          const Eigen::MatrixXd trianglePoints = geometryUtilities.ExtractPoints(polygonVertices,
+                                                                                 triangles);
+
+          Gedim::VTKUtilities vtuExporter;
+
+          const unsigned int numTriangles = trianglePoints.cols() / 3;
+          for (unsigned int t = 0; t < numTriangles; t++)
+            vtuExporter.AddPolygon(trianglePoints.block(0, 3 * t, 3, 3));
+
+          vtuExporter.Export(exportFolder + "/Concave_Simple_Triangles.vtu");
+        }
+
+        ASSERT_EQ(vector<unsigned int>({ 1, 2, 0, 0, 2, 3 }),
+                  triangles);
+      }
+
+      // check complex cocanve triangulation
+      {
+        Eigen::MatrixXd polygonVertices(3, 10);
+        polygonVertices.col(0)<< 1.00, 2.25, 0.0;
+        polygonVertices.col(1)<< 2.00, 1.00, 0.0;
+        polygonVertices.col(2)<< 3.00, 2.00, 0.0;
+        polygonVertices.col(3)<< 4.00, 1.25, 0.0;
+        polygonVertices.col(4)<< 5.00, 3.00, 0.0;
+        polygonVertices.col(5)<< 3.75, 2.75, 0.0;
+        polygonVertices.col(6)<< 3.25, 4.00, 0.0;
+        polygonVertices.col(7)<< 2.50, 1.75, 0.0;
+        polygonVertices.col(8)<< 1.25, 2.50, 0.0;
+        polygonVertices.col(9)<< 1.75, 3.50, 0.0;
+
+        {
+          Gedim::VTKUtilities vtuExporter;
+          vtuExporter.AddPolygon(polygonVertices);
+          vtuExporter.Export(exportFolder + "/Concave_Complex.vtu");
+        }
+
+        const std::vector<unsigned int> triangles = geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices);
+
+        {
+          const Eigen::MatrixXd trianglePoints = geometryUtilities.ExtractPoints(polygonVertices,
+                                                                                 triangles);
+
+          Gedim::VTKUtilities vtuExporter;
+
+          const unsigned int numTriangles = trianglePoints.cols() / 3;
+          for (unsigned int t = 0; t < numTriangles; t++)
+            vtuExporter.AddPolygon(trianglePoints.block(0, 3 * t, 3, 3));
+
+          vtuExporter.Export(exportFolder + "/Concave_Complex_Triangles.vtu");
+        }
+
+        ASSERT_EQ(vector<unsigned int>({ 3, 4, 2, 4, 5, 2, 6, 7, 5, 5, 7, 1, 1, 7, 0, 7, 8, 0, 0, 8, 9 }),
+                  triangles);
       }
     }
     catch (const exception& exception)
