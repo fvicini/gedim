@@ -741,31 +741,52 @@ namespace GedimUnitTesting {
 
       const Eigen::Vector3d planeNormal = Eigen::Vector3d::Constant(1.0).normalized();
       const Eigen::Vector3d planeOrigin = Eigen::Vector3d(0.0, 0.0, 1.0);
+      const std::array<Eigen::Vector3d, 3> planePoints =
+      {
+        Eigen::Vector3d(0.0, 0.0, 1.0),
+        Eigen::Vector3d(2.0, -1.0, 0.0),
+        Eigen::Vector3d(3.0, -2.0, 0.0)
+      };
 
       // check point on plane
       {
         const Eigen::Vector3d point = Eigen::Vector3d(5.0, -5.0, 1.0);
-        ASSERT_EQ(geometryUtilities.PointPlanePosition(point,
-                                                       planeNormal,
-                                                       planeOrigin),
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planeNormal,
+                                                         planeOrigin)),
+                  Gedim::GeometryUtilities::PointPlanePositionTypes::OnPlane);
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planePoints)),
                   Gedim::GeometryUtilities::PointPlanePositionTypes::OnPlane);
       }
 
       // check curvilinear coordinate coincident
       {
         const Eigen::Vector3d point = Eigen::Vector3d(-1.0, -1.0, -2.0);
-        ASSERT_EQ(geometryUtilities.PointPlanePosition(point,
-                                                       planeNormal,
-                                                       planeOrigin),
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planeNormal,
+                                                         planeOrigin)),
+                  Gedim::GeometryUtilities::PointPlanePositionTypes::Negative);
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planePoints)),
                   Gedim::GeometryUtilities::PointPlanePositionTypes::Negative);
       }
 
       // check curvilinear coordinate before
       {
         const Eigen::Vector3d point = Eigen::Vector3d(0.0, 1.0, 2.0);
-        ASSERT_EQ(geometryUtilities.PointPlanePosition(point,
-                                                       planeNormal,
-                                                       planeOrigin),
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planeNormal,
+                                                         planeOrigin)),
+                  Gedim::GeometryUtilities::PointPlanePositionTypes::Positive);
+        ASSERT_EQ(geometryUtilities.PointPlanePosition(
+                    geometryUtilities.PointPlaneDistance(point,
+                                                         planePoints)),
                   Gedim::GeometryUtilities::PointPlanePositionTypes::Positive);
       }
     }
