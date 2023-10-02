@@ -94,6 +94,9 @@ namespace Gedim
       virtual bool Cell0DUpdatedCell0Ds(const unsigned int& cell0DIndex,
                                         std::list<unsigned int>& updatedCell0DIds) const = 0;
 
+      /// \brief Initialize the Cell0Ds Cell1D neighbours number
+      /// \param numbersNeighbourCell1Ds the number of Cell1D neighbours of each Cell0D, size 1 x Cell0DTotalNumber()
+      virtual void Cell0DsInitializeNeighbourCell1Ds(const std::vector<unsigned int>& numbersNeighbourCell1Ds) = 0;
       /// \brief Initialize the Cell0D Cell1D neighbours number
       /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
       /// \param numberNeighbourCell1Ds the number of Cell1D neighbours of the Cell0D
@@ -127,6 +130,9 @@ namespace Gedim
       virtual void Cell0DResetNeighbourCell1D(const unsigned int& cell0DIndex,
                                               const unsigned int& neighbourIndex) = 0;
 
+      /// \brief Initialize the Cell0Ds Cell2D neighbours number
+      /// \param numbersNeighbourCell2Ds the number of Cell2D neighbours of each Cell0D, size 1 x Cell0DTotalNumber()
+      virtual void Cell0DsInitializeNeighbourCell2Ds(const std::vector<unsigned int>& numbersNeighbourCell2Ds) = 0;
       /// \brief Initialize the Cell0D Cell2D neighbours number
       /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
       /// \param numberNeighbourCell2Ds the number of Cell2D neighbours of the Cell0D
@@ -159,6 +165,9 @@ namespace Gedim
       virtual void Cell0DResetNeighbourCell2D(const unsigned int& cell0DIndex,
                                               const unsigned int& neighbourIndex) = 0;
 
+      /// \brief Initialize the Cell0Ds Cell3D neighbours number
+      /// \param numbersNeighbourCell3Ds the number of Cell3D neighbours of each Cell0D, size 1 x Cell0DTotalNumber()
+      virtual void Cell0DsInitializeNeighbourCell3Ds(const std::vector<unsigned int>& numbersNeighbourCell3Ds) = 0;
       /// \brief Initialize the Cell0D Cell3D neighbours number
       /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
       /// \param numberNeighbourCell3Ds the number of Cell3D neighbours of the Cell0D
@@ -199,6 +208,11 @@ namespace Gedim
       /// \param propertyId the id of Cell0Ds property
       /// \return the double property position
       virtual unsigned int Cell0DAddDoubleProperty(const std::string& propertyId) = 0;
+      /// \brief Initialize the Cell0Ds double property sizes
+      /// \param propertyIndex the index of Cell0D double property from 0 to Cell0DNumberProperties()
+      /// \param porpertySize the double property size of each Cell0D, size 1 x Cell0DTotalNumber()
+      virtual void Cell0DsInitializeDoublePropertyValues(const unsigned int& propertyIndex,
+                                                         const std::vector<unsigned int>& porpertySizes) = 0;
       /// \brief Initialize the Cell0Ds double property size
       /// \param cell0DIndex the index of Cell0D from 0 to Cell0DTotalNumber()
       /// \param propertyIndex the index of Cell0D double property from 0 to Cell0DNumberProperties()
@@ -348,6 +362,13 @@ namespace Gedim
       virtual bool Cell1DUpdatedCell1Ds(const unsigned int& cell1DIndex,
                                         std::list<unsigned int>& updatedCell1DIds) const = 0;
 
+      /// \brief Initialize the Cell1Ds Cell2D neighbours number
+      /// \param numbersNeighbourCell2Ds the number of Cell2D neighbours of each Cell1D, size 1 x Cell1DTotalNumber()
+      virtual void Cell1DsInitializeNeighbourCell2Ds(const std::vector<unsigned int>& numbersNeighbourCell2Ds) = 0;
+      /// \brief Initialize the Cell1Ds Cell2D neighbours number
+      /// \param numberNeighbourCell2Ds the number of Cell2D neighbours of the Cell1D
+      virtual void Cell1DsInitializeNeighbourCell2Ds(const unsigned int& numberNeighbourCell2Ds) = 0;
+
       /// \brief Initialize the Cell1D Cell2D neighbours number
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param numberNeighbourCell2Ds the number of Cell2D neighbours of the Cell1D
@@ -380,6 +401,9 @@ namespace Gedim
       virtual void Cell1DResetNeighbourCell2D(const unsigned int& cell1DIndex,
                                               const unsigned int& neighbourIndex) = 0;
 
+      /// \brief Initialize the Cell1Ds Cell3D neighbours number
+      /// \param numbersNeighbourCell3Ds the number of Cell2D neighbours of each Cell1D, size 1 x Cell1DTotalNumber()
+      virtual void Cell1DsInitializeNeighbourCell3Ds(const std::vector<unsigned int>& numbersNeighbourCell3Ds) = 0;
       /// \brief Initialize the Cell1D Cell3D neighbours number
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param numberNeighbourCell3Ds the number of Cell3D neighbours of the Cell1D
@@ -421,6 +445,11 @@ namespace Gedim
       /// \param propertyId the id of Cell1Ds property
       /// \return the double property position
       virtual unsigned int Cell1DAddDoubleProperty(const std::string& propertyId) = 0;
+      /// \brief Initialize the Cell1Ds double property sizes
+      /// \param propertyIndex the index of Cell1D double property from 0 to Cell1DNumberProperties()
+      /// \param porpertySize the double property size of each Cell1D, size 1 x Cell1DTotalNumber()
+      virtual void Cell1DsInitializeDoublePropertyValues(const unsigned int& propertyIndex,
+                                                         const std::vector<unsigned int>& porpertySizes) = 0;
       /// \brief Initialize the Cell1Ds double property size
       /// \param cell1DIndex the index of Cell1D from 0 to Cell1DTotalNumber()
       /// \param propertyIndex the index of Cell1D double property from 0 to Cell1DNumberProperties()
@@ -473,16 +502,34 @@ namespace Gedim
       /// \param cell2DIndex the index of Cell0D from 0 to Cell2DTotalNumber()
       /// \note the cell2D is removed and no integrity check in the mesh are performed
       virtual void Cell2DRemove(const unsigned int& cell2DIndex) = 0;
+      /// \brief Initialize the Cell2Ds vertices number
+      /// \param numberCell2DVertices the number of vertices of all Cell2Ds
+      virtual void Cell2DsInitializeVertices(const unsigned int& numberCell2DVertices) = 0;
+      /// \brief Initialize the Cell2Ds vertices number
+      /// \param numberCell2DsVertices the number of vertices of each Cell2D
+      virtual void Cell2DsInitializeVertices(const std::vector<unsigned int>& numberCell2DsVertices) = 0;
       /// \brief Initialize the Cell2D vertices  number
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param numberCell2DVertices the number of vertices of Cell2D
       virtual void Cell2DInitializeVertices(const unsigned int& cell2DIndex,
                                             const unsigned int& numberCell2DVertices) = 0;
+      /// \brief Initialize the Cell2Ds edges number
+      /// \param numberCell2DEdges the number of edges of all Cell2Ds
+      virtual void Cell2DsInitializeEdges(const unsigned int& numberCell2DEdges) = 0;
+      /// \brief Initialize the Cell2Ds edges number
+      /// \param numberCell2DsEdges the number of edges of each Cell2D
+      virtual void Cell2DsInitializeEdges(const std::vector<unsigned int>& numberCell2DsEdges) = 0;
       /// \brief Initialize the Cell2D edges number
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param numberCell2DEdges the number of edges of Cell2D
       virtual void Cell2DInitializeEdges(const unsigned int& cell2DIndex,
                                          const unsigned int& numberCell2DEdges) = 0;
+      /// \brief Insert the Cell2D vertex
+      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param verticesCell0DIndices the Cell0D vertices index from 0 to Cell0DTotalNumber()
+      /// \note Cell2DInitializeVertices() should be called before using this method
+      virtual void Cell2DInsertVertices(const unsigned int& cell2DIndex,
+                                        const std::vector<unsigned int>& verticesCell0DIndices) = 0;
       /// \brief Insert the Cell2D vertex
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param vertexIndex the number of vertex of the Cell2D from 0 to Cell2DNumberVertices(cell2DIndex)
@@ -497,6 +544,12 @@ namespace Gedim
       /// \note No itialization is necessary
       virtual void Cell2DAddVertices(const unsigned int& cell2DIndex,
                                      const std::vector<unsigned int>& verticesCell0DIndices) = 0;
+      /// \brief Insert the Cell2D edge
+      /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param edgesCell1DIndices the Cell1D edges indices from 0 to Cell1DTotalNumber()
+      /// \note Cell2DInitializeEdges() should be called before using this method
+      virtual void Cell2DInsertEdges(const unsigned int& cell2DIndex,
+                                     const std::vector<unsigned int>& edgesCell1DIndices) = 0;
       /// \brief Insert the Cell2D edge
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param edgeIndex the number of edge of the Cell2D from 0 to Cell2DNumberEdges(cell2DIndex)
@@ -619,6 +672,9 @@ namespace Gedim
       virtual bool Cell2DUpdatedCell2Ds(const unsigned int& cell2DIndex,
                                         std::list<unsigned int>& updatedCell2DIds) const = 0;
 
+      /// \brief Initialize the Cell2Ds Cell3D neighbours number
+      /// \param numbersNeighbourCell3Ds the number of Cell3D neighbours of each Cell2D, size 1 x Cell2DTotalNumber()
+      virtual void Cell2DsInitializeNeighbourCell3Ds(const std::vector<unsigned int>& numbersNeighbourCell3Ds) = 0;
       /// \brief Initialize the Cell2D Cell3D neighbours number
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param numberNeighbourCell3Ds the number of Cell3D neighbours of the Cell2D
@@ -659,6 +715,11 @@ namespace Gedim
       /// \param propertyId the id of Cell2Ds property
       /// \return the double property position
       virtual unsigned int Cell2DAddDoubleProperty(const std::string& propertyId) = 0;
+      /// \brief Initialize the Cell2Ds double property sizes
+      /// \param propertyIndex the index of Cell2D double property from 0 to Cell2DNumberProperties()
+      /// \param porpertySize the double property size of each Cell2D, size 1 x Cell2DTotalNumber()
+      virtual void Cell2DsInitializeDoublePropertyValues(const unsigned int& propertyIndex,
+                                                         const std::vector<unsigned int>& porpertySizes) = 0;
       /// \brief Initialize the Cell2Ds double property size
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param propertyIndex the index of Cell2D double property from 0 to Cell2DNumberProperties()
@@ -699,6 +760,10 @@ namespace Gedim
                                                const unsigned int& propertyIndex,
                                                const unsigned int& propertyValueIndex) const = 0;
 
+      /// \brief Initialize the Cell2D subdivision number for each Cell2D
+      /// \param numberSubDivisions the number of sub-polygons for each Cell2D, size 1 x Cell2DTotalNumber()
+      /// \note each subdivision is a triangle, thus numberSubDivision shall be a multiple of 3
+      virtual void Cell2DsInitializeSubDivision(const std::vector<unsigned int>& numberSubDivisions) = 0;
       /// \brief Initialize the Cell2D subdivision number
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
       /// \param numberSubDivision the number of sub-polygons of the Cell2D
@@ -738,16 +803,25 @@ namespace Gedim
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \note the cell3D is removed and no integrity check in the mesh are performed
       virtual void Cell3DRemove(const unsigned int& cell3DIndex) = 0;
+      /// \brief Initialize the Cell3Ds vertices number
+      /// \param numberCell3DsVertices the number of vertices of each Cell3D
+      virtual void Cell3DsInitializeVertices(const std::vector<unsigned int>& numberCell3DsVertices) = 0;
       /// \brief Initialize the Cell3D vertices  number
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \param numberCell3DVertices the number of vertices of Cell3D
       virtual void Cell3DInitializeVertices(const unsigned int& cell3DIndex,
                                             const unsigned int& numberCell3DVertices) = 0;
+      /// \brief Initialize the Cell3Ds edges number
+      /// \param numberCell3DsEdges the number of edges of each Cell3D
+      virtual void Cell3DsInitializeEdges(const std::vector<unsigned int>& numberCell3DsEdges) = 0;
       /// \brief Initialize the Cell3D edges number
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \param numberCell3DEdges the number of edges of Cell3D
       virtual void Cell3DInitializeEdges(const unsigned int& cell3DIndex,
                                          const unsigned int& numberCell3DEdges) = 0;
+      /// \brief Initialize the Cell3Ds faces number
+      /// \param numberCell3DsFaces the number of faces of each Cell3D
+      virtual void Cell3DsInitializeFaces(const std::vector<unsigned int>& numberCell3DsFaces) = 0;
       /// \brief Initialize the Cell3D faces number
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \param numberCell3DFaces the number of faces of Cell3D
@@ -900,6 +974,11 @@ namespace Gedim
       /// \param propertyId the id of Cell3Ds property
       /// \return the double property position
       virtual unsigned int Cell3DAddDoubleProperty(const std::string& propertyId) = 0;
+      /// \brief Initialize the Cell3Ds double property sizes
+      /// \param propertyIndex the index of Cell3D double property from 0 to Cell3DNumberProperties()
+      /// \param porpertySize the double property size of each Cell3D, size 1 x Cell3DTotalNumber()
+      virtual void Cell3DsInitializeDoublePropertyValues(const unsigned int& propertyIndex,
+                                                         const std::vector<unsigned int>& porpertySizes) = 0;
       /// \brief Initialize the Cell3Ds double property size
       /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
       /// \param propertyIndex the index of Cell3D double property from 0 to Cell3DNumberProperties()

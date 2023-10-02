@@ -53,6 +53,16 @@ namespace Gedim
 
       struct RefinePolygon_Result final
       {
+          enum struct ResultTypes
+          {
+            Unknown = 0,
+            Successfull = 1,
+            Cell2DAlreadySplitted = 2,
+            Cell2DSplitUnderTolerance = 3,
+            SplitDirectionNotInsideCell2D = 4,
+            SplitQualityCheckCell2DFailed = 5
+          };
+
           struct RefinedCell1D final
           {
               enum struct Types
@@ -103,6 +113,8 @@ namespace Gedim
           std::vector<unsigned int> NewCell0DsIndex = {};
           std::vector<RefinedCell1D> NewCell1DsIndex = {};
           std::vector<unsigned int> NewCell2DsIndex = {};
+
+          ResultTypes ResultType = ResultTypes::Unknown;
       };
 
       struct RefinePolygon_UpdateNeighbour_Result final
@@ -159,37 +171,47 @@ namespace Gedim
                                                  IMeshDAO& mesh) const;
       bool SplitPolygon_CheckIsToSplit(const RefinePolygon_Result::Cell1DToSplit& cell1DSplitOne,
                                        const RefinePolygon_Result::Cell1DToSplit& cell1DSplitTwo) const;
+      bool SplitPolygon_CheckIsToSplit_Relaxed(const RefinePolygon_Result::Cell1DToSplit& cell1DSplitOne,
+                                               const RefinePolygon_Result::Cell1DToSplit& cell1DSplitTwo) const;
 
-      bool SplitPolygon_CheckArea(const Eigen::VectorXi& newCell2DVertices,
-                                  IMeshDAO& mesh) const;
+      bool SplitPolygon_IsAreaPositive(const Eigen::VectorXi& newCell2D_Indices,
+                                       const Eigen::MatrixXd& newCell2D_Vertices,
+                                       IMeshDAO& mesh) const;
 
-      SplitPolygon_Result SplitPolygon_NoNewVertices(const unsigned int& cell2DIndex,
+      SplitPolygon_Result SplitPolygon_NoNewVertices(const unsigned int cell2DIndex,
                                                      const unsigned int cell2DNumVertices,
-                                                     const unsigned int& fromVertex,
-                                                     const unsigned int& toVertex,
+                                                     const unsigned int fromVertex,
+                                                     const unsigned int toVertex,
+                                                     const Eigen::MatrixXd& cell2DVertices,
                                                      IMeshDAO& mesh) const;
-      SplitPolygon_Result SplitPolygon_NewVertexFrom(const unsigned int& cell2DIndex,
+      SplitPolygon_Result SplitPolygon_NewVertexFrom(const unsigned int cell2DIndex,
                                                      const unsigned int cell2DNumVertices,
-                                                     const unsigned int& fromEdge,
-                                                     const unsigned int& toVertex,
-                                                     const unsigned int& fromNewCell0DIndex,
+                                                     const unsigned int fromEdge,
+                                                     const unsigned int toVertex,
+                                                     const Eigen::MatrixXd& cell2DVertices,
+                                                     const Eigen::Vector3d& newCell2DVertex,
+                                                     const unsigned int fromNewCell0DIndex,
                                                      const std::vector<unsigned int>& fromSplitCell1DsIndex,
                                                      const bool& fromEdgeDirection,
                                                      IMeshDAO& mesh) const;
-      SplitPolygon_Result SplitPolygon_NewVertexTo(const unsigned int& cell2DIndex,
+      SplitPolygon_Result SplitPolygon_NewVertexTo(const unsigned int cell2DIndex,
                                                    const unsigned int cell2DNumVertices,
-                                                   const unsigned int& fromVertex,
-                                                   const unsigned int& toEdge,
-                                                   const unsigned int& toNewCell0DIndex,
+                                                   const unsigned int fromVertex,
+                                                   const unsigned int toEdge,
+                                                   const Eigen::MatrixXd& cell2DVertices,
+                                                   const Eigen::Vector3d& newCell2DVertex,
+                                                   const unsigned int toNewCell0DIndex,
                                                    const std::vector<unsigned int>& toSplitCell1DsIndex,
                                                    const bool& toEdgeDirection,
                                                    IMeshDAO& mesh) const;
-      SplitPolygon_Result SplitPolygon_NewVertices(const unsigned int& cell2DIndex,
+      SplitPolygon_Result SplitPolygon_NewVertices(const unsigned int cell2DIndex,
                                                    const unsigned int cell2DNumVertices,
-                                                   const unsigned int& fromEdge,
-                                                   const unsigned int& toEdge,
-                                                   const unsigned int& fromNewCell0DIndex,
-                                                   const unsigned int& toNewCell0DIndex,
+                                                   const unsigned int fromEdge,
+                                                   const unsigned int toEdge,
+                                                   const Eigen::MatrixXd& cell2DVertices,
+                                                   const std::array<Eigen::Vector3d, 2>& newCell2DVertices,
+                                                   const unsigned int fromNewCell0DIndex,
+                                                   const unsigned int toNewCell0DIndex,
                                                    const std::vector<unsigned int>& fromSplitCell1DsIndex,
                                                    const std::vector<unsigned int>& toSplitCell1DsIndex,
                                                    const bool& fromEdgeDirection,
@@ -207,10 +229,12 @@ namespace Gedim
 
       /// \brief Refine Triangle Cell2D By Edge
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()
+      /// \param cell2DVertices the cell2D 2D vertices
       /// \param edgeIndex the edge local index to split
       /// \param oppositeVertexIndex the vertex opposite to edge local index
       /// \param mesh the mesh to be updated
       RefinePolygon_Result RefineTriangleCell_ByEdge(const unsigned int& cell2DIndex,
+                                                     const Eigen::MatrixXd& cell2DVertices,
                                                      const unsigned int& edgeIndex,
                                                      const unsigned int& oppositeVertexIndex,
                                                      const std::vector<bool>& cell2DEdgesDirection,
@@ -230,6 +254,7 @@ namespace Gedim
                                                const unsigned int& newCell0DIndex,
                                                const std::vector<unsigned int>& splitCell1DsIndex,
                                                const bool& cell2DEdgeDirection,
+                                               const std::vector<Eigen::MatrixXd>& cell2DsVertices,
                                                IMeshDAO& mesh) const;
 
       /// \brief Refine Polygon Cell2D By Direction

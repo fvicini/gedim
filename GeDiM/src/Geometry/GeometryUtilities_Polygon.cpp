@@ -298,6 +298,24 @@ namespace Gedim
                                PolygonTypes::Generic_Concave;
   }
   // ***************************************************************************
+  GeometryUtilities::PolygonOrientations GeometryUtilities::PolygonOrientation(const std::vector<unsigned int>& convexHull) const
+  {
+    Gedim::Output::Assert(convexHull.size() > 2);
+
+    const unsigned int minIndex = std::distance(std::begin(convexHull),
+                                                std::min_element(std::begin(convexHull),
+                                                                 std::end(convexHull)));
+    const unsigned int minIndex_next = (minIndex + 1) % convexHull.size();
+    const unsigned int minIndex_next_next = (minIndex_next + 1) % convexHull.size();
+
+    if (convexHull[minIndex_next] < convexHull[minIndex_next_next])
+      return PolygonOrientations::CounterClockwise;
+    else
+      return PolygonOrientations::Clockwise;
+
+    throw runtime_error("Polygon orientation not detected");
+  }
+  // ***************************************************************************
   vector<unsigned int> GeometryUtilities::PolygonTriangulationByFirstVertex(const Eigen::MatrixXd& polygonVertices) const
   {
     Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
