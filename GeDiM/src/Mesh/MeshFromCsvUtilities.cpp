@@ -136,7 +136,18 @@ namespace Gedim
     if (numCell2Ds == 0)
       return;
 
+    std::vector<unsigned int> numberVertices(numCell2Ds), numberEdges(numCell2Ds);
+    for (unsigned int f = 0; f < numCell2Ds; f++)
+    {
+      const Cell2D& cell2D = cell2Ds[f];
+
+      numberVertices[f] = cell2D.Vertices.size();
+      numberEdges[f] = cell2D.Edges.size();
+    }
+
     mesh.Cell2DsInitialize(numCell2Ds);
+    mesh.Cell2DsInitializeVertices(numberVertices);
+    mesh.Cell2DsInitializeEdges(numberEdges);
     for (unsigned int f = 0; f < numCell2Ds; f++)
     {
       const Cell2D& cell2D = cell2Ds[f];
@@ -148,11 +159,9 @@ namespace Gedim
       const unsigned int numCellEdges = cell2D.Edges.size();
       Output::Assert(numCellVertices == numCellEdges);
 
-      mesh.Cell2DInitializeVertices(f, numCellVertices);
       for (unsigned int v = 0; v < numCellVertices; v++)
         mesh.Cell2DInsertVertex(f, v, cell2D.Vertices[v]);
 
-      mesh.Cell2DInitializeEdges(f, numCellEdges);
       for (unsigned int e = 0; e < numCellEdges; e++)
         mesh.Cell2DInsertEdge(f, e, cell2D.Edges[e]);
     }
@@ -166,7 +175,23 @@ namespace Gedim
     if (numCell3Ds == 0)
       return;
 
+    std::vector<unsigned int> numberVertices(numCell3Ds);
+    std::vector<unsigned int> numberEdges(numCell3Ds);
+    std::vector<unsigned int> numberFaces(numCell3Ds);
+    for (unsigned int c = 0; c < numCell3Ds; c++)
+    {
+      const Cell3D& cell3D = cell3Ds[c];
+
+      numberVertices[c] = cell3D.Vertices.size();
+      numberEdges[c] = cell3D.Edges.size();
+      numberFaces[c] = cell3D.Faces.size();
+    }
+
     mesh.Cell3DsInitialize(numCell3Ds);
+    mesh.Cell3DsInitializeVertices(numberVertices);
+    mesh.Cell3DsInitializeEdges(numberEdges);
+    mesh.Cell3DsInitializeFaces(numberFaces);
+
     for (unsigned int c = 0; c < numCell3Ds; c++)
     {
       const Cell3D& cell3D = cell3Ds[c];
@@ -178,15 +203,12 @@ namespace Gedim
       const unsigned int numCellEdges = cell3D.Edges.size();
       const unsigned int numCellFaces = cell3D.Faces.size();
 
-      mesh.Cell3DInitializeVertices(c, numCellVertices);
       for (unsigned int v = 0; v < numCellVertices; v++)
         mesh.Cell3DInsertVertex(c, v, cell3D.Vertices[v]);
 
-      mesh.Cell3DInitializeEdges(c, numCellEdges);
       for (unsigned int e = 0; e < numCellEdges; e++)
         mesh.Cell3DInsertEdge(c, e, cell3D.Edges[e]);
 
-      mesh.Cell3DInitializeFaces(c, numCellFaces);
       for (unsigned int f = 0; f < numCellFaces; f++)
         mesh.Cell3DInsertFace(c, f, cell3D.Faces[f]);
     }
@@ -200,13 +222,25 @@ namespace Gedim
     if (numCell0Ds == 0)
       return;
 
+    std::vector<unsigned int> numberNeighbours1D(numCell0Ds), numberNeighbours2D(numCell0Ds), numberNeighbours3D(numCell0Ds);
+    for (unsigned int v = 0; v < numCell0Ds; v++)
+    {
+      const MeshFromCsvUtilities::Cell0DNeighbours& cell0D = cell0DNeighbours[v];
+
+      numberNeighbours1D[v] = cell0D.Cell1DNeighbours.size();
+      numberNeighbours2D[v] = cell0D.Cell2DNeighbours.size();
+      numberNeighbours3D[v] = cell0D.Cell3DNeighbours.size();
+    }
+
+    mesh.Cell0DsInitializeNeighbourCell1Ds(numberNeighbours1D);
+    mesh.Cell0DsInitializeNeighbourCell2Ds(numberNeighbours2D);
+    mesh.Cell0DsInitializeNeighbourCell3Ds(numberNeighbours3D);
+
     for (unsigned int v = 0; v < numCell0Ds; v++)
     {
       const MeshFromCsvUtilities::Cell0DNeighbours& cell0D = cell0DNeighbours[v];
 
       const unsigned int numCell1DNeighbours = cell0D.Cell1DNeighbours.size();
-
-      mesh.Cell0DInitializeNeighbourCell1Ds(v, numCell1DNeighbours);
       for (unsigned int n = 0; n < numCell1DNeighbours; n++)
       {
         if (cell0D.Cell1DNeighbours[n] >= mesh.Cell1DTotalNumber())
@@ -216,8 +250,6 @@ namespace Gedim
       }
 
       const unsigned int numCell2DNeighbours = cell0D.Cell2DNeighbours.size();
-
-      mesh.Cell0DInitializeNeighbourCell2Ds(v, numCell2DNeighbours);
       for (unsigned int n = 0; n < numCell2DNeighbours; n++)
       {
         if (cell0D.Cell2DNeighbours[n] >= mesh.Cell2DTotalNumber())
@@ -227,8 +259,6 @@ namespace Gedim
       }
 
       const unsigned int numCell3DNeighbours = cell0D.Cell3DNeighbours.size();
-
-      mesh.Cell0DInitializeNeighbourCell3Ds(v, numCell3DNeighbours);
       for (unsigned int n = 0; n < numCell3DNeighbours; n++)
       {
         if (cell0D.Cell3DNeighbours[n] >= mesh.Cell3DTotalNumber())
@@ -247,13 +277,24 @@ namespace Gedim
     if (numCell1Ds == 0)
       return;
 
+    std::vector<unsigned int> numberNeighbours2D(numCell1Ds), numberNeighbours3D(numCell1Ds);
+    for (unsigned int v = 0; v < numCell1Ds; v++)
+    {
+      const MeshFromCsvUtilities::Cell1DNeighbours& cell1D = cell1DNeighbours[v];
+
+      numberNeighbours2D[v] = cell1D.Cell2DNeighbours.size();
+      numberNeighbours3D[v] = cell1D.Cell3DNeighbours.size();
+    }
+
+    mesh.Cell1DsInitializeNeighbourCell2Ds(numberNeighbours2D);
+    mesh.Cell1DsInitializeNeighbourCell3Ds(numberNeighbours3D);
+
     for (unsigned int v = 0; v < numCell1Ds; v++)
     {
       const MeshFromCsvUtilities::Cell1DNeighbours& cell1D = cell1DNeighbours[v];
 
       const unsigned int numCell2DNeighbours = cell1D.Cell2DNeighbours.size();
 
-      mesh.Cell1DInitializeNeighbourCell2Ds(v, numCell2DNeighbours);
       for (unsigned int n = 0; n < numCell2DNeighbours; n++)
       {
         if (cell1D.Cell2DNeighbours[n] >= mesh.Cell2DTotalNumber())
@@ -264,7 +305,6 @@ namespace Gedim
 
       const unsigned int numCell3DNeighbours = cell1D.Cell3DNeighbours.size();
 
-      mesh.Cell1DInitializeNeighbourCell3Ds(v, numCell3DNeighbours);
       for (unsigned int n = 0; n < numCell3DNeighbours; n++)
       {
         if (cell1D.Cell3DNeighbours[n] >= mesh.Cell3DTotalNumber())
@@ -283,13 +323,21 @@ namespace Gedim
     if (numCell2Ds == 0)
       return;
 
+    std::vector<unsigned int> numberNeighbours3D(numCell2Ds);
+    for (unsigned int v = 0; v < numCell2Ds; v++)
+    {
+      const MeshFromCsvUtilities::Cell2DNeighbours& cell2D = cell2DNeighbours[v];
+
+      numberNeighbours3D[v] = cell2D.Cell3DNeighbours.size();
+    }
+
+    mesh.Cell2DsInitializeNeighbourCell3Ds(numberNeighbours3D);
     for (unsigned int v = 0; v < numCell2Ds; v++)
     {
       const MeshFromCsvUtilities::Cell2DNeighbours& cell2D = cell2DNeighbours[v];
 
       const unsigned int numCell3DNeighbours = cell2D.Cell3DNeighbours.size();
 
-      mesh.Cell2DInitializeNeighbourCell3Ds(v, numCell3DNeighbours);
       for (unsigned int n = 0; n < numCell3DNeighbours; n++)
       {
         if (cell2D.Cell3DNeighbours[n] >= mesh.Cell3DTotalNumber())
@@ -308,13 +356,17 @@ namespace Gedim
     if (numCell2Ds == 0)
       return;
 
+    std::vector<unsigned int> numCell2DSubdivisions(numCell2Ds);
+    for (unsigned int v = 0; v < numCell2Ds; v++)
+      numCell2DSubdivisions[v] = cell2DSubDivisions[v].SubDivision.size();
+
+    mesh.Cell2DsInitializeSubDivision(numCell2DSubdivisions);
     for (unsigned int v = 0; v < numCell2Ds; v++)
     {
       const MeshFromCsvUtilities::Cell2DSubDivision& cell2D = cell2DSubDivisions[v];
 
       const unsigned int numCell2DSubDivision = cell2D.SubDivision.size();
 
-      mesh.Cell2DInitializeSubDivision(v, numCell2DSubDivision);
       for (unsigned int n = 0; n < numCell2DSubDivision; n++)
         mesh.Cell2DInsertSubDivision(v, n, cell2D.SubDivision[n]);
     }
@@ -340,6 +392,13 @@ namespace Gedim
 
       unsigned int propertyIndex = mesh.Cell0DAddDoubleProperty(cellsProperty.Id);
 
+      std::vector<unsigned int> numPropertyValues(numCells);
+      for (unsigned int c = 0; c < numCells; c++)
+        numPropertyValues[c] = cellsProperty.Values[c].Values.size();
+
+      mesh.Cell0DsInitializeDoublePropertyValues(propertyIndex,
+                                                 numPropertyValues);
+
       for (unsigned int c = 0; c < numCells; c++)
       {
         const MeshFromCsvUtilities::CellDoubleProperty::Value& cellProperty = cellsProperty.Values[c];
@@ -349,9 +408,6 @@ namespace Gedim
         if (numValues == 0)
           continue;
 
-        mesh.Cell0DInitializeDoublePropertyValues(cellProperty.CellId,
-                                                  propertyIndex,
-                                                  numValues);
         for (unsigned int v = 0; v < numValues; v++)
           mesh.Cell0DInsertDoublePropertyValue(cellProperty.CellId,
                                                propertyIndex,
@@ -381,6 +437,13 @@ namespace Gedim
 
       unsigned int propertyIndex = mesh.Cell1DAddDoubleProperty(cellsProperty.Id);
 
+      std::vector<unsigned int> numPropertyValues(numCells);
+      for (unsigned int c = 0; c < numCells; c++)
+        numPropertyValues[c] = cellsProperty.Values[c].Values.size();
+
+      mesh.Cell1DsInitializeDoublePropertyValues(propertyIndex,
+                                                 numPropertyValues);
+
       for (unsigned int c = 0; c < numCells; c++)
       {
         const MeshFromCsvUtilities::CellDoubleProperty::Value& cellProperty = cellsProperty.Values[c];
@@ -390,9 +453,6 @@ namespace Gedim
         if (numValues == 0)
           continue;
 
-        mesh.Cell1DInitializeDoublePropertyValues(cellProperty.CellId,
-                                                  propertyIndex,
-                                                  numValues);
         for (unsigned int v = 0; v < numValues; v++)
           mesh.Cell1DInsertDoublePropertyValue(cellProperty.CellId,
                                                propertyIndex,
@@ -422,6 +482,13 @@ namespace Gedim
 
       unsigned int propertyIndex = mesh.Cell2DAddDoubleProperty(cellsProperty.Id);
 
+      std::vector<unsigned int> numPropertyValues(numCells);
+      for (unsigned int c = 0; c < numCells; c++)
+        numPropertyValues[c] = cellsProperty.Values[c].Values.size();
+
+      mesh.Cell2DsInitializeDoublePropertyValues(propertyIndex,
+                                                 numPropertyValues);
+
       for (unsigned int c = 0; c < numCells; c++)
       {
         const MeshFromCsvUtilities::CellDoubleProperty::Value& cellProperty = cellsProperty.Values[c];
@@ -431,9 +498,6 @@ namespace Gedim
         if (numValues == 0)
           continue;
 
-        mesh.Cell2DInitializeDoublePropertyValues(cellProperty.CellId,
-                                                  propertyIndex,
-                                                  numValues);
         for (unsigned int v = 0; v < numValues; v++)
           mesh.Cell2DInsertDoublePropertyValue(cellProperty.CellId,
                                                propertyIndex,
@@ -463,6 +527,13 @@ namespace Gedim
 
       unsigned int propertyIndex = mesh.Cell3DAddDoubleProperty(cellsProperty.Id);
 
+      std::vector<unsigned int> numPropertyValues(numCells);
+      for (unsigned int c = 0; c < numCells; c++)
+        numPropertyValues[c] = cellsProperty.Values[c].Values.size();
+
+      mesh.Cell3DsInitializeDoublePropertyValues(propertyIndex,
+                                                 numPropertyValues);
+
       for (unsigned int c = 0; c < numCells; c++)
       {
         const MeshFromCsvUtilities::CellDoubleProperty::Value& cellProperty = cellsProperty.Values[c];
@@ -472,9 +543,6 @@ namespace Gedim
         if (numValues == 0)
           continue;
 
-        mesh.Cell3DInitializeDoublePropertyValues(cellProperty.CellId,
-                                                  propertyIndex,
-                                                  numValues);
         for (unsigned int v = 0; v < numValues; v++)
           mesh.Cell3DInsertDoublePropertyValue(cellProperty.CellId,
                                                propertyIndex,
