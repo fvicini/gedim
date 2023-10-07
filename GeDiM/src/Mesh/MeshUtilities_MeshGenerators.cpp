@@ -1007,9 +1007,9 @@ namespace Gedim
                                                const vector<double>& widthMeshCurvilinearCoordinates,
                                                IMeshDAO& mesh) const
   {
-    const unsigned int& numLengthPoints = lengthMeshCurvilinearCoordinates.size();
-    const unsigned int& numHeightPoints = heightMeshCurvilinearCoordinates.size();
-    const unsigned int& numWidthPoints = widthMeshCurvilinearCoordinates.size();
+    const unsigned int numLengthPoints = lengthMeshCurvilinearCoordinates.size();
+    const unsigned int numHeightPoints = heightMeshCurvilinearCoordinates.size();
+    const unsigned int numWidthPoints = widthMeshCurvilinearCoordinates.size();
 
     const unsigned int numCell0Ds = numLengthPoints * numHeightPoints * numWidthPoints;
     const unsigned int numCell1Ds = numHeightPoints * numWidthPoints * (numLengthPoints - 1)
