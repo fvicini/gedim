@@ -10,7 +10,9 @@ namespace Gedim
 // ************************************************************************* //
 VoroInterface::VoroInterface(const Gedim::GeometryUtilities& geometryUtilities):
     geometryUtilities(geometryUtilities)
-    {};
+{
+
+}
 // ************************************************************************* //
 bool VoroInterface::InsertNewPoints(Cell0D& cell0D,
                                     list<Cell0D>& cell0Ds)
