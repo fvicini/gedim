@@ -2,7 +2,7 @@
 
 #include "Macro.hpp"
 #include "Eigen/Eigen"
-
+#include "CommonUtilities.hpp"
 
 
 namespace Gedim
@@ -14,12 +14,25 @@ VoroInterface::VoroInterface(const Gedim::GeometryUtilities& geometryUtilities):
 
 }
 // ************************************************************************* //
+#if ENABLE_VORO == 0
+void VoroInterface::GenerateVoronoiTassellations(const Eigen::MatrixXd& polyhedronVertices,
+                                                 const Eigen::MatrixXi& polyhedronEdges,
+                                                 const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                 const unsigned int& numPoints,
+                                                 Gedim::IMeshDAO& mesh)
+{
+    Gedim::Utilities::Unused(polyhedronVertices);
+    Gedim::Utilities::Unused(polyhedronEdges);
+    Gedim::Utilities::Unused(polyhedronFaces);
+    Gedim::Utilities::Unused(numPoints);
+    Gedim::Utilities::Unused(mesh);
+    throw runtime_error("Not active module VORO");
+}
+#else
+// ************************************************************************* //
 bool VoroInterface::InsertNewPoints(Cell0D& cell0D,
                                     list<Cell0D>& cell0Ds)
 {
-#if ENABLE_VORO == 0
-    throw runtime_error("Not active module VORO");
-#else
     if(cell0Ds.size() == 0)
     {
         cell0D.id = 0;
@@ -64,7 +77,6 @@ bool VoroInterface::InsertNewPoints(Cell0D& cell0D,
         cell0Ds.push_back(cell0D);
         return true;
     }
-#endif
 }
 // ************************************************************************* //
 void VoroInterface::GenerateVoronoiTassellations(const Eigen::MatrixXd& polyhedronVertices,
@@ -73,9 +85,6 @@ void VoroInterface::GenerateVoronoiTassellations(const Eigen::MatrixXd& polyhedr
                                                  const unsigned int& numPoints,
                                                  Gedim::IMeshDAO& mesh)
 {
-#if ENABLE_VORO == 0
-    throw runtime_error("Not active module VORO");
-#else
     const unsigned int numVerticesDomain = polyhedronVertices.cols();
     const unsigned int numEdgesDomain = polyhedronEdges.cols();
     const unsigned int numFacesDomain = polyhedronFaces.size();
@@ -561,7 +570,6 @@ void VoroInterface::GenerateVoronoiTassellations(const Eigen::MatrixXd& polyhedr
         cells2DIndex++;
 
     }
-#endif
 }
 // ************************************************************************* //
 void VoroInterface::GenerateRandomPoints(const Eigen::MatrixXd& polyhedronVertices,
@@ -618,6 +626,7 @@ void VoroInterface::GenerateCartesianPoints(const Eigen::MatrixXd& polyhedronVer
         }
     }
 }
+#endif
 // ************************************************************************* //
 }
 

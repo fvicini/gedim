@@ -52,16 +52,18 @@ namespace Gedim
 
     private:
 
+#if ENABLE_VORO == 1
       bool InsertNewPoints(Cell0D& cell0D, list<Cell0D>& cell0Ds);
-        inline double rnd() {return double(rand())/RAND_MAX;}
+      inline double rnd() {return double(rand())/RAND_MAX;}
 
-        void GenerateRandomPoints(const Eigen::MatrixXd &polyhedronVertices,
-                                  const unsigned int &numPoints,
-                                  voro::container &con);
+      void GenerateRandomPoints(const Eigen::MatrixXd &polyhedronVertices,
+                                const unsigned int &numPoints,
+                                voro::container &con);
 
-        void GenerateCartesianPoints(const Eigen::MatrixXd &polyhedronVertices,
-                                     const unsigned int &numPoints,
-                                     voro::container &con);
+      void GenerateCartesianPoints(const Eigen::MatrixXd &polyhedronVertices,
+                                   const unsigned int &numPoints,
+                                   voro::container &con);
+#endif
   };
 
 }
