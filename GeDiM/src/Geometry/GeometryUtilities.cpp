@@ -1,5 +1,6 @@
 #include "IOUtilities.hpp"
 #include "GeometryUtilities.hpp"
+#include "CommonUtilities.hpp"
 #include <unordered_set>
 
 using namespace std;
@@ -56,6 +57,67 @@ namespace Gedim
     return coordinates;
   }
   // ***************************************************************************
+  std::vector<double> GeometryUtilities::RandomCoordinates(const unsigned int size,
+                                                           const bool insertExtremes,
+                                                           const unsigned int seed) const
+  {
+    if (size == 0)
+      return { };
+    else if (size == 1 && insertExtremes)
+      throw invalid_argument("size is not valid with false insertExtremes");
+
+    const unsigned int max_value = 1.0 / (3.0 * _configuration.Tolerance);
+
+    Gedim::Output::Assert(size <= max_value);
+
+    const unsigned int num_random_points = insertExtremes ? (size - 2) :
+                                                            size;
+    std::vector<unsigned int> random_points = num_random_points == 0 ? std::vector<unsigned int>() :
+                                                                       Gedim::Utilities::RandomArrayNoRepetition(num_random_points,
+                                                                                                                 max_value,
+                                                                                                                 seed);
+    std::sort(random_points.begin(),
+              random_points.end());
+
+    list<double> coordinates;
+
+    if (insertExtremes)
+      coordinates.push_back(0.0);
+
+    for (const unsigned int random_point : random_points)
+    {
+      if (insertExtremes &&
+          (random_point == 0 ||
+           random_point == max_value))
+        continue;
+
+      coordinates.push_back(static_cast<double>(random_point) /
+                            static_cast<double>(max_value));
+    }
+
+    if (insertExtremes)
+      coordinates.push_back(1.0);
+
+    if (coordinates.size() < size)
+    {
+      const double middlePoint = 0.5 * (*coordinates.begin() +
+                                        *std::next(coordinates.begin()));
+      coordinates.insert(std::next(coordinates.begin()),
+                         middlePoint);
+    }
+
+    if (coordinates.size() < size)
+    {
+      const double middlePoint = 0.5 * (*coordinates.rbegin() +
+                                        *std::next(coordinates.rbegin()));
+      coordinates.insert(std::prev(coordinates.end()),
+                         middlePoint);
+    }
+
+    return std::vector<double>(coordinates.begin(),
+                               coordinates.end());
+  }
+  // ***************************************************************************
   GeometryUtilities::CompareTypes GeometryUtilities::CompareValues(const double& first,
                                                                    const double& second,
                                                                    const double& tolerance) const
@@ -65,7 +127,7 @@ namespace Gedim
 
     double relativeValue = (abs(first) <= max_tolerance ||
                             abs(second) <= max_tolerance) ? 1.0 :
-                                             abs(first);
+                                                            abs(first);
     double difference = second - first;
 
     if (abs(difference) <= max_tolerance * relativeValue)
@@ -106,28 +168,27 @@ namespace Gedim
     if (numPoints == 1)
       return vector<unsigned int> { 0 };
 
-    struct pt
+    struct pt final
     {
-        double x;
-        double y;
+        Eigen::Vector3d Point;
         unsigned int id;
     };
 
     vector<pt> structPoints(numPoints);
     for (unsigned int p = 0; p < numPoints; p++)
-      structPoints[p] = { points.col(p).x(), points.col(p).y(), p };
+      structPoints[p] = { points.col(p), p };
 
-    pt p0 = { std::numeric_limits<double>::max(),
-              std::numeric_limits<double>::max(),
+    pt p0 = { Eigen::Vector3d(std::numeric_limits<double>::max(),
+              std::numeric_limits<double>::max(), 0.0),
               0
             };
     for (const auto& p : structPoints)
     {
-      if (IsValue1DGreater(p0.y, p.y))
+      if (IsValue1DGreater(p0.Point.y(), p.Point.y()))
         p0 = p;
 
-      if (IsValue1DZero(abs(p0.y - p.y)) &&
-          IsValue1DGreater(p0.x, p.x))
+      if (Are1DValuesEqual(p0.Point.y(), p.Point.y()) &&
+          IsValue1DGreater(p0.Point.x(), p.Point.x()))
         p0 = p;
     }
 
@@ -135,41 +196,69 @@ namespace Gedim
          structPoints.end(),
          [&p0, this](const pt& a, const pt& b)
     {
-      const double orientation = p0.x * (a.y - b.y) +
-                                 a.x * (b.y - p0.y) +
-                                 b.x * (p0.y - a.y); // < 0 clockwise, > 0 counter-clockwise
+      const double norm_b_a = (a.Point - b.Point).norm();
+      const double squared_norm_b_p0 = (p0.Point - b.Point).squaredNorm();
 
-      if (IsValue1DZero(orientation))
-        return IsValue1DGreater((p0.x-b.x) * (p0.x-b.x) +
-                                (p0.y-b.y) * (p0.y-b.y),
-                                (p0.x-a.x) * (p0.x-a.x) +
-                                (p0.y-a.y) * (p0.y-a.y));
-      return IsValue1DNegative(orientation);
+      const double orientation_polar = PolarAngle(a.Point,
+                                                  b.Point,
+                                                  p0.Point,
+                                                  norm_b_a,
+                                                  sqrt(squared_norm_b_p0));
+
+      if (IsValue1DZero(orientation_polar))
+      {
+        const double squared_norm_a_p0 = (p0.Point - a.Point).squaredNorm();
+        return IsValue1DGreater(squared_norm_b_p0,
+                                squared_norm_a_p0);
+      }
+
+      return IsValue1DNegative(orientation_polar);
     });
 
     if (includeCollinear)
     {
       int i = (int)structPoints.size() - 1;
 
+      double norm_b_a = (structPoints[i].Point - structPoints.back().Point).norm();
+      double norm_b_p0 = (p0.Point - structPoints.back().Point).norm();
+      double orientation_polar = PolarAngle(structPoints[i].Point,
+                                            structPoints.back().Point,
+                                            p0.Point,
+                                            norm_b_a,
+                                            norm_b_p0);
+
       while (i >= 0 &&
-             IsValue1DZero(p0.x * (structPoints[i].y - structPoints.back().y) +
-                           structPoints[i].x * (structPoints.back().y - p0.y) +
-                           structPoints.back().x * (p0.y - structPoints[i].y)))
+             IsValue1DZero(orientation_polar))
+      {
         i--;
+
+        norm_b_a = (structPoints[i].Point - structPoints.back().Point).norm();
+        norm_b_p0 = (p0.Point - structPoints.back().Point).norm();
+        orientation_polar = PolarAngle(structPoints[i].Point,
+                                       structPoints.back().Point,
+                                       p0.Point,
+                                       norm_b_a,
+                                       norm_b_p0);
+      }
+
       reverse(structPoints.begin() + i + 1,
               structPoints.end());
     }
 
     vector<pt> st;
-    for (int i = 0; i < (int)structPoints.size(); i++)
+    for (unsigned int i = 0; i < structPoints.size(); i++)
     {
       while (st.size() > 1)
       {
-        double orientation = st[st.size()-2].x * (st.back().y - structPoints[i].y) +
-                             st.back().x * (structPoints[i].y - st[st.size()-2].y) +
-            structPoints[i].x*(st[st.size()-2].y - st.back().y); // < 0 clockwise, > 0 counter-clockwise
-
-        if (IsValue1DNegative(orientation) || (includeCollinear && IsValue1DZero(orientation)))
+        const double norm_b_a = (st.back().Point - structPoints[i].Point).norm();
+        const double norm_b_c = (st[st.size() - 2].Point - structPoints[i].Point).norm();
+        const double orientation_polar = PolarAngle(st.back().Point,
+                                                    structPoints.at(i).Point,
+                                                    st.at(st.size() - 2).Point,
+                                                    norm_b_a,
+                                                    norm_b_c);
+        if (IsValue1DNegative(orientation_polar) ||
+            (includeCollinear && IsValue1DZero(orientation_polar)))
           break;
 
         st.pop_back();
