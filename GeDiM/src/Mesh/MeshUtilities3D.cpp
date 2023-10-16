@@ -13,108 +13,197 @@ namespace Gedim
   // ***************************************************************************
   void MeshUtilities::CheckMesh3D(const CheckMesh3DConfiguration& configuration,
                                   const GeometryUtilities& geometryUtilities,
-                                  const IMeshDAO& convexMesh) const
+                                  const IMeshDAO& mesh) const
   {
-    Output::Assert(convexMesh.Dimension() == 3);
+    Output::Assert(mesh.Dimension() == 3);
 
     // check Cell0D duplications
     if (configuration.Cell0D_CheckDuplications)
     {
-      for (unsigned int p1 = 0; p1 < convexMesh.Cell0DTotalNumber(); p1++)
+      for (unsigned int p1 = 0; p1 < mesh.Cell0DTotalNumber(); p1++)
       {
-        for (unsigned int p2 = p1 + 1; p2 < convexMesh.Cell0DTotalNumber(); p2++)
+        if (!mesh.Cell0DIsActive(p1))
+          continue;
+
+        for (unsigned int p2 = p1 + 1; p2 < mesh.Cell0DTotalNumber(); p2++)
         {
-          Output::Assert(!geometryUtilities.PointsAreCoincident(convexMesh.Cell0DCoordinates(p1),
-                                                                convexMesh.Cell0DCoordinates(p2)));
+          if (!mesh.Cell0DIsActive(p2))
+            continue;
+
+          if (geometryUtilities.PointsAreCoincident(mesh.Cell0DCoordinates(p1),
+                                                    mesh.Cell0DCoordinates(p2)))
+          {
+            throw std::runtime_error("Cell0D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are coincident");
+          }
         }
       }
     }
 
     if (configuration.Cell1D_CheckDuplications)
     {
-      for (unsigned int e1 = 0; e1 < convexMesh.Cell1DTotalNumber(); e1++)
+      for (unsigned int e1 = 0; e1 < mesh.Cell1DTotalNumber(); e1++)
       {
-        Output::Assert(convexMesh.Cell1DByExtremes(convexMesh.Cell1DOrigin(e1),
-                                                   convexMesh.Cell1DEnd(e1)) ==
-                       e1);
-        Output::Assert(convexMesh.Cell1DByExtremes(convexMesh.Cell1DEnd(e1),
-                                                   convexMesh.Cell1DOrigin(e1)) ==
-                       convexMesh.Cell1DTotalNumber());
+        if (!mesh.Cell1DIsActive(e1))
+          continue;
 
-        for (unsigned int e2 = e1 + 1; e2 < convexMesh.Cell1DTotalNumber(); e2++)
+        if (mesh.Cell1DByExtremes(mesh.Cell1DOrigin(e1),
+                                  mesh.Cell1DEnd(e1)) !=
+            e1)
         {
-          Output::Assert(!(convexMesh.Cell1DOrigin(e1) == convexMesh.Cell1DOrigin(e2) &&
-                           convexMesh.Cell1DEnd(e1) == convexMesh.Cell1DEnd(e2)));
-          Output::Assert(!(convexMesh.Cell1DEnd(e1) == convexMesh.Cell1DOrigin(e2) &&
-                           convexMesh.Cell1DOrigin(e1) == convexMesh.Cell1DEnd(e2)));
+          throw std::runtime_error("Cell1D " +
+                                   std::to_string(e1) +
+                                   " has wrong extremes");
+        }
+
+        if (mesh.Cell1DByExtremes(mesh.Cell1DEnd(e1),
+                                  mesh.Cell1DOrigin(e1)) !=
+            mesh.Cell1DTotalNumber())
+        {
+          throw std::runtime_error("Cell1D " +
+                                   std::to_string(e1) +
+                                   " has wrong extremes");
+        }
+
+        for (unsigned int e2 = e1 + 1; e2 < mesh.Cell1DTotalNumber(); e2++)
+        {
+          if (!mesh.Cell1DIsActive(e2))
+            continue;
+
+          if ((mesh.Cell1DOrigin(e1) == mesh.Cell1DOrigin(e2) &&
+               mesh.Cell1DEnd(e1) == mesh.Cell1DEnd(e2)))
+          {
+            throw std::runtime_error("Cell1D " +
+                                     std::to_string(e1) +
+                                     " and " +
+                                     std::to_string(e2) +
+                                     " are duplicated");
+          }
+          if ((mesh.Cell1DEnd(e1) == mesh.Cell1DOrigin(e2) &&
+               mesh.Cell1DOrigin(e1) == mesh.Cell1DEnd(e2)))
+          {
+            throw std::runtime_error("Cell1D " +
+                                     std::to_string(e1) +
+                                     " and " +
+                                     std::to_string(e2) +
+                                     " are duplicated");
+          }
         }
       }
     }
 
     if (configuration.Cell1D_CheckMeasure)
     {
-      for (unsigned int e = 0; e < convexMesh.Cell1DTotalNumber(); e++)
+      for (unsigned int e = 0; e < mesh.Cell1DTotalNumber(); e++)
       {
-        Output::Assert(geometryUtilities.IsValue1DPositive(
-                         geometryUtilities.SegmentLength(convexMesh.Cell1DOriginCoordinates(e),
-                                                         convexMesh.Cell1DEndCoordinates(e))));
+        if (!mesh.Cell1DIsActive(e))
+          continue;
+
+        if (geometryUtilities.IsValueZero(
+              geometryUtilities.SegmentLength(mesh.Cell1DOriginCoordinates(e),
+                                              mesh.Cell1DEndCoordinates(e)),
+              geometryUtilities.Tolerance1D()))
+        {
+          throw std::runtime_error("Cell1D " +
+                                   std::to_string(e) +
+                                   " is zero");
+        }
       }
     }
 
     if (configuration.Cell2D_CheckEdges)
     {
-      for (unsigned int p = 0; p < convexMesh.Cell2DTotalNumber(); p++)
+      for (unsigned int p = 0; p < mesh.Cell2DTotalNumber(); p++)
       {
-        const unsigned int cell2DNumEdges = convexMesh.Cell2DNumberEdges(p);
+        if (!mesh.Cell2DIsActive(p))
+          continue;
+
+        const unsigned int cell2DNumEdges = mesh.Cell2DNumberEdges(p);
+
         for (unsigned int v = 0; v < cell2DNumEdges; v++)
         {
-          const unsigned int eO = convexMesh.Cell2DVertex(p, v);
-          const unsigned int eE = convexMesh.Cell2DVertex(p, (v + 1) % cell2DNumEdges);
+          const unsigned int eO = mesh.Cell2DVertex(p, v);
+          const unsigned int eE = mesh.Cell2DVertex(p, (v + 1) % cell2DNumEdges);
 
-          const unsigned int edgeFromVerticesOE = convexMesh.Cell2DFindEdgeByExtremes(p,
-                                                                                      eO,
-                                                                                      eE);
-          const unsigned int edgeFromVerticesEO = convexMesh.Cell2DFindEdgeByExtremes(p,
-                                                                                      eE,
-                                                                                      eO);
+          const unsigned int edgeFromVerticesOE = mesh.Cell2DFindEdgeByExtremes(p,
+                                                                                eO,
+                                                                                eE);
+          const unsigned int edgeFromVerticesEO = mesh.Cell2DFindEdgeByExtremes(p,
+                                                                                eE,
+                                                                                eO);
 
-          Output::Assert((edgeFromVerticesOE < cell2DNumEdges && edgeFromVerticesOE == v) ||
-                         (edgeFromVerticesEO < cell2DNumEdges && edgeFromVerticesEO == v));
+          if (!((edgeFromVerticesOE < cell2DNumEdges && edgeFromVerticesOE == v) ||
+                (edgeFromVerticesEO < cell2DNumEdges && edgeFromVerticesEO == v)))
+          {
+            throw std::runtime_error("Cell2D " +
+                                     std::to_string(p) +
+                                     " has wrong edge " +
+                                     std::to_string(v));
+          }
         }
       }
     }
 
     if (configuration.Cell2D_CheckDuplications)
     {
-      for (unsigned int p1 = 0; p1 < convexMesh.Cell2DTotalNumber(); p1++)
+      for (unsigned int p1 = 0; p1 < mesh.Cell2DTotalNumber(); p1++)
       {
-        vector<unsigned int> cell2D1Vertices = convexMesh.Cell2DVertices(p1);
+        if (!mesh.Cell2DIsActive(p1))
+          continue;
+
+        vector<unsigned int> cell2D1Vertices = mesh.Cell2DVertices(p1);
         sort(cell2D1Vertices.begin(), cell2D1Vertices.end());
-        vector<unsigned int> cell2D1Edges = convexMesh.Cell2DEdges(p1);
+        vector<unsigned int> cell2D1Edges = mesh.Cell2DEdges(p1);
         sort(cell2D1Edges.begin(), cell2D1Edges.end());
 
-        for (unsigned int p2 = p1 + 1; p2 < convexMesh.Cell2DTotalNumber(); p2++)
+        for (unsigned int p2 = p1 + 1; p2 < mesh.Cell2DTotalNumber(); p2++)
         {
-          vector<unsigned int> cell2D2Vertices = convexMesh.Cell2DVertices(p2);
+          if (!mesh.Cell2DIsActive(p2))
+            continue;
+
+          vector<unsigned int> cell2D2Vertices = mesh.Cell2DVertices(p2);
           sort(cell2D2Vertices.begin(), cell2D2Vertices.end());
-          vector<unsigned int> cell2D2Edges = convexMesh.Cell2DEdges(p2);
+          vector<unsigned int> cell2D2Edges = mesh.Cell2DEdges(p2);
           sort(cell2D2Edges.begin(), cell2D2Edges.end());
 
-          Output::Assert(cell2D1Vertices.size() != cell2D2Vertices.size() || !equal(cell2D1Vertices.begin(),
-                                                                                    cell2D1Vertices.end(),
-                                                                                    cell2D2Vertices.begin()));
-          Output::Assert(cell2D1Edges.size() != cell2D2Edges.size() || !equal(cell2D1Edges.begin(),
-                                                                              cell2D1Edges.end(),
-                                                                              cell2D2Edges.begin()));
+          if (!(cell2D1Vertices.size() != cell2D2Vertices.size() ||
+                !equal(cell2D1Vertices.begin(),
+                       cell2D1Vertices.end(),
+                       cell2D2Vertices.begin())))
+          {
+            throw std::runtime_error("Cell2D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are duplicated");
+          }
+
+          if (!(cell2D1Edges.size() != cell2D2Edges.size() ||
+                !equal(cell2D1Edges.begin(),
+                       cell2D1Edges.end(),
+                       cell2D2Edges.begin())))
+          {
+            throw std::runtime_error("Cell2D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are duplicated");
+          }
         }
       }
     }
 
     if (configuration.Cell2D_CheckConvexity)
     {
-      for (unsigned int p = 0; p < convexMesh.Cell2DTotalNumber(); p++)
+      for (unsigned int p = 0; p < mesh.Cell2DTotalNumber(); p++)
       {
-        const Eigen::MatrixXd cell2DVertices3D = convexMesh.Cell2DVerticesCoordinates(p);
+        if (!mesh.Cell2DIsActive(p))
+          continue;
+
+        const Eigen::MatrixXd cell2DVertices3D = mesh.Cell2DVerticesCoordinates(p);
         const Eigen::Vector3d cell2DNormal = geometryUtilities.PolygonNormal(cell2DVertices3D);
         const Eigen::Vector3d cell2DTranslation = geometryUtilities.PolygonTranslation(cell2DVertices3D);
         const Eigen::Matrix3d cell2DRotationMatrix = geometryUtilities.PolygonRotationMatrix(cell2DVertices3D,
@@ -130,16 +219,32 @@ namespace Gedim
         const Eigen::MatrixXd convexHullVertices = geometryUtilities.ExtractPoints(convexCell2DUnalignedVertices,
                                                                                    convexHull);
 
-        Output::Assert(geometryUtilities.PolygonIsConvex(convexCell2DUnalignedVertices,
-                                                         convexHullVertices));
+        if (!geometryUtilities.PolygonIsConvex(convexCell2DUnalignedVertices,
+                                               convexHullVertices))
+        {
+          throw std::runtime_error("Cell2D " +
+                                   std::to_string(p) +
+                                   " is not convex ");
+        }
+
+        if (geometryUtilities.PolygonOrientation(convexHull) ==
+            Gedim::GeometryUtilities::PolygonOrientations::Clockwise)
+        {
+          throw std::runtime_error("Cell2D " +
+                                   std::to_string(p) +
+                                   " is not CounterClockwise");
+        }
       }
     }
 
     if (configuration.Cell2D_CheckMeasure)
     {
-      for (unsigned int p = 0; p < convexMesh.Cell2DTotalNumber(); p++)
+      for (unsigned int p = 0; p < mesh.Cell2DTotalNumber(); p++)
       {
-        const Eigen::MatrixXd cell2DVertices3D = convexMesh.Cell2DVerticesCoordinates(p);
+        if (!mesh.Cell2DIsActive(p))
+          continue;
+
+        const Eigen::MatrixXd cell2DVertices3D = mesh.Cell2DVerticesCoordinates(p);
         const Eigen::Vector3d cell2DNormal = geometryUtilities.PolygonNormal(cell2DVertices3D);
         const Eigen::Vector3d cell2DTranslation = geometryUtilities.PolygonTranslation(cell2DVertices3D);
         const Eigen::Matrix3d cell2DRotationMatrix = geometryUtilities.PolygonRotationMatrix(cell2DVertices3D,
@@ -149,76 +254,90 @@ namespace Gedim
                                                                                           cell2DRotationMatrix.transpose(),
                                                                                           cell2DTranslation);
 
-        Output::Assert(geometryUtilities.IsValue2DPositive(
-                         geometryUtilities.PolygonArea(cell2DVertices2D)));
+        if (geometryUtilities.IsValueZero(
+              geometryUtilities.PolygonArea(cell2DVertices2D),
+              geometryUtilities.Tolerance2D()))
+        {
+          throw std::runtime_error("Cell2D " +
+                                   std::to_string(p) +
+                                   " is zero");
+        }
       }
     }
 
     if (configuration.Cell3D_CheckDuplications)
     {
-      for (unsigned int p1 = 0; p1 < convexMesh.Cell3DTotalNumber(); p1++)
+      for (unsigned int p1 = 0; p1 < mesh.Cell3DTotalNumber(); p1++)
       {
-        vector<unsigned int> cell3D1Vertices = convexMesh.Cell3DVertices(p1);
+        if (!mesh.Cell3DIsActive(p1))
+          continue;
+
+        vector<unsigned int> cell3D1Vertices = mesh.Cell3DVertices(p1);
         sort(cell3D1Vertices.begin(), cell3D1Vertices.end());
-        vector<unsigned int> cell3D1Edges = convexMesh.Cell3DEdges(p1);
+        vector<unsigned int> cell3D1Edges = mesh.Cell3DEdges(p1);
         sort(cell3D1Edges.begin(), cell3D1Edges.end());
-        vector<unsigned int> cell3D1Faces = convexMesh.Cell3DFaces(p1);
+        vector<unsigned int> cell3D1Faces = mesh.Cell3DFaces(p1);
         sort(cell3D1Faces.begin(), cell3D1Faces.end());
 
-        for (unsigned int p2 = p1 + 1; p2 < convexMesh.Cell3DTotalNumber(); p2++)
+        for (unsigned int p2 = p1 + 1; p2 < mesh.Cell3DTotalNumber(); p2++)
         {
-          vector<unsigned int> cell3D2Vertices = convexMesh.Cell3DVertices(p2);
+          if (!mesh.Cell3DIsActive(p2))
+            continue;
+
+          vector<unsigned int> cell3D2Vertices = mesh.Cell3DVertices(p2);
           sort(cell3D2Vertices.begin(), cell3D2Vertices.end());
-          vector<unsigned int> cell3D2Edges = convexMesh.Cell3DEdges(p2);
+          vector<unsigned int> cell3D2Edges = mesh.Cell3DEdges(p2);
           sort(cell3D2Edges.begin(), cell3D2Edges.end());
-          vector<unsigned int> cell3D2Faces = convexMesh.Cell3DFaces(p2);
+          vector<unsigned int> cell3D2Faces = mesh.Cell3DFaces(p2);
           sort(cell3D2Faces.begin(), cell3D2Faces.end());
 
-          Output::Assert(cell3D1Vertices.size() != cell3D2Vertices.size() || !equal(cell3D1Vertices.begin(),
-                                                                                    cell3D1Vertices.end(),
-                                                                                    cell3D2Vertices.begin()));
-          Output::Assert(cell3D1Edges.size() != cell3D2Edges.size() || !equal(cell3D1Edges.begin(),
-                                                                              cell3D1Edges.end(),
-                                                                              cell3D2Edges.begin()));
-          Output::Assert(cell3D1Faces.size() != cell3D2Faces.size() || !equal(cell3D1Faces.begin(),
-                                                                              cell3D1Faces.end(),
-                                                                              cell3D2Faces.begin()));
+          if (!(cell3D1Vertices.size() != cell3D2Vertices.size() ||
+                !equal(cell3D1Vertices.begin(),
+                       cell3D1Vertices.end(),
+                       cell3D2Vertices.begin())))
+          {
+            throw std::runtime_error("Cell3D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are duplicated");
+          }
+
+          if (!(cell3D1Edges.size() != cell3D2Edges.size() ||
+                !equal(cell3D1Edges.begin(),
+                       cell3D1Edges.end(),
+                       cell3D2Edges.begin())))
+          {
+            throw std::runtime_error("Cell3D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are duplicated");
+          }
+
+          if (!(cell3D1Faces.size() != cell3D2Faces.size() ||
+                !equal(cell3D1Faces.begin(),
+                       cell3D1Faces.end(),
+                       cell3D2Faces.begin())))
+          {
+            throw std::runtime_error("Cell3D " +
+                                     std::to_string(p1) +
+                                     " and " +
+                                     std::to_string(p2) +
+                                     " are duplicated");
+          }
         }
-      }
-    }
-
-
-    {
-      for (unsigned int p = 0; p < convexMesh.Cell3DTotalNumber(); p++)
-      {
-        GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(convexMesh,
-                                                                          p);
-
-        const Eigen::Vector3d polyhedronBarycenter = geometryUtilities.PolyhedronBarycenter(polyhedron.Vertices);
-        const vector<Eigen::MatrixXd> polyhedronFace3DVertices = geometryUtilities.PolyhedronFaceVertices(polyhedron.Vertices,
-                                                                                                          polyhedron.Faces);
-        const vector<Eigen::Vector3d> polyhedronFaceBarycenters = geometryUtilities.PolyhedronFaceBarycenter(polyhedronFace3DVertices);
-
-        const vector<Eigen::Vector3d> polyhedronFaceNormals = geometryUtilities.PolyhedronFaceNormals(polyhedronFace3DVertices);
-        const vector<bool> polyhedronFaceNormalDirections = geometryUtilities.PolyhedronFaceNormalDirections(polyhedronFace3DVertices,
-                                                                                                             polyhedronBarycenter,
-                                                                                                             polyhedronFaceNormals);
-        const vector<Eigen::Vector3d> polyhedronFaceTranslations = geometryUtilities.PolyhedronFaceTranslations(polyhedronFace3DVertices);
-        const vector<Eigen::Matrix3d> polyhedronFaceRotationMatrices = geometryUtilities.PolyhedronFaceRotationMatrices(polyhedronFace3DVertices,
-                                                                                                                        polyhedronFaceNormals,
-                                                                                                                        polyhedronFaceTranslations);
-
-        const vector<Eigen::MatrixXd> polyhedronFace2DVertices = geometryUtilities.PolyhedronFaceRotatedVertices(polyhedronFace3DVertices,
-                                                                                                                 polyhedronFaceTranslations,
-                                                                                                                 polyhedronFaceRotationMatrices);
       }
     }
 
     if (configuration.Cell3D_CheckConvexity)
     {
-      for (unsigned int p = 0; p < convexMesh.Cell3DTotalNumber(); p++)
+      for (unsigned int p = 0; p < mesh.Cell3DTotalNumber(); p++)
       {
-        GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(convexMesh,
+        if (!mesh.Cell3DIsActive(p))
+          continue;
+
+        GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(mesh,
                                                                           p);
 
         const Eigen::Vector3d polyhedronBarycenter = geometryUtilities.PolyhedronBarycenter(polyhedron.Vertices);
@@ -251,20 +370,28 @@ namespace Gedim
         Output::Assert(polyhedronBarycenterPosition.Type ==
                        GeometryUtilities::PointPolyhedronPositionResult::Types::Inside);
 
-        Output::Assert(geometryUtilities.PolyhedronIsConvex(polyhedronFace3DVertices,
-                                                            polyhedronFace2DVertices,
-                                                            polyhedronFaceBarycenters,
-                                                            polyhedronFaceNormals,
-                                                            polyhedronFaceNormalDirections,
-                                                            polyhedronBarycenter));
+        if (!geometryUtilities.PolyhedronIsConvex(polyhedronFace3DVertices,
+                                                  polyhedronFace2DVertices,
+                                                  polyhedronFaceBarycenters,
+                                                  polyhedronFaceNormals,
+                                                  polyhedronFaceNormalDirections,
+                                                  polyhedronBarycenter))
+        {
+          throw std::runtime_error("Cell3D " +
+                                   std::to_string(p) +
+                                   " is not convex");
+        }
       }
     }
 
     if (configuration.Cell3D_CheckMeasure)
     {
-      for (unsigned int p = 0; p < convexMesh.Cell3DTotalNumber(); p++)
+      for (unsigned int p = 0; p < mesh.Cell3DTotalNumber(); p++)
       {
-        GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(convexMesh,
+        if (!mesh.Cell3DIsActive(p))
+          continue;
+
+        GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(mesh,
                                                                           p);
 
         const Eigen::Vector3d polyhedronBarycenter = geometryUtilities.PolyhedronBarycenter(polyhedron.Vertices);
@@ -289,12 +416,209 @@ namespace Gedim
         const std::vector<std::vector<Eigen::Matrix3d>> polyhedronFace2DTriangulationPoints = geometryUtilities.PolyhedronFaceExtractTriangulationPoints(polyhedronFace2DVertices,
                                                                                                                                                          polyhedronFaceTriangulations);
 
-        Output::Assert(geometryUtilities.IsValue3DPositive(
-                         geometryUtilities.PolyhedronVolume(polyhedronFace2DTriangulationPoints,
-                                                            polyhedronFaceNormals,
-                                                            polyhedronFaceNormalDirections,
-                                                            polyhedronFaceTranslations,
-                                                            polyhedronFaceRotationMatrices)));
+        if (geometryUtilities.IsValueZero(
+              geometryUtilities.PolyhedronVolumeByBoundaryIntegral(polyhedronFace2DTriangulationPoints,
+                                                                   polyhedronFaceNormals,
+                                                                   polyhedronFaceNormalDirections,
+                                                                   polyhedronFaceTranslations,
+                                                                   polyhedronFaceRotationMatrices),
+              geometryUtilities.Tolerance3D()))
+        {
+          throw std::runtime_error("Cell3D " +
+                                   std::to_string(p) +
+                                   " is zero");
+        }
+      }
+    }
+  }
+  // ***************************************************************************
+  void MeshUtilities::CheckMeshGeometricData3D(const CheckMeshGeometricData3DConfiguration& configuration,
+                                               const GeometryUtilities& geometryUtilities,
+                                               const IMeshDAO& mesh,
+                                               const MeshGeometricData3D& geometricData) const
+  {
+    if (configuration.Cell1D_CheckMeasure)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(cell3DIndex); f++)
+        {
+          const unsigned int cell2DIndex = mesh.Cell3DFace(cell3DIndex, f);
+          for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(cell2DIndex); e++)
+            Output::Assert(geometryUtilities.IsValuePositive(geometricData.Cell3DsFacesEdgeLengths[cell3DIndex][f][e],
+                                                             geometryUtilities.Tolerance1D()));
+        }
+      }
+    }
+
+    if (configuration.Cell1D_CheckNormals)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(cell3DIndex); f++)
+        {
+          const double area = geometryUtilities.PolygonAreaByBoundaryIntegral(geometricData.Cell3DsFaces2DVertices[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdgeLengths[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdge2DTangents[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdge2DNormals[cell3DIndex][f]);
+
+          if (!geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                area,
+                                                geometryUtilities.Tolerance2D()))
+          {
+            std::cout.precision(16);
+            std::cout<< "Cell1D_CheckNormals cell3DIndex "<< cell3DIndex<< " cell2DIndex "<< mesh.Cell3DFace(cell3DIndex, f)<< std::endl;
+            std::cout<< scientific<< "Areas: "<< area<< " "<< geometricData.Cell3DsFacesAreas[cell3DIndex][f]<< std::endl;
+            std::cout<< scientific<< "Difference: "<< (area - geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+            std::cout<< scientific<< "Tolerance: "<< geometryUtilities.Tolerance2D() * std::max(area, geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+          }
+
+          Output::Assert(geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                          area,
+                                                          geometryUtilities.Tolerance2D()));
+        }
+      }
+    }
+
+    if (configuration.Cell2D_CheckMeasure)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(cell3DIndex); f++)
+        {
+          Output::Assert(geometryUtilities.IsValuePositive(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                           geometryUtilities.Tolerance2D()));
+        }
+      }
+    }
+
+    if (configuration.Cell2D_CheckTriangles)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(cell3DIndex); f++)
+        {
+          const double area = geometryUtilities.PolygonAreaByInternalIntegral(geometricData.Cell3DsFaces2DTriangulations[cell3DIndex][f]);
+
+          if (!geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                area,
+                                                geometryUtilities.Tolerance2D()))
+          {
+            std::cout.precision(16);
+            std::cout<< "Cell2D_CheckTriangles cell3DIndex "<< cell3DIndex<< " cell2DIndex "<< mesh.Cell3DFace(cell3DIndex, f)<< std::endl;
+            std::cout<< scientific<< "Areas: "<< area<< " "<< geometricData.Cell3DsFacesAreas[cell3DIndex][f]<< std::endl;
+            std::cout<< scientific<< "Difference: "<< (area - geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+            std::cout<< scientific<< "Tolerance: "<< geometryUtilities.Tolerance2D() * std::max(area, geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+          }
+
+          Output::Assert(geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                          area,
+                                                          geometryUtilities.Tolerance2D()));
+        }
+      }
+    }
+
+    if (configuration.Cell2D_CheckNormals)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(cell3DIndex); f++)
+        {
+          const double area = geometryUtilities.PolygonAreaByBoundaryIntegral(geometricData.Cell3DsFaces2DVertices[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdgeLengths[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdge2DTangents[cell3DIndex][f],
+                                                                              geometricData.Cell3DsFacesEdge2DNormals[cell3DIndex][f]);
+
+          if (!geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                area,
+                                                geometryUtilities.Tolerance2D()))
+          {
+            std::cout.precision(16);
+            std::cout<< "Cell2D_CheckNormals cell3DIndex "<< cell3DIndex<< " cell2DIndex "<< mesh.Cell3DFace(cell3DIndex, f)<< std::endl;
+            std::cout<< scientific<< "Areas: "<< area<< " "<< geometricData.Cell3DsFacesAreas[cell3DIndex][f]<< std::endl;
+            std::cout<< scientific<< "Difference: "<< (area - geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+            std::cout<< scientific<< "Tolerance: "<< geometryUtilities.Tolerance2D() * std::max(area, geometricData.Cell3DsFacesAreas[cell3DIndex][f])<< std::endl;
+          }
+
+          Output::Assert(geometryUtilities.AreValuesEqual(geometricData.Cell3DsFacesAreas[cell3DIndex][f],
+                                                          area,
+                                                          geometryUtilities.Tolerance2D()));
+        }
+
+
+        const double volume = geometryUtilities.PolyhedronVolumeByBoundaryIntegral(geometricData.Cell3DsFaces2DTriangulations[cell3DIndex],
+                                                                                   geometricData.Cell3DsFacesNormals[cell3DIndex],
+                                                                                   geometricData.Cell3DsFacesNormalDirections[cell3DIndex],
+                                                                                   geometricData.Cell3DsFacesTranslations[cell3DIndex],
+                                                                                   geometricData.Cell3DsFacesRotationMatrices[cell3DIndex]);
+
+        if (!geometryUtilities.AreValuesEqual(geometricData.Cell3DsVolumes[cell3DIndex],
+                                              volume,
+                                              geometryUtilities.Tolerance3D()))
+        {
+          std::cout.precision(16);
+          std::cout<< "Cell2D_CheckNormals cell3DIndex "<< cell3DIndex<< std::endl;
+          std::cout<< scientific<< "Volumes: "<< volume<< " "<< geometricData.Cell3DsVolumes[cell3DIndex]<< std::endl;
+          std::cout<< scientific<< "Difference: "<< (volume - geometricData.Cell3DsVolumes[cell3DIndex])<< std::endl;
+          std::cout<< scientific<< "Tolerance: "<< geometryUtilities.Tolerance3D() * std::max(volume, geometricData.Cell3DsVolumes[cell3DIndex])<< std::endl;
+        }
+
+        Output::Assert(geometryUtilities.AreValuesEqual(geometricData.Cell3DsVolumes[cell3DIndex],
+                                                        volume,
+                                                        geometryUtilities.Tolerance3D()));
+      }
+    }
+
+    if (configuration.Cell3D_CheckMeasure)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        Output::Assert(geometryUtilities.IsValuePositive(geometricData.Cell3DsVolumes[cell3DIndex],
+                                                         geometryUtilities.Tolerance3D()));
+      }
+    }
+
+    if (configuration.Cell3D_CheckTetrahedra)
+    {
+      for (unsigned int cell3DIndex = 0; cell3DIndex < mesh.Cell3DTotalNumber(); cell3DIndex++)
+      {
+        if (!mesh.Cell3DIsActive(cell3DIndex))
+          continue;
+
+        const double volume = geometryUtilities.PolyhedronVolumeByInternalIntegral(geometricData.Cell3DsTetrahedronPoints[cell3DIndex]);
+
+        if (!geometryUtilities.AreValuesEqual(geometricData.Cell3DsVolumes[cell3DIndex],
+                                              volume,
+                                              geometryUtilities.Tolerance3D()))
+        {
+          std::cout.precision(16);
+          std::cout<< "Cell3D_CheckTetrahedra cell3DIndex "<< cell3DIndex<< std::endl;
+          std::cout<< scientific<< "Volume: "<< volume<< " "<< geometricData.Cell3DsVolumes[cell3DIndex]<< std::endl;
+          std::cout<< scientific<< "Difference: "<< (volume - geometricData.Cell3DsVolumes[cell3DIndex])<< std::endl;
+          std::cout<< scientific<< "Tolerance: "<< geometryUtilities.Tolerance3D() * std::max(volume, geometricData.Cell3DsVolumes[cell3DIndex])<< std::endl;
+        }
+
+        Output::Assert(geometryUtilities.AreValuesEqual(geometricData.Cell3DsVolumes[cell3DIndex],
+                                                        volume,
+                                                        geometryUtilities.Tolerance3D()));
       }
     }
   }
@@ -583,11 +907,11 @@ namespace Gedim
                                                                                                 result.Cell3DsFacesNormals[c]);
 
 
-      result.Cell3DsVolumes[c] = geometryUtilities.PolyhedronVolume(result.Cell3DsFaces2DTriangulations[c],
-                                                                    result.Cell3DsFacesNormals[c],
-                                                                    result.Cell3DsFacesNormalDirections[c],
-                                                                    result.Cell3DsFacesTranslations[c],
-                                                                    result.Cell3DsFacesRotationMatrices[c]);
+      result.Cell3DsVolumes[c] = geometryUtilities.PolyhedronVolumeByBoundaryIntegral(result.Cell3DsFaces2DTriangulations[c],
+                                                                                      result.Cell3DsFacesNormals[c],
+                                                                                      result.Cell3DsFacesNormalDirections[c],
+                                                                                      result.Cell3DsFacesTranslations[c],
+                                                                                      result.Cell3DsFacesRotationMatrices[c]);
 
       result.Cell3DsCentroids[c] = geometryUtilities.PolyhedronCentroid(result.Cell3DsFaces2DTriangulations[c],
                                                                         result.Cell3DsFacesNormals[c],
@@ -734,37 +1058,37 @@ namespace Gedim
         const vector<unsigned int> faceConvexHull = geometryUtilities.ConvexHull(face2DVerticesCCW[f],
                                                                                  false);
 
-//        if (geometryUtilities.PolygonOrientation(faceConvexHull) !=
-//            Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise)
-//        {
-//          std::cout.precision(16);
-//          std::cout<< "Cell "<< c<< " ";
-//          std::cout<< "Face "<< f<< " ";
-//          std::cout<< "index "<< mesh.Cell3DFace(c, f)<< std::endl;
-//          std::cout<< scientific<< "3DVertices:\n"<< result.Cell3DsFaces3DVertices[c][f]<< std::endl;
-//          std::cout<< scientific<< "2DVertices:\n"<< result.Cell3DsFaces2DVertices[c][f]<< std::endl;
-//          std::cout<< scientific<< "2DVertices_CCW:\n"<< face2DVerticesCCW[f]<< std::endl;
-//          std::cout<< scientific<< "Rotation:\n"<< result.Cell3DsFacesRotationMatrices[c][f]<< std::endl;
-//          std::cout<< scientific<< "Translation:\n "<< result.Cell3DsFacesTranslations[c][f]<< std::endl;
+        //        if (geometryUtilities.PolygonOrientation(faceConvexHull) !=
+        //            Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise)
+        //        {
+        //          std::cout.precision(16);
+        //          std::cout<< "Cell "<< c<< " ";
+        //          std::cout<< "Face "<< f<< " ";
+        //          std::cout<< "index "<< mesh.Cell3DFace(c, f)<< std::endl;
+        //          std::cout<< scientific<< "3DVertices:\n"<< result.Cell3DsFaces3DVertices[c][f]<< std::endl;
+        //          std::cout<< scientific<< "2DVertices:\n"<< result.Cell3DsFaces2DVertices[c][f]<< std::endl;
+        //          std::cout<< scientific<< "2DVertices_CCW:\n"<< face2DVerticesCCW[f]<< std::endl;
+        //          std::cout<< scientific<< "Rotation:\n"<< result.Cell3DsFacesRotationMatrices[c][f]<< std::endl;
+        //          std::cout<< scientific<< "Translation:\n "<< result.Cell3DsFacesTranslations[c][f]<< std::endl;
 
-//          {
-//            Gedim::VTKUtilities exporter;
-//            exporter.AddPolygon(result.Cell3DsFaces3DVertices[c][f]);
-//            exporter.Export("./Cell3DFace3D.vtu");
-//          }
+        //          {
+        //            Gedim::VTKUtilities exporter;
+        //            exporter.AddPolygon(result.Cell3DsFaces3DVertices[c][f]);
+        //            exporter.Export("./Cell3DFace3D.vtu");
+        //          }
 
-//          {
-//            Gedim::VTKUtilities exporter;
-//            exporter.AddPolygon(result.Cell3DsFaces2DVertices[c][f]);
-//            exporter.Export("./Cell3DFace2D.vtu");
-//          }
+        //          {
+        //            Gedim::VTKUtilities exporter;
+        //            exporter.AddPolygon(result.Cell3DsFaces2DVertices[c][f]);
+        //            exporter.Export("./Cell3DFace2D.vtu");
+        //          }
 
-//          {
-//            Gedim::VTKUtilities exporter;
-//            exporter.AddPolygon(face2DVerticesCCW[f]);
-//            exporter.Export("./Cell3DFace2DCCW.vtu");
-//          }
-//        }
+        //          {
+        //            Gedim::VTKUtilities exporter;
+        //            exporter.AddPolygon(face2DVerticesCCW[f]);
+        //            exporter.Export("./Cell3DFace2DCCW.vtu");
+        //          }
+        //        }
 
         Output::Assert(geometryUtilities.PolygonOrientation(faceConvexHull) ==
                        Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
@@ -881,11 +1205,11 @@ namespace Gedim
                                                                                              geometryUtilities.PolyhedronBarycenter(convexCell3DPolyhedron.Vertices),
                                                                                              convexCell3DsNormal[cc]);
 
-        convexCell3DsVolume[cc] = geometryUtilities.PolyhedronVolume(convexCell3DFaces2DTriangulations,
-                                                                     convexCell3DsNormal[cc],
-                                                                     convexCell3DsNormalDirections[cc],
-                                                                     convexCell3DFacesTranslation,
-                                                                     convexCell3DFacesRotationMatrices);
+        convexCell3DsVolume[cc] = geometryUtilities.PolyhedronVolumeByBoundaryIntegral(convexCell3DFaces2DTriangulations,
+                                                                                       convexCell3DsNormal[cc],
+                                                                                       convexCell3DsNormalDirections[cc],
+                                                                                       convexCell3DFacesTranslation,
+                                                                                       convexCell3DFacesRotationMatrices);
 
         convexCell3DsCentroid.col(cc) = geometryUtilities.PolyhedronCentroid(convexCell3DFaces2DTriangulations,
                                                                              convexCell3DsNormal[cc],
@@ -942,7 +1266,8 @@ namespace Gedim
             convexCell3DsNormalDirections[cc][ccf] ?
               convexCell3DsNormal[cc][ccf] : -1.0 * convexCell3DsNormal[cc][ccf];
 
-        result.Cell3DsFacesNormalDirections[c][f] = geometryUtilities.IsValue1DPositive(faceNormal.dot(outgoingFaceNormal));
+        result.Cell3DsFacesNormalDirections[c][f] = geometryUtilities.IsValuePositive(faceNormal.dot(outgoingFaceNormal),
+                                                                                      geometryUtilities.Tolerance1DSquared());
       }
     }
 
@@ -1020,7 +1345,8 @@ namespace Gedim
                                                                                           faceRotationMatrix.transpose(),
                                                                                           faceTranslation);
 
-          if (geometryUtilities.IsValue1DNegative(faceRotationMatrix.determinant()))
+          if (geometryUtilities.IsValueNegative(faceRotationMatrix.determinant(),
+                                                geometryUtilities.Tolerance1D()))
             convexFace2DTriangle.block(0, 1, 3, convexFace2DTriangle.cols() - 1).rowwise().reverseInPlace();
 
           // check if concave face point is inside convex cell

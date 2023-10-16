@@ -9,7 +9,13 @@ namespace Gedim
 {
   struct GeometryUtilitiesConfig final
   {
-      double Tolerance = std::numeric_limits<double>::epsilon();
+      static constexpr double DefaultMinTolerance()
+      { return 10.0 * std::numeric_limits<double>::epsilon(); }
+
+      double MinTolerance = DefaultMinTolerance();
+      double Tolerance1D = MinTolerance;
+      double Tolerance2D = MinTolerance;
+      double Tolerance3D = MinTolerance;
   };
 
   /// \brief The GeometryUtilities class intersects 3D segments
@@ -656,7 +662,51 @@ namespace Gedim
           Types Type = Types::Unknown; /// type of split
       };
 
-    private:
+    public:
+      GeometryUtilities(const GeometryUtilitiesConfig& configuration);
+      ~GeometryUtilities();
+
+      /// \return tolerance used for segment length
+      inline double Tolerance1D() const
+      { return std::max(_configuration.MinTolerance,
+                        _configuration.Tolerance1D); }
+      /// \return tolerance used for squared segment length
+      inline double Tolerance1DSquared() const
+      { return std::max(_configuration.MinTolerance *
+                        _configuration.MinTolerance,
+                        _configuration.Tolerance1D *
+                        _configuration.Tolerance1D); }
+      /// \return tolerance used for polygon area
+      inline double Tolerance2D() const
+      { return std::max(_configuration.MinTolerance,
+                        std::max(_configuration.Tolerance2D,
+                                 0.25 * std::sqrt(3.0) *
+                                 Tolerance1D() *
+                                 Tolerance1D())); }
+      /// \return tolerance used for polyhedron volume
+      inline double Tolerance3D() const
+      { return std::max(_configuration.MinTolerance,
+                        std::max(_configuration.Tolerance3D,
+                                 std::max(std::sqrt(2.0) / 12.0 *
+                                          Tolerance1D() *
+                                          Tolerance1D() *
+                                          Tolerance1D(),
+                                          std::sqrt(6.0) / 9.0 *
+                                          Tolerance2D() *
+                                          Tolerance1D()))); }
+
+      /// \param first the first value
+      /// \param second the second value
+      /// \return the relative difference between the two values according the first
+      inline double RelativeDifference(const double& first,
+                                       const double& second,
+                                       const double& tolerance) const
+      {
+        const double max_tolerance = std::max(abs(tolerance),
+                                              _configuration.MinTolerance);
+        return abs(second - first) / ((abs(first) <= max_tolerance) ? 1.0 : abs(first));
+      }
+
       /// \brief Compare two values according to tolerance
       /// \param first the first value
       /// \param second the second value
@@ -665,64 +715,42 @@ namespace Gedim
       CompareTypes CompareValues(const double& first,
                                  const double& second,
                                  const double& tolerance) const;
-    public:
-      GeometryUtilities(const GeometryUtilitiesConfig& configuration);
-      ~GeometryUtilities();
 
-      /// \param first the first value
-      /// \param second the second value
-      /// \return the relative difference between the two values according the first
-      inline double RelativeDifference(const double& first,
-                                       const double& second,
-                                       const double& tolerance = std::numeric_limits<double>::epsilon()) const
-      {
-        const double max_tolerance = std::max(abs(tolerance),
-                                              std::numeric_limits<double>::epsilon());
-        return abs(second - first) / ((abs(first) <= max_tolerance) ? 1.0 : abs(first));
-      }
-
-      /// \brief Compare two 1D values according to tolerance
+      /// \brief Check if two values are equal according to tolerance
       /// \param first the first value
       /// \param second the second value
       /// \return the result
-      inline CompareTypes Compare1DValues(const double& first,
-                                          const double& second) const
+      inline bool AreValuesEqual(const double& first,
+                                 const double& second,
+                                 const double& tolerance) const
       {
         return CompareValues(first,
                              second,
-                             _configuration.Tolerance);
-      }
-
-      /// \brief Check if two 1D values are equal according to tolerance
-      /// \param first the first value
-      /// \param second the second value
-      /// \return the result
-      inline bool Are1DValuesEqual(const double& first,
-                                   const double& second) const
-      {
-        return CompareValues(first,
-                             second,
-                             _configuration.Tolerance) == CompareTypes::Coincident;
+                             tolerance) == CompareTypes::Coincident;
       }
 
       /// \param first the first value
       /// \param second the second value
       /// \return true if first is greater than second
-      inline bool IsValue1DGreater(const double& first,
-                                   const double& second) const
+      inline bool IsValueGreater(const double& first,
+                                 const double& second,
+                                 const double& tolerance) const
       {
-        return Compare1DValues(first,
-                               second) == CompareTypes::SecondBeforeFirst;
+        return CompareValues(first,
+                             second,
+                             tolerance) == CompareTypes::SecondBeforeFirst;
       }
 
       /// \param first the first value
       /// \param second the second value
       /// \return true if first is greater or equal than second
-      inline bool IsValue1DGreaterOrEqual(const double& first,
-                                          const double& second) const
+      inline bool IsValueGreaterOrEqual(const double& first,
+                                        const double& second,
+                                        const double& tolerance) const
       {
-        const CompareTypes result = Compare1DValues(first,
-                                                    second);
+        const CompareTypes result = CompareValues(first,
+                                                  second,
+                                                  tolerance);
 
         return result == CompareTypes::SecondBeforeFirst ||
             result == CompareTypes::Coincident;
@@ -730,101 +758,32 @@ namespace Gedim
 
       /// \param value the value
       /// \return true if value is positive
-      inline bool IsValue1DPositive(const double& value) const
+      inline bool IsValuePositive(const double& value,
+                                  const double& tolerance) const
       {
-        return Compare1DValues(0.0,
-                               value) == CompareTypes::FirstBeforeSecond;
+        return CompareValues(0.0,
+                             value,
+                             tolerance) == CompareTypes::FirstBeforeSecond;
       }
 
       /// \param value the value
       /// \return true if value is negative
-      inline bool IsValue1DNegative(const double& value) const
+      inline bool IsValueNegative(const double& value,
+                                  const double& tolerance) const
       {
-        return Compare1DValues(0.0,
-                               value) == CompareTypes::SecondBeforeFirst;
+        return CompareValues(0.0,
+                             value,
+                             tolerance) == CompareTypes::SecondBeforeFirst;
       }
 
       /// \param value the value
       /// \return true if value is zero
-      inline bool IsValue1DZero(const double& value) const
+      inline bool IsValueZero(const double& value,
+                              const double& tolerance) const
       {
-        return Compare1DValues(0.0,
-                               value) == CompareTypes::Coincident;
-      }
-
-      /// \brief Compare two 2D values according to squared tolerance
-      /// \param first the first value
-      /// \param second the second value
-      /// \return the result
-      inline CompareTypes Compare2DValues(const double& first,
-                                          const double& second) const
-      {
-        return CompareValues(first,
-                             second,
-                             _configuration.Tolerance *
-                             _configuration.Tolerance);
-      }
-
-      /// \param value the value
-      /// \return true if value is positive
-      inline bool IsValue2DPositive(const double& value) const
-      {
-        return Compare2DValues(0.0,
-                               value) == CompareTypes::FirstBeforeSecond;
-      }
-
-      /// \param value the value
-      /// \return true if value is negative
-      inline bool IsValue2DNegative(const double& value) const
-      {
-        return Compare2DValues(0.0,
-                               value) == CompareTypes::SecondBeforeFirst;
-      }
-
-      /// \param value the value
-      /// \return true if value is zero
-      inline bool IsValue2DZero(const double& value) const
-      {
-        return Compare2DValues(0.0,
-                               value) == CompareTypes::Coincident;
-      }
-
-      /// \brief Compare two 3D values according to cube tolerance
-      /// \param first the first value
-      /// \param second the second value
-      /// \return the result
-      inline CompareTypes Compare3DValues(const double& first,
-                                          const double& second) const
-      {
-        return CompareValues(first,
-                             second,
-                             _configuration.Tolerance *
-                             _configuration.Tolerance *
-                             _configuration.Tolerance);
-      }
-
-      /// \param value the value
-      /// \return true if value is positive
-      inline bool IsValue3DPositive(const double& value) const
-      {
-        return Compare3DValues(0.0,
-                               value) == CompareTypes::FirstBeforeSecond;
-      }
-
-      /// \param value the value
-      /// \return true if value is negative
-      inline bool IsValue3DNegative(const double& value) const
-      {
-        return Compare3DValues(0.0,
-                               value) == CompareTypes::SecondBeforeFirst;
-      }
-
-      /// \param value the value
-      /// \return true if value is zero
-      inline bool IsValue3DZero(const double& value) const
-      {
-        return Compare3DValues(0.0,
-                               value) == CompareTypes::Coincident;
+        return CompareValues(0.0,
+                             value,
+                             tolerance) == CompareTypes::Coincident;
       }
 
       /// \param step the distance between each coordinate
@@ -851,6 +810,7 @@ namespace Gedim
       /// \note if size < 2 then size will be considered as 2
       std::vector<double> RandomCoordinates(const unsigned int size,
                                             const bool insertExtremes,
+                                            const double& minDistance,
                                             const unsigned int seed = time(nullptr)) const;
 
       /// \param v_prev the previous point
@@ -863,14 +823,14 @@ namespace Gedim
                                const Eigen::Vector3d& v_next,
                                const double& norm_v_prev_v,
                                const double& norm_v_next_v) const
-      { return IsValue1DZero(norm_v_prev_v) ||
-            IsValue1DZero(norm_v_next_v) ? 0.0 :
-                                           (v.x() - v_prev.x()) *
-                                           (v_next.y() - v_prev.y()) /
-                                           (norm_v_prev_v * norm_v_next_v) -
-                                           (v_next.x() - v_prev.x()) *
-                                           (v.y() - v_prev.y()) /
-                                           (norm_v_prev_v * norm_v_next_v);
+      { return IsValueZero(norm_v_prev_v, Tolerance1D()) ||
+            IsValueZero(norm_v_next_v, Tolerance1D()) ? 0.0 :
+                                                        (v.x() - v_prev.x()) *
+                                                        (v_next.y() - v_prev.y()) /
+                                                        (norm_v_prev_v * norm_v_next_v) -
+                                                        (v_next.x() - v_prev.x()) *
+                                                        (v.y() - v_prev.y()) /
+                                                        (norm_v_prev_v * norm_v_next_v);
       }
 
       /// \brief compute the Point distance
@@ -903,9 +863,9 @@ namespace Gedim
       /// \return false if the point is outside the bounding box, true otherwise (border or inside)
       inline bool IsPointInBoundingBox(const Eigen::Vector3d& point,
                                        const Eigen::MatrixXd& boudingBox) const
-      { return (IsValue1DGreaterOrEqual(point.x(), boudingBox(0, 0)) && IsValue1DGreaterOrEqual(boudingBox(0, 1), point.x())) &&
-            (IsValue1DGreaterOrEqual(point.y(), boudingBox(1, 0)) && IsValue1DGreaterOrEqual(boudingBox(1, 1), point.y())) &&
-            (IsValue1DGreaterOrEqual(point.z(), boudingBox(2, 0)) && IsValue1DGreaterOrEqual(boudingBox(2, 1), point.z())); }
+      { return (IsValueGreaterOrEqual(point.x(), boudingBox(0, 0), Tolerance1D()) && IsValueGreaterOrEqual(boudingBox(0, 1), point.x(), Tolerance1D())) &&
+            (IsValueGreaterOrEqual(point.y(), boudingBox(1, 0), Tolerance1D()) && IsValueGreaterOrEqual(boudingBox(1, 1), point.y(), Tolerance1D())) &&
+            (IsValueGreaterOrEqual(point.z(), boudingBox(2, 0), Tolerance1D()) && IsValueGreaterOrEqual(boudingBox(2, 1), point.z(), Tolerance1D())); }
 
       /// \param points the point collection, size 3 x numPoints
       /// \return the maximum distance between the points.
@@ -917,7 +877,7 @@ namespace Gedim
       inline bool PointsAreCoincident(const Eigen::Vector3d& firstPoint,
                                       const Eigen::Vector3d& secondPoint) const
       {
-        return IsValue1DZero(PointDistance(firstPoint, secondPoint));
+        return IsValueZero(PointDistance(firstPoint, secondPoint), Tolerance1D());
       }
 
       /// \brief Find a point in point list
@@ -953,7 +913,7 @@ namespace Gedim
       inline bool PointsAre2D(const Eigen::MatrixXd& points) const
       {
         Gedim::Output::Assert(points.rows() == 3 && points.cols() > 0);
-        return points.row(2).isZero(_configuration.Tolerance);
+        return points.row(2).isZero(_configuration.Tolerance1D);
       }
 
       /// \brief compute the Point Curvilinear Coordinate of segment
@@ -1093,7 +1053,7 @@ namespace Gedim
       inline double SegmentSlope(const Eigen::Vector3d& segmentOrigin,
                                  const Eigen::Vector3d& segmentEnd) const
       {
-        Gedim::Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        Gedim::Output::Assert(!AreValuesEqual(segmentEnd.x(), segmentOrigin.x(), Tolerance1D()));
         return (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
       }
 
@@ -1105,7 +1065,7 @@ namespace Gedim
       inline double SegmentIntercept(const Eigen::Vector3d& segmentOrigin,
                                      const Eigen::Vector3d& segmentEnd) const
       {
-        Gedim::Output::Assert(!Are1DValuesEqual(segmentEnd.x(), segmentOrigin.x()));
+        Gedim::Output::Assert(!AreValuesEqual(segmentEnd.x(), segmentOrigin.x(), Tolerance1D()));
         return segmentOrigin.y() -
             segmentOrigin.x() * (segmentEnd.y() - segmentOrigin.y()) / (segmentEnd.x() - segmentOrigin.x());
       }
@@ -1122,8 +1082,9 @@ namespace Gedim
                                              const double& firstSphereDiameter,
                                              const double& secondSphereDiameter) const
       {
-        return IsValue1DGreater(2.0 * PointDistance(firstSphereCenter, secondSphereCenter),
-                                firstSphereDiameter + secondSphereDiameter);
+        return IsValueGreater(2.0 * PointDistance(firstSphereCenter, secondSphereCenter),
+                              firstSphereDiameter + secondSphereDiameter,
+                              Tolerance1D());
       }
 
       /// \param firstLineOrigin first line origin
@@ -1576,12 +1537,26 @@ namespace Gedim
       /// \param edgeLengths the edge lengths, size numEdges
       /// \param edgeTangents the edge tangents, size 3 x numEdges
       /// \param edgeNormals the edge outgoint normals, size 3 x numEdges
+      /// \param referenceQuadraturePoints quadrature points on reference segment [0,1]
+      /// \param referenceQuadratureWeights quadrature weights on reference segment [0,1]
       /// \return the polygon area
       /// \note the area is computed as integral_edges x dot n_x with gauss formula on edges of order 1
-      double PolygonAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
-                                   const Eigen::VectorXd& edgeLengths,
-                                   const Eigen::MatrixXd& edgeTangents,
-                                   const Eigen::MatrixXd& edgeNormals) const;
+      double PolygonAreaByBoundaryIntegral(const Eigen::MatrixXd& polygonVertices,
+                                           const Eigen::VectorXd& edgeLengths,
+                                           const Eigen::MatrixXd& edgeTangents,
+                                           const Eigen::MatrixXd& edgeNormals,
+                                           const Eigen::MatrixXd& referenceQuadraturePoints =
+          (Eigen::MatrixXd(3, 1) << 0.5, 0.0, 0.0).finished(),
+                                           const Eigen::VectorXd& referenceQuadratureWeights =
+          Eigen::VectorXd::Ones(1)) const;
+
+      /// \brief Polygon Area By Internal Integral
+      /// \param polygonTriangulationPoints the internal polygon sub-triangulation
+      /// \param referenceQuadratureWeights the reference triangle quadrature weights [0,1]x[0,1]
+      /// \return the area computed as integral on sub-triangles
+      double PolygonAreaByInternalIntegral(const std::vector<Eigen::Matrix3d>& polygonTriangulationPoints,
+                                           const Eigen::VectorXd& referenceQuadratureWeights =
+          Eigen::VectorXd::Constant(1, 0.5)) const;
 
       /// \brief Polygon Area By Integral on edges
       /// \param polygonVertices the polygon vertices, size 3 x numVertices
@@ -1924,13 +1899,27 @@ namespace Gedim
       /// \param polyhedronFaceNormalDirections polyhedron face normal directions, size numPolyhedronFaces
       /// \param polyhedronFaceTranslations polyhedron face translation vector from 2D to 3D
       /// \param polyhedronFaceRotationMatrices polyhedron face rotation matrix from 2D to 3D
+      /// \param referenceQuadraturePoints the reference tetrahedron quadrature points [0,1]x[0,1]x[0,1]
+      /// \param referenceQuadratureWeights the reference tetrahedron quadrature weights [0,1]x[0,1]x[0,1]
       /// \return the polyhedron volume
       /// \note use the divergence theorem, with F = 1/3 (x, y, z), see https://en.wikipedia.org/wiki/Divergence_theorem
-      double PolyhedronVolume(const std::vector<std::vector<Eigen::Matrix3d>>& polyhedronFaceRotatedTriangulationPoints,
-                              const std::vector<Eigen::Vector3d>& polyhedronFaceNormals,
-                              const std::vector<bool>& polyhedronFaceNormalDirections,
-                              const std::vector<Eigen::Vector3d>& polyhedronFaceTranslations,
-                              const std::vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const;
+      double PolyhedronVolumeByBoundaryIntegral(const std::vector<std::vector<Eigen::Matrix3d>>& polyhedronFaceRotatedTriangulationPoints,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFaceNormals,
+                                                const std::vector<bool>& polyhedronFaceNormalDirections,
+                                                const std::vector<Eigen::Vector3d>& polyhedronFaceTranslations,
+                                                const std::vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices,
+                                                const Eigen::MatrixXd& referenceQuadraturePoints =
+          (Eigen::MatrixXd(3, 1) << 1.0 / 3.0, 1.0 / 3.0, 0.0).finished(),
+                                                const Eigen::VectorXd& referenceQuadratureWeights =
+          Eigen::VectorXd::Constant(1, 0.5)) const;
+
+      /// \brief Polyhedron Volume By Internal Integral
+      /// \param polyhedronTetrahedronVertices the internal polyhedron sub-tetrahedra
+      /// \param referenceQuadratureWeights the reference tetrahedron quadrature weights [0,1]x[0,1]x[0,1]
+      /// \return the area computed as integral on sub-tetrahedra
+      double PolyhedronVolumeByInternalIntegral(const std::vector<Eigen::MatrixXd>& polyhedronTetrahedronVertices,
+                                                const Eigen::VectorXd& referenceQuadratureWeights =
+          Eigen::VectorXd::Constant(1, 1.0 / 6.0)) const;
 
       /// \brief Compute the Polyhedron centroid
       /// \param polyhedronRotatedFaceTriangulationPoints polyhedron face triangulation points 2D, size numPolyhedronFaces x numTrianglesPerFace

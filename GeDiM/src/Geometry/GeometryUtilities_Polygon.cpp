@@ -103,23 +103,22 @@ namespace Gedim
     return centroid;
   }
   // ***************************************************************************
-  double GeometryUtilities::PolygonAreaByIntegral(const Eigen::MatrixXd& polygonVertices,
-                                                  const Eigen::VectorXd& edgeLengths,
-                                                  const Eigen::MatrixXd& edgeTangents,
-                                                  const Eigen::MatrixXd& edgeNormals) const
+  double GeometryUtilities::PolygonAreaByBoundaryIntegral(const Eigen::MatrixXd& polygonVertices,
+                                                          const Eigen::VectorXd& edgeLengths,
+                                                          const Eigen::MatrixXd& edgeTangents,
+                                                          const Eigen::MatrixXd& edgeNormals,
+                                                          const Eigen::MatrixXd& referenceQuadraturePoints,
+                                                          const Eigen::VectorXd& referenceQuadratureWeights) const
   {
-    Gedim::Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
-    Gedim::Output::Assert(edgeLengths.size() == polygonVertices.cols());
-    Output::Assert(edgeTangents.rows() == 3 && edgeTangents.cols() == polygonVertices.cols());
-    Output::Assert(edgeNormals.rows() == 3 && edgeNormals.cols() == polygonVertices.cols());
-
-
-    // quadrature on reference segment [0,1] of order 1
-    const double referenceSegmentPoints = 5.0000000000000000e-01;
-    const double referenceSegmentWeights = 1.0000000000000000e+00;
-    const unsigned int numReferenceQuadraturePoints = 1;
-
     const unsigned int numEdges = polygonVertices.cols();
+
+    Gedim::Output::Assert(polygonVertices.rows() == 3 && numEdges > 2);
+    Gedim::Output::Assert(edgeLengths.size() == numEdges);
+    Output::Assert(edgeTangents.rows() == 3 && edgeTangents.cols() == numEdges);
+    Output::Assert(edgeNormals.rows() == 3 && edgeNormals.cols() == numEdges);
+    Output::Assert(referenceQuadraturePoints.cols() == referenceQuadratureWeights.size());
+
+    const unsigned int numReferenceQuadraturePoints = referenceQuadraturePoints.cols();
     const unsigned int numQuadraturePoints = numEdges *
                                              numReferenceQuadraturePoints;
 
@@ -129,14 +128,14 @@ namespace Gedim
     for (unsigned int e = 0; e < numEdges; e++)
     {
       const MatrixXd edgeWeightsTimesNormal = std::abs(edgeLengths[e]) *
-                                              referenceSegmentWeights *
+                                              referenceQuadratureWeights *
                                               edgeNormals.col(e).transpose();
 
       for (unsigned int q = 0; q < numReferenceQuadraturePoints; q++)
       {
         quadraturePoints.col(e * numReferenceQuadraturePoints +
                              q) = polygonVertices.col(e) +
-                                  referenceSegmentPoints *
+                                  referenceQuadraturePoints(0, q) *
                                   edgeTangents.col(e);
       }
 
@@ -147,6 +146,34 @@ namespace Gedim
     }
 
     return quadraturePoints.row(0).dot(quadratureWeightsTimesNormal.row(0));
+  }
+  // ***************************************************************************
+  double GeometryUtilities::PolygonAreaByInternalIntegral(const std::vector<Eigen::Matrix3d>& polygonTriangulationPoints,
+                                                          const Eigen::VectorXd& referenceQuadratureWeights) const
+  {
+    const unsigned int numPolygonTriangles = polygonTriangulationPoints.size();
+
+    const unsigned int numReferenceQuadraturePoints = referenceQuadratureWeights.size();
+    const unsigned int numQuadraturePoints = numPolygonTriangles *
+                                             numReferenceQuadraturePoints;
+
+    Eigen::VectorXd quadratureWeights = Eigen::VectorXd::Zero(numQuadraturePoints);
+
+    Gedim::MapTriangle mapTriangle;
+
+    for (unsigned int t = 0; t < numPolygonTriangles; t++)
+    {
+      const Eigen::Matrix3d& triangleVertices = polygonTriangulationPoints[t];
+
+      Gedim::MapTriangle::MapTriangleData mapData = mapTriangle.Compute(triangleVertices);
+      quadratureWeights.segment(numReferenceQuadraturePoints * t,
+                                numReferenceQuadraturePoints) = referenceQuadratureWeights.array() *
+                                                                mapTriangle.DetJ(mapData,
+                                                                                 referenceQuadratureWeights).array().abs();
+
+    }
+
+    return quadratureWeights.sum();
   }
   // ***************************************************************************
   Vector3d GeometryUtilities::PolygonCentroidByIntegral(const Eigen::MatrixXd& polygonVertices,
@@ -230,7 +257,7 @@ namespace Gedim
                                                     const Eigen::Vector3d& polygonNormal,
                                                     const Eigen::Vector3d& polygonTranslation) const
   {
-    Output::Assert(Compare1DValues(polygonNormal.norm(), 1.0) == CompareTypes::Coincident);
+    Output::Assert(CompareValues(polygonNormal.norm(), 1.0, Tolerance1D()) == CompareTypes::Coincident);
 
     const unsigned int& numVertices = polygonVertices.cols();
     MatrixXd Z, W;
@@ -249,11 +276,11 @@ namespace Gedim
       const double normVectorI = VimV0.norm();
       const double cosTheta = VimV0.dot(V1mV0) / (normVectorOne * normVectorI);
 
-      if (Compare1DValues(cosTheta, 1.0) == CompareTypes::Coincident)
+      if (CompareValues(cosTheta, 1.0, Tolerance1D()) == CompareTypes::Coincident)
         W.col(i - 1)<< normVectorI, 0.0, 0.0;
-      else if (Compare1DValues(cosTheta, -1.0) == CompareTypes::Coincident)
+      else if (CompareValues(cosTheta, -1.0, Tolerance1D()) == CompareTypes::Coincident)
         W.col(i - 1)<< -normVectorI, 0.0, 0.0;
-      else if (Compare1DValues(cosTheta, 0.0) == CompareTypes::Coincident)
+      else if (CompareValues(cosTheta, 0.0, Tolerance1D()) == CompareTypes::Coincident)
         W.col(i - 1)<< 0.0, normVectorI, 0.0;
       else
         W.col(i - 1) << normVectorI * cosTheta, normVectorI * sqrt(1.0 - cosTheta*cosTheta), 0;
@@ -398,7 +425,7 @@ namespace Gedim
                                              norm_v_prev_v,
                                              norm_v_next_v);
 
-        if (IsValue1DNegative(polarAngle))
+        if (IsValueNegative(polarAngle, Tolerance1D()))
           continue;
 
         // test ear
@@ -959,7 +986,7 @@ namespace Gedim
         break;
       }
 
-      Output::Assert(IsValue1DPositive(intersectionCoordinate));
+      Output::Assert(IsValuePositive(intersectionCoordinate, Tolerance1D()));
 
       const Eigen::Vector3d intersectionPoint = edgeEnd + intersectionCoordinate * endEdgeCenterTangent;
       newVerticesIndicesPerEdge[edgeNumber] = newCoordinates.size();
@@ -1204,7 +1231,7 @@ namespace Gedim
         break;
       }
 
-      Output::Assert(IsValue1DNegative(intersectionCoordinate));
+      Output::Assert(IsValueNegative(intersectionCoordinate, Tolerance1D()));
 
       // create new coordinate
       const Eigen::Vector3d intersectionPoint = edgeEnd + intersectionCoordinate * endEdgeCenterTangent;
