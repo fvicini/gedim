@@ -615,146 +615,146 @@ void VoroInterface::GenerateVoronoiTassellations3D(const Eigen::MatrixXd& polyhe
                          numPoints,
                          VoronoiPoints);
 
-//    // Loop on Voronoi cells
-//    for(unsigned int it = 0; it < numIterations; it++)
-//    {
-//        double vvol = 0.0;
-//        // Initialize Voronoi mesh
-//        voro::container con
-//            (
-//                x_min, x_max, y_min, y_max, -0.5, 0.5,
-//                n_x, n_y, n_z,
-//                false, false, false, 8
-//                );
+    // Loop on Voronoi cells
+    for(unsigned int it = 0; it < numIterations; it++)
+    {
+        double vvol = 0.0;
+        // Initialize Voronoi mesh
+        voro::container con
+            (
+                x_min, x_max, y_min, y_max, z_min, z_max,
+                n_x, n_y, n_z,
+                false, false, false, 8
+                );
 
-//        for(unsigned int i=0; i < VoronoiPoints.cols(); i++) {
-//            con.put(i, VoronoiPoints(0, i), VoronoiPoints(1, i), VoronoiPoints(2, i));
-//        }
+        for(unsigned int i=0; i < VoronoiPoints.cols(); i++) {
+            con.put(i, VoronoiPoints(0, i), VoronoiPoints(1, i), VoronoiPoints(2, i));
+        }
 
-//        unsigned int countPoints = 0;
+        unsigned int countPoints = 0;
 
-//        // Loop on Voronoi cells
-//        voro::c_loop_all vl(con);
-//        int ijk, q; double *pp;
-//        voro::voronoicell_neighbor c;
-//        if (vl.start())
-//        {
-//            do{
-//                if (con.compute_cell(c, vl))
-//                {
-//                    ijk = vl.ijk;
-//                    q = vl.q;
-//                    pp = con.p[ijk] + con.ps*q;
+        // Loop on Voronoi cells
+        voro::c_loop_all vl(con);
+        int ijk, q; double *pp;
+        voro::voronoicell_neighbor c;
+        if (vl.start())
+        {
+            do{
+                if (con.compute_cell(c, vl))
+                {
+                    ijk = vl.ijk;
+                    q = vl.q;
+                    pp = con.p[ijk] + con.ps*q;
 
-//                    // Cell barycenter
-//                    const double cx = *pp;
-//                    const double cy = pp[1];
-//                    const double cz = pp[2];
+                    // Cell barycenter
+                    const double cx = *pp;
+                    const double cy = pp[1];
+                    const double cz = pp[2];
 
-//                    // Get cell vertices
-//                    std::vector<double> vertices;
-//                    c.vertices(cx, cy, cz, vertices);
+                    // Get cell vertices
+                    std::vector<double> vertices;
+                    c.vertices(cx, cy, cz, vertices);
 
-//                    // Get cell face cardinality
-//                    std::vector<int> faceOrders;
-//                    c.face_orders(faceOrders);
+                    // Get cell face cardinality
+                    std::vector<int> faceOrders;
+                    c.face_orders(faceOrders);
 
-//                    // Get face-vertices connectivity
-//                    std::vector<int> localFaceVertices;
-//                    c.face_vertices(localFaceVertices);
+                    // Get face-vertices connectivity
+                    std::vector<int> localFaceVertices;
+                    c.face_vertices(localFaceVertices);
 
-//                    // Get cell neighbors IDs
-//                    std::vector<int> faceNeighs;
-//                    c.neighbors(faceNeighs);
-
-
-//                    // Fill mesh connectivity structures
-//                    // cell vertices
-//                    const unsigned int nCoords = vertices.size();
-//                    const unsigned int numVertices = nCoords/3;
-//                    Eigen::MatrixXd Cell3DsVertices = Eigen::MatrixXd::Zero(3, numVertices);
-
-//                    unsigned int v = 0;
-//                    unsigned int i = 0;
-//                    while (i < nCoords)
-//                    {
-//                        double x = vertices[i++];
-//                        double y = vertices[i++];
-//                        double z = vertices[i++];
-
-//                        Cell3DsVertices.col(v) << x, y, z;
-//                        v++;
-//                    }
-
-//                    // cell faces
-//                    unsigned int nFaces = faceOrders.size();
-//                    vector<Eigen::MatrixXi> Cell3DsFaces(nFaces);
-
-//                    int count = 0;
-//                    for (unsigned int i = 0; i < nFaces; i++)
-//                    {
-//                        const unsigned numFaceVertices = faceOrders[i];
-//                        Cell3DsFaces[i] = Eigen::MatrixXi::Zero(2, numFaceVertices);
-
-//                        count++;
-//                        for (unsigned int j = 0; j < numFaceVertices; j++)
-//                        {
-//                            Cell3DsFaces[i](0, j) = localFaceVertices[count];
-//                            count++;
-//                        }
-
-//                    }
-
-//                    const std::vector<Eigen::MatrixXd> Cell3DsFaces3DVertices = geometryUtilities.PolyhedronFaceVertices(Cell3DsVertices,
-//                                                                                                                         Cell3DsFaces);
-//                    const std::vector<Eigen::Vector3d> Cell3DsFacesTranslations = geometryUtilities.PolyhedronFaceTranslations(Cell3DsFaces3DVertices);
-//                    const std::vector<Eigen::Vector3d> Cell3DsFacesNormals = geometryUtilities.PolyhedronFaceNormals(Cell3DsFaces3DVertices);
-//                    const std::vector<Eigen::Matrix3d> Cell3DsFacesRotationMatrices = geometryUtilities.PolyhedronFaceRotationMatrices(Cell3DsFaces3DVertices,
-//                                                                                                                                       Cell3DsFacesNormals,
-//                                                                                                                                       Cell3DsFacesTranslations);
-
-//                    const vector<vector<unsigned int>> polyhedronFaceTriangulations = geometryUtilities.PolyhedronFaceTriangulationsByFirstVertex(Cell3DsFaces,
-//                                                                                                                                                   Cell3DsFaces3DVertices);
-
-//                    const std::vector<Eigen::MatrixXd> Cell3DsFaces2DVertices = geometryUtilities.PolyhedronFaceRotatedVertices(Cell3DsFaces3DVertices,
-//                                                                                                                                Cell3DsFacesTranslations,
-//                                                                                                                                Cell3DsFacesRotationMatrices);
+                    // Get cell neighbors IDs
+                    std::vector<int> faceNeighs;
+                    c.neighbors(faceNeighs);
 
 
-//                    const std::vector<std::vector<Eigen::Matrix3d>> Cell3DsFaces2DTriangulations = geometryUtilities.PolyhedronFaceExtractTriangulationPoints(Cell3DsFaces2DVertices,
-//                                                                                                                                                               polyhedronFaceTriangulations);
+                    // Fill mesh connectivity structures
+                    // cell vertices
+                    const unsigned int nCoords = vertices.size();
+                    const unsigned int numVertices = nCoords/3;
+                    Eigen::MatrixXd Cell3DsVertices = Eigen::MatrixXd::Zero(3, numVertices);
+
+                    unsigned int v = 0;
+                    unsigned int i = 0;
+                    while (i < nCoords)
+                    {
+                        double x = vertices[i++];
+                        double y = vertices[i++];
+                        double z = vertices[i++];
+
+                        Cell3DsVertices.col(v) << x, y, z;
+                        v++;
+                    }
+
+                    // cell faces
+                    unsigned int nFaces = faceOrders.size();
+                    vector<Eigen::MatrixXi> Cell3DsFaces(nFaces);
+
+                    int count = 0;
+                    for (unsigned int i = 0; i < nFaces; i++)
+                    {
+                        const unsigned numFaceVertices = faceOrders[i];
+                        Cell3DsFaces[i] = Eigen::MatrixXi::Zero(2, numFaceVertices);
+
+                        count++;
+                        for (unsigned int j = 0; j < numFaceVertices; j++)
+                        {
+                            Cell3DsFaces[i](0, j) = localFaceVertices[count];
+                            count++;
+                        }
+
+                    }
+
+                    const std::vector<Eigen::MatrixXd> Cell3DsFaces3DVertices = geometryUtilities.PolyhedronFaceVertices(Cell3DsVertices,
+                                                                                                                         Cell3DsFaces);
+                    const std::vector<Eigen::Vector3d> Cell3DsFacesTranslations = geometryUtilities.PolyhedronFaceTranslations(Cell3DsFaces3DVertices);
+                    const std::vector<Eigen::Vector3d> Cell3DsFacesNormals = geometryUtilities.PolyhedronFaceNormals(Cell3DsFaces3DVertices);
+                    const std::vector<Eigen::Matrix3d> Cell3DsFacesRotationMatrices = geometryUtilities.PolyhedronFaceRotationMatrices(Cell3DsFaces3DVertices,
+                                                                                                                                       Cell3DsFacesNormals,
+                                                                                                                                       Cell3DsFacesTranslations);
+
+                    const vector<vector<unsigned int>> polyhedronFaceTriangulations = geometryUtilities.PolyhedronFaceTriangulationsByFirstVertex(Cell3DsFaces,
+                                                                                                                                                   Cell3DsFaces3DVertices);
+
+                    const std::vector<Eigen::MatrixXd> Cell3DsFaces2DVertices = geometryUtilities.PolyhedronFaceRotatedVertices(Cell3DsFaces3DVertices,
+                                                                                                                                Cell3DsFacesTranslations,
+                                                                                                                                Cell3DsFacesRotationMatrices);
+
+
+                    const std::vector<std::vector<Eigen::Matrix3d>> Cell3DsFaces2DTriangulations = geometryUtilities.PolyhedronFaceExtractTriangulationPoints(Cell3DsFaces2DVertices,
+                                                                                                                                                               polyhedronFaceTriangulations);
 
 
 
-//                    const std::vector<bool> Cell3DsFacesNormalDirections = geometryUtilities.PolyhedronFaceNormalDirections(Cell3DsFaces3DVertices,
-//                                                                                                                            geometryUtilities.PolyhedronBarycenter(Cell3DsVertices),
-//                                                                                                                            Cell3DsFacesNormals);
+                    const std::vector<bool> Cell3DsFacesNormalDirections = geometryUtilities.PolyhedronFaceNormalDirections(Cell3DsFaces3DVertices,
+                                                                                                                            geometryUtilities.PolyhedronBarycenter(Cell3DsVertices),
+                                                                                                                            Cell3DsFacesNormals);
 
 
-//                    const double Cell3DsVolumes = geometryUtilities.PolyhedronVolumeByBoundaryIntegral(Cell3DsFaces2DTriangulations,
-//                                                                                                       Cell3DsFacesNormals,
-//                                                                                                       Cell3DsFacesNormalDirections,
-//                                                                                                       Cell3DsFacesTranslations,
-//                                                                                                       Cell3DsFacesRotationMatrices);
+                    const double Cell3DsVolumes = geometryUtilities.PolyhedronVolumeByBoundaryIntegral(Cell3DsFaces2DTriangulations,
+                                                                                                       Cell3DsFacesNormals,
+                                                                                                       Cell3DsFacesNormalDirections,
+                                                                                                       Cell3DsFacesTranslations,
+                                                                                                       Cell3DsFacesRotationMatrices);
 
-//                    VoronoiPoints.col(countPoints++) = geometryUtilities.PolyhedronCentroid(Cell3DsFaces2DTriangulations,
-//                                                                                            Cell3DsFacesNormals,
-//                                                                                            Cell3DsFacesNormalDirections,
-//                                                                                            Cell3DsFacesTranslations,
-//                                                                                            Cell3DsFacesRotationMatrices,
-//                                                                                            Cell3DsVolumes);
+                    VoronoiPoints.col(countPoints++) = geometryUtilities.PolyhedronCentroid(Cell3DsFaces2DTriangulations,
+                                                                                            Cell3DsFacesNormals,
+                                                                                            Cell3DsFacesNormalDirections,
+                                                                                            Cell3DsFacesTranslations,
+                                                                                            Cell3DsFacesRotationMatrices,
+                                                                                            Cell3DsVolumes);
 
-//                    vvol += c.volume();
+                    vvol += c.volume();
 
-//                }
-//            }
-//            while(vl.inc());
-//        }
+                }
+            }
+            while(vl.inc());
+        }
 
-//        if(abs(cvol - vvol) > 1.0e-12)
-//            throw runtime_error("Error generating Voronoi cells: volumes do not mathc each other");
+        if(abs(cvol - vvol) > 1.0e-12)
+            throw runtime_error("Error generating Voronoi cells: volumes do not mathc each other");
 
-//    }
+    }
 
 
 
@@ -763,7 +763,7 @@ void VoroInterface::GenerateVoronoiTassellations3D(const Eigen::MatrixXd& polyhe
     // Initialize Voronoi mesh
     voro::container con
         (
-            x_min, x_max, y_min, y_max, -0.5, 0.5,
+            x_min, x_max, y_min, y_max, z_min, z_max,
             n_x, n_y, n_z,
             false, false, false, 8
             );
