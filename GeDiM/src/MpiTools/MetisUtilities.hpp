@@ -70,7 +70,7 @@ namespace Gedim
           bool ContigousPartitions = true;
           bool CompressGraph = false;
           bool MinimizeConnectivity = false;
-          unsigned int RandomSeed = -1;
+          int RandomSeed = -1;
           unsigned int MasterWeight = 100; ///< 0 de-activated; 100 activated totally
       };
 

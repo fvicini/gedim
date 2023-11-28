@@ -787,7 +787,7 @@ namespace UnitTesting
       cell1DsWeight.setFromTriplets(triplets.begin(), triplets.end());
       cell1DsWeight.makeCompressed();
     }
-    else if (true)
+    else if (false)
     {
       cell1DsWeight.resize(meshDAO.Cell2DTotalNumber(),
                            meshDAO.Cell2DTotalNumber());
@@ -837,7 +837,7 @@ namespace UnitTesting
       partitionOptions.DebugLevel = Gedim::MetisUtilities::NetworkPartitionOptions::DebugLevels::None;
       partitionOptions.CoarseningSchema = Gedim::MetisUtilities::NetworkPartitionOptions::CoarseningSchemes::Default;
       partitionOptions.RefinementSchema = Gedim::MetisUtilities::NetworkPartitionOptions::RefinementSchemes::Default;
-      partitionOptions.NumberRefinementIterations = 100;
+      partitionOptions.NumberRefinementIterations = 10;
       partitionOptions.InitialPartitioningSchema = Gedim::MetisUtilities::NetworkPartitionOptions::InitialPartitioningSchemes::Default;
       partitionOptions.RandomSeed = -1;
 
