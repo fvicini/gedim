@@ -506,7 +506,18 @@ namespace Gedim
       /// \param mesh the mesh to update
       /// \return the list of new cell2Ds indices, from 0 to Cell2DTotalNumber()
       std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
-                                            const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                            const std::vector<Eigen::MatrixXi>& subCell2Ds,
+                                            IMeshDAO& mesh) const;
+
+      /// \brief Split cell3D into subcells
+      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
+      /// \param subCell3Ds the list of sub-cells 3D mesh vertices and edges indices, size numSubCells x (2 x numVertices)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell3Ds indices, from 0 to Cell3DTotalNumber()
+      std::vector<unsigned int> SplitCell3D(const unsigned int& cell3DIndex,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsVertices,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsEdges,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsFaces,
                                             IMeshDAO& mesh) const;
 
       void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,

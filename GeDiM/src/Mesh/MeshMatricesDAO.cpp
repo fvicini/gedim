@@ -1262,25 +1262,25 @@ namespace Gedim
   }
   // ***************************************************************************
   void MeshMatricesDAO::Cell3DAddEdges(const unsigned int& cell3DIndex,
-                                       const vector<unsigned int>& edgesCell0DIndices)
+                                       const vector<unsigned int>& edgesCell1DIndices)
   {
     Cell3DInitializeEdges(cell3DIndex,
-                          edgesCell0DIndices.size());
-    for (unsigned int e = 0; e < edgesCell0DIndices.size(); e++)
+                          edgesCell1DIndices.size());
+    for (unsigned int e = 0; e < edgesCell1DIndices.size(); e++)
       Cell3DInsertEdge(cell3DIndex,
                        e,
-                       edgesCell0DIndices[e]);
+                       edgesCell1DIndices[e]);
   }
   // ***************************************************************************
   void MeshMatricesDAO::Cell3DAddFaces(const unsigned int& cell3DIndex,
-                                       const vector<unsigned int>& facesCell0DIndices)
+                                       const vector<unsigned int>& facesCell2DIndices)
   {
     Cell3DInitializeFaces(cell3DIndex,
-                          facesCell0DIndices.size());
-    for (unsigned int e = 0; e < facesCell0DIndices.size(); e++)
+                          facesCell2DIndices.size());
+    for (unsigned int e = 0; e < facesCell2DIndices.size(); e++)
       Cell3DInsertFace(cell3DIndex,
                        e,
-                       facesCell0DIndices[e]);
+                       facesCell2DIndices[e]);
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell3DFindEdgeByExtremes(const unsigned int& cell3DIndex,

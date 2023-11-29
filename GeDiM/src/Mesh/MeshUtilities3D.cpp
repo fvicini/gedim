@@ -1469,4 +1469,60 @@ namespace Gedim
     return vtpPolyhedron;
   }
   // ***************************************************************************
+  std::vector<unsigned int> MeshUtilities::SplitCell3D(const unsigned int& cell3DIndex,
+                                                       const std::vector<std::vector<unsigned int>>& subCell3DsVertices,
+                                                       const std::vector<std::vector<unsigned int>>& subCell3DsEdges,
+                                                       const std::vector<std::vector<unsigned int>>& subCell3DsFaces,
+                                                       IMeshDAO& mesh) const
+  {
+    Gedim::Output::Assert(subCell3DsVertices.size() == subCell3DsEdges.size() &&
+                          subCell3DsVertices.size() == subCell3DsFaces.size());
+
+    const unsigned int numSubCells = subCell3DsVertices.size();
+    unsigned int newCell3DsStartingIndex = mesh.Cell3DAppend(numSubCells);
+
+    vector<unsigned int> newCell3DsIndex(numSubCells);
+
+    mesh.Cell3DSetState(cell3DIndex, false);
+
+    for (unsigned int c = 0; c < numSubCells; c++)
+    {
+      newCell3DsIndex[c] = newCell3DsStartingIndex + c;
+
+      const unsigned int& newCell3DIndex = newCell3DsIndex[c];
+      mesh.Cell3DAddVertices(newCell3DIndex,
+                             subCell3DsVertices[c]);
+      mesh.Cell3DAddEdges(newCell3DIndex,
+                          subCell3DsEdges[c]);
+      mesh.Cell3DAddFaces(newCell3DIndex,
+                          subCell3DsFaces[c]);
+
+      mesh.Cell3DSetMarker(newCell3DIndex,
+                           mesh.Cell3DMarker(cell3DIndex));
+      mesh.Cell3DSetState(newCell3DIndex,
+                          true);
+
+      mesh.Cell3DInsertUpdatedCell3D(cell3DIndex,
+                                     newCell3DIndex);
+
+      for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(newCell3DIndex); f++)
+      {
+        const unsigned int cell2DIndex = mesh.Cell3DFace(newCell3DIndex, f);
+
+        for (unsigned int n = 0; n < mesh.Cell2DNumberNeighbourCell3D(cell2DIndex); n++)
+        {
+          if (!mesh.Cell2DHasNeighbourCell3D(cell2DIndex, n))
+            continue;
+
+          if (mesh.Cell2DNeighbourCell3D(cell2DIndex, n) == cell3DIndex)
+            mesh.Cell2DInsertNeighbourCell3D(cell2DIndex,
+                                             n,
+                                             newCell3DIndex);
+        }
+      }
+    }
+
+    return newCell3DsIndex;
+  }
+  // ***************************************************************************
 }

@@ -769,7 +769,7 @@ namespace Gedim
   }
   // ***************************************************************************
   std::vector<unsigned int> MeshUtilities::SplitCell2D(const unsigned int& cell2DIndex,
-                                                       const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                                       const std::vector<MatrixXi>& subCell2Ds,
                                                        IMeshDAO& mesh) const
   {
     const unsigned int numSubCells = subCell2Ds.size();
