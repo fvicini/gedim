@@ -66,6 +66,7 @@ namespace GedimUnitTesting
         Mesh.Cell3DFaces = { 0,1,2,3,4,5 };
         Mesh.Cell3DMarkers = { 0 };
         Mesh.ActiveCell3D = { 1 };
+        Mesh.Cell3DOriginalCell3Ds.resize(Mesh.NumberCell3D, std::numeric_limits<unsigned int>::max());
         Mesh.UpdatedCell3Ds = {};
         Mesh.Cell3DDoublePropertyIds = {};
         Mesh.Cell3DDoublePropertyIndices = {};

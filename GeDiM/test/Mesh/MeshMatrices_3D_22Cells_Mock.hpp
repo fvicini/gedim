@@ -67,6 +67,7 @@ namespace GedimUnitTesting
         Mesh.Cell3DFaces = { 3,0,1,2,7,4,5,6,3,8,9,10,14,11,12,13,18,15,16,17,14,16,19,6,23,20,21,22,27,24,25,26,30,28,24,29,32,2,31,13,35,4,33,34,23,36,10,37,7,20,38,32,41,31,39,40,45,42,43,44,30,46,47,37,22,48,43,29,51,36,49,50,55,52,53,54,56,53,46,9,60,57,58,59,61,58,0,12 };
         Mesh.Cell3DMarkers = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
         Mesh.ActiveCell3D = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+        Mesh.Cell3DOriginalCell3Ds.resize(Mesh.NumberCell3D, std::numeric_limits<unsigned int>::max());
         Mesh.UpdatedCell3Ds = {};
         Mesh.Cell3DDoublePropertyIds = {};
         Mesh.Cell3DDoublePropertyIndices = {};
