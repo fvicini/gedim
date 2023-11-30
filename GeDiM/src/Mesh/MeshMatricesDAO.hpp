@@ -1003,6 +1003,16 @@ namespace Gedim
                                      const unsigned int& updatedCell3DIdex);
       bool Cell3DUpdatedCell3Ds(const unsigned int& cell3DIndex,
                                 std::list<unsigned int>& updatedCell3DIds) const;
+      inline bool Cell3DHasOriginalCell3D(const unsigned int& updatedCell3DIndex) const
+      {
+        Gedim::Output::Assert(updatedCell3DIndex < Cell3DTotalNumber());
+        return _mesh.Cell3DOriginalCell3Ds.at(updatedCell3DIndex) < _mesh.NumberCell3D;
+      }
+      inline unsigned int Cell3DOriginalCell3D(const unsigned int& updatedCell3DIndex) const
+      {
+        Gedim::Output::Assert(updatedCell3DIndex < Cell3DTotalNumber());
+        return _mesh.Cell3DOriginalCell3Ds.at(updatedCell3DIndex);
+      }
 
       void Cell3DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
       unsigned int Cell3DAddDoubleProperty(const std::string& propertyId);

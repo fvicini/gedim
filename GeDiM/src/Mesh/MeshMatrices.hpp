@@ -61,6 +61,7 @@ namespace Gedim
       std::vector<unsigned int> Cell3DFaces = {}; ///< Cell3D Cell2D indices, size 1 x NumberCell3DFaces[NumberCell3D]
       std::vector<unsigned int> Cell3DMarkers = {}; ///< Cell3D markers, size 1 x NumberCell3D (marker)
       std::vector<bool> ActiveCell3D = {}; ///< active Cell3D
+      std::vector<unsigned int> Cell3DOriginalCell3Ds = {}; ///< for each cell3D the index of original cell3D, NumberCell3D is the default value (no original cell), size 1 x NumberCell3D
       std::unordered_map<unsigned int, std::unordered_set<unsigned int>> UpdatedCell3Ds = {}; ///< for each cell3D the list to the new cell3Ds
       std::vector<std::string> Cell3DDoublePropertyIds = {}; ///< Cell3D double property id - double property index
       std::unordered_map<std::string, unsigned int> Cell3DDoublePropertyIndices = {}; ///< Cell3D double property id - double property index

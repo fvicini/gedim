@@ -1096,6 +1096,7 @@ namespace Gedim
     _mesh.NumberCell3DFaces.resize(_mesh.NumberCell3D + 1, 0);
     _mesh.Cell3DMarkers.resize(_mesh.NumberCell3D, 0);
     _mesh.ActiveCell3D.resize(_mesh.NumberCell3D, false);
+    _mesh.Cell3DOriginalCell3Ds.resize(_mesh.NumberCell3D, std::numeric_limits<unsigned int>::max());
     for (unsigned int p = 0; p < Cell3DNumberDoubleProperties(); p++)
       _mesh.Cell3DDoublePropertySizes[p].resize(_mesh.NumberCell3D + 1, 0);
   }
@@ -1113,6 +1114,7 @@ namespace Gedim
       _mesh.NumberCell3DFaces.push_back(0);
       _mesh.Cell3DMarkers.push_back(0);
       _mesh.ActiveCell3D.push_back(false);
+      _mesh.Cell3DOriginalCell3Ds.push_back(std::numeric_limits<unsigned int>::max());
       for (unsigned int p = 0; p < Cell3DNumberDoubleProperties(); p++)
         _mesh.Cell3DDoublePropertySizes[p].push_back(0);
     }
@@ -1173,7 +1175,8 @@ namespace Gedim
                                             0);
     _mesh.NumberCell3DFaces.erase(std::next(_mesh.NumberCell3DFaces.begin(),
                                             cell3DIndex));
-
+    _mesh.Cell3DOriginalCell3Ds.erase(std::next(_mesh.Cell3DOriginalCell3Ds.begin(),
+                                                cell3DIndex));
     _mesh.Cell3DMarkers.erase(std::next(_mesh.Cell3DMarkers.begin(), cell3DIndex));
     _mesh.ActiveCell3D.erase(std::next(_mesh.ActiveCell3D.begin(), cell3DIndex));
     _mesh.NumberCell3D--;
@@ -1185,6 +1188,9 @@ namespace Gedim
     AlignMapContainerHigherElements(_mesh.UpdatedCell3Ds,
                                     cell3DIndex,
                                     _mesh.NumberCell3D);
+    AlignContainerHigherElements(_mesh.Cell3DOriginalCell3Ds,
+                                 cell3DIndex,
+                                 std::numeric_limits<unsigned int>::max());
   }
   // ***************************************************************************
   void MeshMatricesDAO::Cell3DsInitializeVertices(const std::vector<unsigned int>& numberCell3DsVertices)
@@ -1327,6 +1333,7 @@ namespace Gedim
     if (!Cell3DHasUpdatedCell3Ds(cell3DIndex))
       _mesh.UpdatedCell3Ds.insert(pair<unsigned int, unordered_set<unsigned int>>(cell3DIndex, {}));
     _mesh.UpdatedCell3Ds.at(cell3DIndex).insert(updatedCell3DIdex);
+    _mesh.Cell3DOriginalCell3Ds[updatedCell3DIdex] = cell3DIndex;
   }
   // ***************************************************************************
   bool MeshMatricesDAO::Cell3DUpdatedCell3Ds(const unsigned int& cell3DIndex,
@@ -1492,6 +1499,7 @@ namespace Gedim
     _mesh.Cell3DEdges.shrink_to_fit();
     _mesh.Cell3DFaces.shrink_to_fit();
     _mesh.Cell3DMarkers.shrink_to_fit();
+    _mesh.Cell3DOriginalCell3Ds.shrink_to_fit();
     _mesh.ActiveCell3D.shrink_to_fit();
     _mesh.Cell3DDoublePropertyIds.shrink_to_fit();
     _mesh.Cell3DDoublePropertySizes.shrink_to_fit();
@@ -1559,6 +1567,7 @@ namespace Gedim
     converter<< scientific<< "Cell3DFaces = "<< _mesh.Cell3DFaces<< ";"<< endl;
     converter<< scientific<< "Cell3DMarkers = "<< _mesh.Cell3DMarkers<< ";"<< endl;
     converter<< scientific<< "ActiveCell3D = "<< _mesh.ActiveCell3D<< ";"<< endl;
+    converter<< scientific<< "Cell3DOriginalCell3Ds = "<< _mesh.Cell3DOriginalCell3Ds<< ";"<< endl;
     converter<< scientific<< "UpdatedCell3Ds = "<< _mesh.UpdatedCell3Ds<< ";"<< endl;
     converter<< scientific<< "Cell3DDoublePropertyIds = "<< _mesh.Cell3DDoublePropertyIds<< ";"<< endl;
     converter<< scientific<< "Cell3DDoublePropertyIndices = "<< _mesh.Cell3DDoublePropertyIndices<< ";"<< endl;

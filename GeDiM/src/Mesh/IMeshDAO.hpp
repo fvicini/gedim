@@ -943,6 +943,12 @@ namespace Gedim
       /// \return if the cell3D is active
       virtual bool Cell3DIsActive(const unsigned int& cell3DIndex) const = 0;
 
+      /// \param updatedCell3DIndex the updated cell3D index, from 0 to Cell3DTotalNumber()
+      /// \return true if has an original cell, false otherwise (the original cell is itself)
+      virtual bool Cell3DHasOriginalCell3D(const unsigned int& updatedCell3DIndex) const = 0;
+      /// \param updatedCell3DIndex the updated cell3D index, from 0 to Cell3DTotalNumber()
+      /// \return the original cell3D index, from 0 to Cell3DTotalNumber()
+      virtual unsigned int Cell3DOriginalCell3D(const unsigned int& updatedCell3DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \return if the cell3D has new cell3Ds associated
       virtual bool Cell3DHasUpdatedCell3Ds(const unsigned int& cell3DIndex) const = 0;
