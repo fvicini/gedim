@@ -801,8 +801,8 @@ namespace Gedim
       result.Cell3DsEdges[c] = polyhedron.Edges;
       result.Cell3DsFaces[c] = polyhedron.Faces;
 
-      result.Cell3DsEdgeLengths[c] = geometryUtilities.PolyhedronEdgeTangents(result.Cell3DsVertices[c],
-                                                                              result.Cell3DsEdges[c]);
+      result.Cell3DsEdgeLengths[c] = geometryUtilities.PolyhedronEdgesLength(result.Cell3DsVertices[c],
+                                                                             result.Cell3DsEdges[c]);
 
       result.Cell3DsEdgeTangents[c] = geometryUtilities.PolyhedronEdgeTangents(result.Cell3DsVertices[c],
                                                                                result.Cell3DsEdges[c]);
@@ -984,8 +984,8 @@ namespace Gedim
       result.Cell3DsEdges[c] = polyhedron.Edges;
       result.Cell3DsFaces[c] = polyhedron.Faces;
 
-      result.Cell3DsEdgeLengths[c] = geometryUtilities.PolyhedronEdgeTangents(result.Cell3DsVertices[c],
-                                                                              result.Cell3DsEdges[c]);
+      result.Cell3DsEdgeLengths[c] = geometryUtilities.PolyhedronEdgesLength(result.Cell3DsVertices[c],
+                                                                             result.Cell3DsEdges[c]);
 
       result.Cell3DsEdgeTangents[c] = geometryUtilities.PolyhedronEdgeTangents(result.Cell3DsVertices[c],
                                                                                result.Cell3DsEdges[c]);
