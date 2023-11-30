@@ -329,7 +329,7 @@ namespace Gedim
   VectorXd GeometryUtilities::PolyhedronEdgesLength(const Eigen::MatrixXd& polyhedronVertices,
                                                     const Eigen::MatrixXi& polyhedronEdges) const
   {
-    VectorXd edgesLength(3, polyhedronEdges.cols());
+    VectorXd edgesLength(polyhedronEdges.cols());
 
     for (unsigned int e = 0; e < polyhedronEdges.cols(); e++)
     {
