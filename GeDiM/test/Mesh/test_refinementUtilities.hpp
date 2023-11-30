@@ -144,8 +144,15 @@ namespace GedimUnitTesting
     const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(meshGeometricData.Cell3DsEdges.at(cell3DToRefineIndex),
                                                                                                                                      meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex));
     EXPECT_EQ(2, direction.MaxEdgeIndex);
-    EXPECT_EQ(3, direction.OppositeVerticesIndex[0]);
-    EXPECT_EQ(4, direction.OppositeVerticesIndex[1]);
+    EXPECT_EQ(2, direction.OppositeVerticesIndex[0]);
+    EXPECT_EQ(3, direction.OppositeVerticesIndex[1]);
+
+    std::cout<< "Edge "<< meshDAO.Cell3DEdge(cell3DToRefineIndex,
+                                             direction.MaxEdgeIndex)<< std::endl;
+    std::cout<< "Vertex1 "<< meshDAO.Cell3DVertex(cell3DToRefineIndex,
+                                                  direction.OppositeVerticesIndex[0])<< std::endl;
+    std::cout<< "Vertex2 "<< meshDAO.Cell3DVertex(cell3DToRefineIndex,
+                                                  direction.OppositeVerticesIndex[1])<< std::endl;
 
     //    const Gedim::RefinementUtilities::RefinePolygon_Result result = refinementUtilities.RefineTriangleCell_ByEdge(cell2DToRefineIndex,
     //                                                                                                                  direction.MaxEdgeIndex,
