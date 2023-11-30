@@ -13,10 +13,16 @@ namespace Gedim
   class RefinementUtilities final
   {
     public:
-      struct MaxEdgeDirection final
+      struct TriangleMaxEdgeDirection final
       {
           unsigned int MaxEdgeIndex = 0;
           unsigned int OppositeVertexIndex = 0;
+      };
+
+      struct TetrahedronMaxEdgeDirection final
+      {
+          unsigned int MaxEdgeIndex = 0;
+          std::array<unsigned int, 2> OppositeVerticesIndex = {};
       };
 
       struct PolygonDirection final
@@ -262,7 +268,7 @@ namespace Gedim
                                                    const bool& toEdgeDirection,
                                                    IMeshDAO& mesh) const;
 
-      MaxEdgeDirection ComputeTriangleMaxEdgeDirection(const Eigen::VectorXd& edgesLength) const;
+      TriangleMaxEdgeDirection ComputeTriangleMaxEdgeDirection(const Eigen::VectorXd& edgesLength) const;
 
       PolygonDirection ComputePolygonMaxDiameterDirection(const Eigen::MatrixXd unalignedVertices,
                                                           const Eigen::Vector3d& centroid) const;
@@ -270,6 +276,9 @@ namespace Gedim
                                                          const Eigen::VectorXd& unalignedEdgesLength,
                                                          const Eigen::Vector3d& centroid,
                                                          const Eigen::Matrix3d& inertia) const;
+
+      TetrahedronMaxEdgeDirection ComputeTetrahedronMaxEdgeDirection(const Eigen::MatrixXi& polyhedronEdges,
+                                                                     const Eigen::VectorXd& edgesLength) const;
 
       /// \brief Refine Triangle Cell2D By Edge
       /// \param cell2DIndex the index of Cell2D from 0 to Cell2DTotalNumber()

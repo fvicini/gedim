@@ -796,9 +796,9 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
-  RefinementUtilities::MaxEdgeDirection RefinementUtilities::ComputeTriangleMaxEdgeDirection(const Eigen::VectorXd& edgesLength) const
+  RefinementUtilities::TriangleMaxEdgeDirection RefinementUtilities::ComputeTriangleMaxEdgeDirection(const Eigen::VectorXd& edgesLength) const
   {
-    MaxEdgeDirection result;
+    TriangleMaxEdgeDirection result;
 
     Eigen::VectorXd::Index maxEdgeLocalIndex;
     edgesLength.maxCoeff(&maxEdgeLocalIndex);
@@ -1131,6 +1131,40 @@ namespace Gedim
       result.LineTangent.segment(0, 2) = eigensolver.eigenvectors().col(1);
       result.LineOrigin = centroid;
     }
+
+    return result;
+  }
+  // ***************************************************************************
+  RefinementUtilities::TetrahedronMaxEdgeDirection RefinementUtilities::ComputeTetrahedronMaxEdgeDirection(const Eigen::MatrixXi& polyhedronEdges,
+                                                                                                           const Eigen::VectorXd& edgesLength) const
+  {
+    Gedim::Output::Assert(polyhedronEdges.cols() == 6);
+    Gedim::Output::Assert(edgesLength.size() == 6);
+
+    TetrahedronMaxEdgeDirection result;
+
+    Eigen::VectorXd::Index maxEdgeLocalIndex;
+    edgesLength.maxCoeff(&maxEdgeLocalIndex);
+
+    result.MaxEdgeIndex = maxEdgeLocalIndex;
+
+    const unsigned int edgeOrigin = polyhedronEdges(0, result.MaxEdgeIndex);
+    const unsigned int edgeEnd = polyhedronEdges(1, result.MaxEdgeIndex);
+
+    unsigned int vertexNumber = 0, vertexFound = 0;
+    while (vertexFound < 2 &&
+           vertexNumber < 4)
+    {
+      if (vertexNumber != edgeOrigin &&
+          vertexNumber != edgeEnd)
+      {
+        result.OppositeVerticesIndex[vertexFound++] = vertexNumber;
+      }
+
+      vertexNumber++;
+    }
+
+    Gedim::Output::Assert(vertexFound == 2);
 
     return result;
   }

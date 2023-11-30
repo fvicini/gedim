@@ -326,6 +326,20 @@ namespace Gedim
     return 0.5 * centroid / polyhedronVolume;
   }
   // ***************************************************************************
+  VectorXd GeometryUtilities::PolyhedronEdgesLength(const Eigen::MatrixXd& polyhedronVertices,
+                                                    const Eigen::MatrixXi& polyhedronEdges) const
+  {
+    VectorXd edgesLength(3, polyhedronEdges.cols());
+
+    for (unsigned int e = 0; e < polyhedronEdges.cols(); e++)
+    {
+      edgesLength[e] = SegmentLength(polyhedronVertices.col(polyhedronEdges(0, e)),
+                                     polyhedronVertices.col(polyhedronEdges(1, e)));
+    }
+
+    return edgesLength;
+  }
+  // ***************************************************************************
   MatrixXd GeometryUtilities::PolyhedronEdgeTangents(const Eigen::MatrixXd& polyhedronVertices,
                                                      const Eigen::MatrixXi& polyhedronEdges) const
   {

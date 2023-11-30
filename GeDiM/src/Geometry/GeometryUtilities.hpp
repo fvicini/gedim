@@ -1944,7 +1944,14 @@ namespace Gedim
         return PointsMaxDistance(polyhedronVertices);
       }
 
-      /// \brief Compute Polyhedron Faces Vertices
+      /// \brief Compute Polyhedron Edges Lenght
+      /// \param polyhedronVertices the polyhedron vertices
+      /// \param polyhedronEdges the polyhedron edges
+      /// \return for each edge the length, size 1xnumEdges
+      Eigen::VectorXd PolyhedronEdgesLength(const Eigen::MatrixXd& polyhedronVertices,
+                                            const Eigen::MatrixXi& polyhedronEdges) const;
+
+      /// \brief Compute Polyhedron Edges Tangent
       /// \param polyhedronVertices the polyhedron vertices
       /// \param polyhedronEdges the polyhedron edges
       /// \return for each edge the tangent, size 3xnumEdges
