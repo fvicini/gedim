@@ -807,6 +807,24 @@ namespace Gedim
                                              newCell2DIndex);
         }
       }
+
+      const unsigned int numCell2DNumberNeighbourCell3D = mesh.Cell2DNumberNeighbourCell3D(cell2DIndex);
+
+      if (numCell2DNumberNeighbourCell3D == 0)
+        continue;
+
+      mesh.Cell2DInitializeNeighbourCell3Ds(newCell2DIndex,
+                                            numCell2DNumberNeighbourCell3D);
+      for (unsigned int n = 0; n < numCell2DNumberNeighbourCell3D; n++)
+      {
+        if (!mesh.Cell2DHasNeighbourCell3D(cell2DIndex, n))
+          continue;
+
+        mesh.Cell2DInsertNeighbourCell3D(newCell2DIndex,
+                                         n,
+                                         mesh.Cell2DNeighbourCell3D(cell2DIndex,
+                                                                    n));
+      }
     }
 
     return newCell2DsIndex;

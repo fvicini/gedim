@@ -560,11 +560,16 @@ namespace GedimUnitTesting
                                           1,
                                           newCell3DsIndex[0]); // left
 
-      //      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(0, 1));
-      //      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(1, 1));
-      //      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(2, 1));
-      //      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(4, 1));
-      //      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(5, 1));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(2, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(4, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(6, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(8, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(10, 1));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(3, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(5, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(7, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(9, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(10, 0));
 
       meshUtilities.ExportMeshToVTU(meshDAO,
                                     exportFolder,

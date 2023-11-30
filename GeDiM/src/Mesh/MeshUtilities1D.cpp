@@ -109,6 +109,7 @@ namespace Gedim
                                      newCell1DIndex);
 
       const unsigned int numCell1DNumberNeighbourCell2D = mesh.Cell1DNumberNeighbourCell2D(cell1DIndex);
+
       if (numCell1DNumberNeighbourCell2D == 0)
         continue;
 
