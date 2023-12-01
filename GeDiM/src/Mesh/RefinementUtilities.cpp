@@ -1182,14 +1182,20 @@ namespace Gedim
     RefinePolygon_Result result;
 
     if (mesh.Cell2DHasUpdatedCell2Ds(cell2DIndex))
+    {
+      result.ResultType = RefinePolygon_Result::ResultTypes::Cell2DAlreadySplitted;
       return result;
+    }
 
     // Check if the cell refinement creates null cell2Ds or cell1Ds
     if (geometryUtilities.IsValueZero(0.5 * cell2DArea,
                                       geometryUtilities.Tolerance2D()) ||
         geometryUtilities.IsValueZero(0.5 * cell2DEdgesLength[edgeIndex],
                                       geometryUtilities.Tolerance1D()))
+    {
+      result.ResultType = RefinePolygon_Result::ResultTypes::Cell2DSplitUnderTolerance;
       return result;
+    }
 
     // Add new mesh vertex, middle point of edge
     const unsigned int cell1DIndex = mesh.Cell2DEdge(cell2DIndex, edgeIndex);
@@ -1217,6 +1223,7 @@ namespace Gedim
         mesh.Cell1DRemove(splitCell1D.NewCell1DsIndex[0]);
         mesh.Cell0DRemove(splitCell1D.NewCell0DIndex);
         mesh.Cell1DSetState(cell1DIndex, true);
+        result.ResultType = RefinePolygon_Result::ResultTypes::Cell2DSplitUnderTolerance;
         return result;
       default:
         break;
@@ -1233,6 +1240,54 @@ namespace Gedim
     result.NewCell1DsIndex[1].NewCell1DsIndex = { splitResult.NewCell1DIndex };
 
     result.NewCell2DsIndex = { splitResult.NewCell2DsIndex };
+
+    return result;
+  }
+  // ***************************************************************************
+  RefinementUtilities::RefinePolyhedron_Result RefinementUtilities::RefineTetrahedronCell_ByEdge(const unsigned int& cell3DIndex,
+                                                                                                 const unsigned int& edgeIndex,
+                                                                                                 const std::array<unsigned int, 2>& oppositeVerticesIndex,
+                                                                                                 const std::vector<bool>& cell3DEdgesDirection,
+                                                                                                 const double& cell3DVolume,
+                                                                                                 const Eigen::VectorXd& cell3DEdgesLength, IMeshDAO& mesh) const
+  {
+    RefinePolyhedron_Result result;
+
+    if (mesh.Cell3DHasUpdatedCell3Ds(cell3DIndex))
+    {
+      result.ResultType = RefinePolyhedron_Result::ResultTypes::Cell3DAlreadySplitted;
+      return result;
+    }
+
+    // Check if the cell refinement creates null cell3Ds or cell1Ds
+    if (geometryUtilities.IsValueZero(0.5 * cell3DVolume,
+                                      geometryUtilities.Tolerance3D()) ||
+        geometryUtilities.IsValueZero(0.5 * cell3DEdgesLength[edgeIndex],
+                                      geometryUtilities.Tolerance1D()))
+    {
+      result.ResultType = RefinePolyhedron_Result::ResultTypes::Cell3DSplitUnderTolerance;
+      return result;
+    }
+
+    // Add new mesh vertex, middle point of edge
+    const unsigned int cell1DIndex = mesh.Cell3DEdge(cell3DIndex,
+                                                     edgeIndex);
+    const bool cell1DDirection = cell3DEdgesDirection[edgeIndex];
+
+    const SplitCell1D_Result splitCell1D = SplitCell1D_MiddlePoint(cell1DIndex,
+                                                                   mesh);
+
+    result.NewCell0DsIndex = { splitCell1D.NewCell0DIndex };
+    result.NewCell1DsIndex.resize(3);
+    result.NewCell1DsIndex[0].Type = RefinePolyhedron_Result::RefinedCell1D::Types::Updated;
+    result.NewCell1DsIndex[0].NewCell1DsIndex = splitCell1D.NewCell1DsIndex;
+    result.NewCell1DsIndex[0].OriginalCell1DIndex = cell1DIndex;
+    result.NewCell1DsIndex[0].OriginalCell3DEdgeIndex = edgeIndex;
+    result.NewCell1DsIndex[0].NewCell0DIndex = splitCell1D.NewCell0DIndex;
+    //result.NewCell1DsIndex[1].Type = RefinePolyhedron_Result::RefinedCell1D::Types::New;
+    //result.NewCell1DsIndex[1].NewCell1DsIndex = { splitResult.NewCell1DIndex };
+
+    //result.NewCell2DsIndex = { splitResult.NewCell2DsIndex };
 
     return result;
   }

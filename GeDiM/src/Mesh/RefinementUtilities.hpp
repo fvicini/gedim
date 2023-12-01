@@ -119,6 +119,39 @@ namespace Gedim
           SplitTypes Type = SplitTypes::Unknown;
       };
 
+      struct RefinePolyhedron_Result final
+      {
+          enum struct ResultTypes
+          {
+            Unknown = 0,
+            Successfull = 1,
+            Cell3DAlreadySplitted = 2,
+            Cell3DSplitUnderTolerance = 3
+          };
+
+          struct RefinedCell1D final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                Updated = 1,
+                New = 2
+              };
+
+              Types Type = Types::Unknown;
+              std::vector<unsigned int> NewCell1DsIndex = {};
+              unsigned int OriginalCell1DIndex = 0;
+              unsigned int NewCell0DIndex = 0;
+              unsigned int OriginalCell3DEdgeIndex = 0;
+          };
+
+          ResultTypes ResultType = ResultTypes::Unknown;
+          std::vector<unsigned int> NewCell0DsIndex = {};
+          std::vector<RefinedCell1D> NewCell1DsIndex = {};
+          std::vector<unsigned int> NewCell2DsIndex = {};
+          std::vector<unsigned int> NewCell3DsIndex = {};
+      };
+
       struct RefinePolygon_Result final
       {
           enum struct ResultTypes
@@ -295,6 +328,17 @@ namespace Gedim
                                                      const Eigen::Vector3d& cell2DTranslation,
                                                      const Eigen::VectorXd& cell2DEdgesLength,
                                                      IMeshDAO& mesh) const;
+
+      /// \brief Refine Tetrahedron Cell3D By Edge
+      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
+      /// \param mesh the mesh to be updated
+      RefinePolyhedron_Result RefineTetrahedronCell_ByEdge(const unsigned int& cell3DIndex,
+                                                           const unsigned int& edgeIndex,
+                                                           const std::array<unsigned int, 2>& oppositeVerticesIndex,
+                                                           const std::vector<bool>& cell3DEdgesDirection,
+                                                           const double& cell3DVolume,
+                                                           const Eigen::VectorXd& cell3DEdgesLength,
+                                                           IMeshDAO& mesh) const;
 
       /// \brief Update Cell1D neighbours of refined triangle by edge with refine by edge
       /// \param cell2DIndex the index of Cell2D refined, from 0 to Cell2DTotalNumber()

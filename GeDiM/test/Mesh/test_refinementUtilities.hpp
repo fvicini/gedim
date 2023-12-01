@@ -147,22 +147,13 @@ namespace GedimUnitTesting
     EXPECT_EQ(2, direction.OppositeVerticesIndex[0]);
     EXPECT_EQ(3, direction.OppositeVerticesIndex[1]);
 
-    std::cout<< "Edge "<< meshDAO.Cell3DEdge(cell3DToRefineIndex,
-                                             direction.MaxEdgeIndex)<< std::endl;
-    std::cout<< "Vertex1 "<< meshDAO.Cell3DVertex(cell3DToRefineIndex,
-                                                  direction.OppositeVerticesIndex[0])<< std::endl;
-    std::cout<< "Vertex2 "<< meshDAO.Cell3DVertex(cell3DToRefineIndex,
-                                                  direction.OppositeVerticesIndex[1])<< std::endl;
-
-    //    const Gedim::RefinementUtilities::RefinePolygon_Result result = refinementUtilities.RefineTriangleCell_ByEdge(cell2DToRefineIndex,
-    //                                                                                                                  direction.MaxEdgeIndex,
-    //                                                                                                                  direction.OppositeVertexIndex,
-    //                                                                                                                  meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex),
-    //                                                                                                                  meshGeometricData.Cell2DsAreas.at(cell2DToRefineIndex),
-    //                                                                                                                  cell2DRotation,
-    //                                                                                                                  cell2DTranslation,
-    //                                                                                                                  meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex),
-    //                                                                                                                  meshDAO);
+    const Gedim::RefinementUtilities::RefinePolyhedron_Result result = refinementUtilities.RefineTetrahedronCell_ByEdge(cell3DToRefineIndex,
+                                                                                                                        direction.MaxEdgeIndex,
+                                                                                                                        direction.OppositeVerticesIndex,
+                                                                                                                        meshGeometricData.Cell3DsEdgeDirections.at(cell3DToRefineIndex),
+                                                                                                                        meshGeometricData.Cell3DsVolumes.at(cell3DToRefineIndex),
+                                                                                                                        meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex),
+                                                                                                                        meshDAO);
     //    EXPECT_EQ(std::vector<unsigned int>({ 4 }),
     //              result.NewCell0DsIndex);
     //    EXPECT_EQ(2,
@@ -210,9 +201,9 @@ namespace GedimUnitTesting
     //    EXPECT_EQ(8, meshDAO.Cell1DTotalNumber());
     //    EXPECT_EQ(4, meshDAO.Cell2DTotalNumber());
 
-    //    meshUtilities.ExportMeshToVTU(meshDAO,
-    //                                  exportFolder,
-    //                                  "Mesh_Refined");
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined");
   }
 
   TEST(TestRefinementUtilities, TestRefineTriangles_ByArea)
