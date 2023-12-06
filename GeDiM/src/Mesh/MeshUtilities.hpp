@@ -64,6 +64,26 @@ namespace Gedim
           std::unordered_map<unsigned int, unsigned int> NewCell3DToOldCell3D; ///< each pair is {new Cell3D index, old Cell3D index}
       };
 
+      struct FilterMeshData final
+      {
+          std::vector<unsigned int> Cell0Ds = {};
+          std::vector<unsigned int> Cell1Ds = {};
+          std::vector<unsigned int> Cell2Ds = {};
+          std::vector<unsigned int> Cell3Ds = {};
+      };
+
+      struct ExtractMeshData final
+      {
+          std::vector<unsigned int> OldCell0DToNewCell0D = {}; ///< each element is [old Cell0D index] = new Cell0D index
+          std::vector<unsigned int> OldCell1DToNewCell1D = {}; ///< each element is [old Cell1D index] = new Cell1D index
+          std::vector<unsigned int> OldCell2DToNewCell2D = {}; ///< each element is [old Cell2D index] = new Cell2D index
+          std::vector<unsigned int> OldCell3DToNewCell3D = {}; ///< each element is [old Cell3D index] = new Cell3D index
+          std::vector<unsigned int> NewCell0DToOldCell0D = {}; ///< each element is [new Cell0D index] = old Cell0D index
+          std::vector<unsigned int> NewCell1DToOldCell1D = {}; ///< each element is [new Cell1D index] = old Cell1D index
+          std::vector<unsigned int> NewCell2DToOldCell2D = {}; ///< each element is [new Cell2D index] = old Cell2D index
+          std::vector<unsigned int> NewCell3DToOldCell3D = {}; ///< each element is [new Cell3D index] = old Cell3D index
+      };
+
       struct ComputeMesh2DCell1DsResult final
       {
           Eigen::MatrixXi Cell1Ds; /// Cell1Ds vertices, size 2 x Cell1DTotalNumber()
@@ -177,6 +197,16 @@ namespace Gedim
       /// \note the resulting mesh has no inactive elements
       void ExtractActiveMesh(IMeshDAO& mesh,
                              ExtractActiveMeshData& extractionData) const;
+
+      /// \brief Extract mesh2D cells from a mesh
+      FilterMeshData FilterMesh2D(const std::vector<unsigned int>& cell2DsFilter,
+                                  const IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh2D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const std::vector<unsigned int>& cell2DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh);
 
       /// \brief Fill Mesh 1D From segment Coordinates
       /// \param segmentOrigin the segment origin
