@@ -198,15 +198,24 @@ namespace Gedim
       void ExtractActiveMesh(IMeshDAO& mesh,
                              ExtractActiveMeshData& extractionData) const;
 
+      /// \brief Extract mesh1D cells from a mesh
+      FilterMeshData FilterMesh1D(const std::vector<unsigned int>& cell1DsFilter,
+                                  const IMeshDAO& mesh) const;
+
       /// \brief Extract mesh2D cells from a mesh
       FilterMeshData FilterMesh2D(const std::vector<unsigned int>& cell2DsFilter,
                                   const IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh1D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh) const;
 
       ExtractMeshData ExtractMesh2D(const std::vector<unsigned int>& cell0DsFilter,
                                     const std::vector<unsigned int>& cell1DsFilter,
                                     const std::vector<unsigned int>& cell2DsFilter,
                                     const IMeshDAO& originalMesh,
-                                    IMeshDAO& mesh);
+                                    IMeshDAO& mesh) const;
 
       /// \brief Fill Mesh 1D From segment Coordinates
       /// \param segmentOrigin the segment origin

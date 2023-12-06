@@ -109,7 +109,7 @@ namespace Gedim
                                                               const std::vector<unsigned int>& cell1DsFilter,
                                                               const std::vector<unsigned int>& cell2DsFilter,
                                                               const IMeshDAO& originalMesh,
-                                                              IMeshDAO& mesh)
+                                                              IMeshDAO& mesh) const
   {
     ExtractMeshData result;
     result.NewCell0DToOldCell0D.resize(cell0DsFilter.size(), std::numeric_limits<unsigned int>::max());
