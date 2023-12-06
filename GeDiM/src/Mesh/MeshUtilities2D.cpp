@@ -136,7 +136,10 @@ namespace Gedim
       result.NewCell1DToOldCell1D[e] = oldCell1DIndex;
       result.OldCell1DToNewCell1D[oldCell1DIndex] = e;
 
-      newCell1Ds.col(e) = originalMesh.Cell1DExtremes(oldCell1DIndex);
+      const Eigen::VectorXi cell1DExtremes = originalMesh.Cell1DExtremes(oldCell1DIndex);
+
+      newCell1Ds(0, e) = result.OldCell0DToNewCell0D.at(cell1DExtremes[0]);
+      newCell1Ds(1, e) = result.OldCell0DToNewCell0D.at(cell1DExtremes[1]);
     }
 
     std::vector<Eigen::MatrixXi> newCell2Ds(cell2DsFilter.size());
@@ -154,8 +157,8 @@ namespace Gedim
       newCell2Ds[p].resize(2, vertices.size());
       for (unsigned int v = 0; v < vertices.size(); v++)
       {
-        newCell2Ds[p](0, v) = vertices[v];
-        newCell2Ds[p](1, v) = edges[v];
+        newCell2Ds[p](0, v) = result.OldCell0DToNewCell0D.at(vertices[v]);
+        newCell2Ds[p](1, v) = result.OldCell1DToNewCell1D.at(edges[v]);
       }
     }
 
