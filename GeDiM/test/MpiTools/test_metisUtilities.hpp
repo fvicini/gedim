@@ -270,8 +270,8 @@ namespace UnitTesting
 
     std::vector<unsigned int> edgesWeights(meshDAO.Cell1DTotalNumber(), 1.0);
     edgesWeights[3] = 100.0;
-    edgesWeights[4] = 100.0;
-    edgesWeights[5] = 100.0;
+    edgesWeights[7] = 100.0;
+    edgesWeights[9] = 100.0;
 
     Gedim::MetisUtilities::MetisNetwork network = metisUtilities.MeshToGraph(meshDAO.Cell0DTotalNumber(),
                                                                              edges,
