@@ -1185,4 +1185,17 @@ namespace Gedim
     }
   }
   // ***************************************************************************
+  std::vector<unsigned int> GeometryUtilities::UnalignedPolyhedronPoints(const Eigen::Vector3d& polyhedronVertices,
+                                                                         const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                         const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices) const
+  {
+    const unsigned int numFaces = polyhedronFaces.size();
+
+    for (unsigned int f = 0; f < numFaces; f++)
+    {
+      const vector<unsigned int> unalignedFaceLocalPoints =
+          UnalignedPoints(polyhedronFaceRotatedVertices[f]);
+    }
+  }
+  // ***************************************************************************
 }

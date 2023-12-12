@@ -1766,6 +1766,13 @@ namespace Gedim
       std::vector<unsigned int> UnalignedPoints(const Eigen::MatrixXd& points,
                                                 const unsigned int numDesiredUnalignedPoints = 0) const;
 
+      /// \brief Extract the circumscribed unaligned points (minimum 4) in a polyhedron
+      /// \return the unaligned points, size numUnalignedPoints, 2 <= numUnalignedPoints <= numPoints
+      std::vector<unsigned int> UnalignedPolyhedronPoints(const Eigen::Vector3d& polyhedronVertices,
+                                                          const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                          const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices) const;
+
+
       /// \param points the points, size 3 x numPoints
       /// \param filter indices counterclockwise, size numFilterPoints, numFilterPoints <= numPoints
       /// \return the points coordinates filtered, size 3 x numFilterPoints
