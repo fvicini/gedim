@@ -99,11 +99,13 @@ namespace Gedim
       ~MetisUtilities();
 
       MetisUtilities::MeshToNetwork Mesh3DToDualGraph(const IMeshDAO& mesh,
+                                                      const std::vector<unsigned int>& cell3DsWeight = {},
                                                       const std::vector<bool>& cell2DsConstrained = {},
-                                                      const Eigen::SparseMatrix<unsigned int>& weights = Eigen::SparseMatrix<unsigned int>()) const;
+                                                      const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight = Eigen::SparseMatrix<unsigned int>()) const;
       MetisUtilities::MeshToNetwork Mesh2DToDualGraph(const IMeshDAO& mesh,
+                                                      const std::vector<unsigned int>& cell2DsWeight = {},
                                                       const std::vector<bool>& cell1DsConstrained = {},
-                                                      const Eigen::SparseMatrix<unsigned int>& weights = Eigen::SparseMatrix<unsigned int>()) const;
+                                                      const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight = Eigen::SparseMatrix<unsigned int>()) const;
       MetisUtilities::MetisNetwork MeshToGraph(const unsigned int& numVertices,
                                                const Eigen::MatrixXi& edges,
                                                const bool& undirectEdges,

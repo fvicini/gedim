@@ -20,8 +20,9 @@ namespace Gedim
   }
   // ***************************************************************************
   MetisUtilities::MeshToNetwork MetisUtilities::Mesh3DToDualGraph(const IMeshDAO& mesh,
+                                                                  const std::vector<unsigned int>& cell3DsWeight,
                                                                   const std::vector<bool>& cell2DsConstrained,
-                                                                  const Eigen::SparseMatrix<unsigned int>& weights) const
+                                                                  const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight) const
   {
     MeshToNetwork meshToNetwork;
 
@@ -108,13 +109,15 @@ namespace Gedim
     {
       for (const Connection& connection : verticesConnections[v])
       {
-        unsigned int weight = (weights.size() > 0) ? weights.coeff(v, connection.Cell3DIndex) : 1;
+        unsigned int weight = (networkEdgesWeight.size() > 0) ? networkEdgesWeight.coeff(v, connection.Cell3DIndex) : 1;
         network.EdgesWeight[counter++] = !checkConstraints ? weight :
                                                              (constraints.find(std::make_pair(v, connection.Cell3DIndex)) != constraints.end() ?
                                                                                                                                1 :
                                                                                                                                weight + numEdges);
       }
     }
+
+    network.NodesWeight = cell3DsWeight;
 
     return meshToNetwork;
   }
@@ -229,8 +232,9 @@ namespace Gedim
   }
   // ***************************************************************************
   MetisUtilities::MeshToNetwork MetisUtilities::Mesh2DToDualGraph(const IMeshDAO& mesh,
+                                                                  const std::vector<unsigned int>& cell2DsWeight,
                                                                   const std::vector<bool>& cell1DsConstrained,
-                                                                  const Eigen::SparseMatrix<unsigned int>& weights) const
+                                                                  const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight) const
   {
     MeshToNetwork meshToNetwork;
 
@@ -315,13 +319,15 @@ namespace Gedim
     {
       for (const Connection& connection : verticesConnections[v])
       {
-        unsigned int weight = (weights.size() > 0) ? weights.coeff(v, connection.Cell2DIndex) : 1;
+        unsigned int weight = (networkEdgesWeight.size() > 0) ? networkEdgesWeight.coeff(v, connection.Cell2DIndex) : 1;
         network.EdgesWeight[counter++] = !checkConstraints ? weight :
                                                              (constraints.find(std::make_pair(v, connection.Cell2DIndex)) != constraints.end() ?
                                                                                                                                1 :
                                                                                                                                weight + numEdges);
       }
     }
+
+    network.NodesWeight = cell2DsWeight;
 
     return meshToNetwork;
   }

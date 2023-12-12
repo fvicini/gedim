@@ -525,6 +525,7 @@ namespace UnitTesting
     cell1DsConstrained[5] = true;
 
     const Gedim::MetisUtilities::MeshToNetwork meshToNetwork = metisUtilities.Mesh2DToDualGraph(meshDAO,
+                                                                                                {},
                                                                                                 cell1DsConstrained);
 
     Gedim::MetisUtilities::NetworkPartitionOptions partitionOptions;
@@ -776,6 +777,7 @@ namespace UnitTesting
     }
 
     const Gedim::MetisUtilities::MeshToNetwork meshToNetwork = metisUtilities.Mesh2DToDualGraph(meshDAO,
+                                                                                                {},
                                                                                                 cell1DsConstrained,
                                                                                                 weights);
 
@@ -941,6 +943,7 @@ namespace UnitTesting
     }
 
     const Gedim::MetisUtilities::MeshToNetwork meshToNetwork = metisUtilities.Mesh2DToDualGraph(meshDAO,
+                                                                                                {},
                                                                                                 cell1DsConstrained,
                                                                                                 cell1DsWeight);
 
@@ -1218,6 +1221,7 @@ namespace UnitTesting
     cell2DsConstrained[29] = true;
 
     const Gedim::MetisUtilities::MeshToNetwork meshToNetwork = metisUtilities.Mesh3DToDualGraph(meshDAO,
+                                                                                                {},
                                                                                                 cell2DsConstrained);
 
     Gedim::MetisUtilities::NetworkPartitionOptions partitionOptions;
@@ -1315,6 +1319,7 @@ namespace UnitTesting
 
 
     const Gedim::MetisUtilities::MeshToNetwork meshToNetwork = metisUtilities.Mesh3DToDualGraph(meshDAO,
+                                                                                                {},
                                                                                                 {},
                                                                                                 weights);
 
