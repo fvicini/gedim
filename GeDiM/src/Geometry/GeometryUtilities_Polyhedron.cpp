@@ -453,6 +453,17 @@ namespace Gedim
     return faceRotatedVertices;
   }
   // ***************************************************************************
+  std::vector<std::vector<unsigned int>> GeometryUtilities::PolyhedronFacesUnalignedVertices(const std::vector<Eigen::MatrixXd>& polyhedronFacesRotatedVertices) const
+  {
+    const unsigned int numFaces = polyhedronFacesRotatedVertices.size();
+    std::vector<std::vector<unsigned int>> faceUnalignedVertices(numFaces);
+
+    for (unsigned int f = 0; f < numFaces; f++)
+      faceUnalignedVertices[f] = UnalignedPoints(polyhedronFacesRotatedVertices[f]);
+
+    return faceUnalignedVertices;
+  }
+  // ***************************************************************************
   vector<Vector3d> GeometryUtilities::PolyhedronFaceNormals(const vector<Eigen::MatrixXd>& polyhedronFaceVertices) const
   {
     vector<Vector3d> faceNormals;
@@ -1185,17 +1196,28 @@ namespace Gedim
     }
   }
   // ***************************************************************************
-  std::vector<unsigned int> GeometryUtilities::UnalignedPolyhedronPoints(const Eigen::Vector3d& polyhedronVertices,
+  std::vector<unsigned int> GeometryUtilities::UnalignedPolyhedronPoints(const Eigen::MatrixXd& polyhedronVertices,
                                                                          const std::vector<Eigen::MatrixXi>& polyhedronFaces,
-                                                                         const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices) const
+                                                                         const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const
   {
     const unsigned int numFaces = polyhedronFaces.size();
 
+    std::set<unsigned int> unalignedVertices;
+
     for (unsigned int f = 0; f < numFaces; f++)
     {
-      const vector<unsigned int> unalignedFaceLocalPoints =
-          UnalignedPoints(polyhedronFaceRotatedVertices[f]);
+      for (const unsigned int unalignedFaceLocalPoint : polyhedronFacesUnalignedVertices[f])
+      {
+        const unsigned int unalignedFacePoint = polyhedronFaces[f](0, unalignedFaceLocalPoint);
+
+        if (unalignedVertices.find(unalignedFacePoint) ==
+            unalignedVertices.end())
+          unalignedVertices.insert(unalignedFacePoint);
+      }
     }
+
+    return std::vector<unsigned int>(unalignedVertices.begin(),
+                                     unalignedVertices.end());
   }
   // ***************************************************************************
 }

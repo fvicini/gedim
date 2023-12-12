@@ -1164,9 +1164,7 @@ namespace Gedim
                          Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
         }
 
-        convexCell3DsFacesUnalignedVertices[cc].resize(convexCell3DFaces2DVertices.size());
-        for (unsigned int ccf = 0; ccf < convexCell3DsFacesUnalignedVertices[cc].size(); ccf++)
-          convexCell3DsFacesUnalignedVertices[cc][ccf] = geometryUtilities.UnalignedPoints(convexCell3DFaces2DVertices[ccf]);
+        convexCell3DsFacesUnalignedVertices[cc] = geometryUtilities.PolyhedronFacesUnalignedVertices(convexCell3DFaces2DVertices);
 
         const std::vector<std::vector<unsigned int>> convexCell3DFacesTriangulations = geometryUtilities.PolyhedronFaceTriangulationsByFirstVertex(convexCell3DPolyhedron.Faces,
                                                                                                                                                    convexCell3DsFaces3DVertices[cc]);
@@ -1288,6 +1286,13 @@ namespace Gedim
 
         for (unsigned int ccf = 0; ccf < numConvexFaces; ccf++)
         {
+          // verify if the convex face is in the same plane of the concave face
+          if (!geometryUtilities.IsPolygonCoplanar(faceNormal,
+                                                   faceOrigin,
+                                                   convexCell3DsFaces3DVertices[cc][ccf],
+                                                   convexCell3DsFacesUnalignedVertices[cc][ccf]))
+            continue;
+
           const Eigen::MatrixXd& convexFaceVertices3D = convexCell3DsFaces3DVertices[cc][ccf];
           const std::vector<unsigned int>& convexFaceUnalignedVertices = convexCell3DsFacesUnalignedVertices[cc][ccf];
 
@@ -1295,22 +1300,6 @@ namespace Gedim
           convexFaceTriangle.col(0)<< convexFaceVertices3D.col(convexFaceUnalignedVertices[0]);
           convexFaceTriangle.col(1)<< convexFaceVertices3D.col(convexFaceUnalignedVertices[1]);
           convexFaceTriangle.col(2)<< convexFaceVertices3D.col(convexFaceUnalignedVertices[2]);
-
-          // verify if the convex face is in the same plane of the concave face
-          if (!geometryUtilities.IsPointOnPlane(convexFaceTriangle.col(0),
-                                                faceNormal,
-                                                faceOrigin))
-            continue;
-
-          if (!geometryUtilities.IsPointOnPlane(convexFaceTriangle.col(1),
-                                                faceNormal,
-                                                faceOrigin))
-            continue;
-
-          if (!geometryUtilities.IsPointOnPlane(convexFaceTriangle.col(2),
-                                                faceNormal,
-                                                faceOrigin))
-            continue;
 
           // rotate convex face to 2D with concave face matrices
           Eigen::MatrixXd convexFace2DTriangle = geometryUtilities.RotatePointsFrom3DTo2D(convexFaceTriangle,

@@ -2111,6 +2111,27 @@ namespace GedimUnitTesting
                                               polyhedron.Edges,
                                               polyhedron.Faces,
                                               exportFolder);
+
+      const vector<Eigen::MatrixXd> faceVertices = geometryUtilities.PolyhedronFaceVertices(polyhedron.Vertices,
+                                                                                            polyhedron.Faces);
+      const vector<Eigen::Vector3d> faceNormals = geometryUtilities.PolyhedronFaceNormals(faceVertices);
+      const vector<Eigen::Vector3d> faceTranslations = geometryUtilities.PolyhedronFaceTranslations(faceVertices);
+      const vector<Eigen::Matrix3d> faceRotationMatrices = geometryUtilities.PolyhedronFaceRotationMatrices(faceVertices,
+                                                                                                            faceNormals,
+                                                                                                            faceTranslations);
+
+      const vector<Eigen::MatrixXd> face2DVertices = geometryUtilities.PolyhedronFaceRotatedVertices(faceVertices,
+                                                                                                     faceTranslations,
+                                                                                                     faceRotationMatrices);
+      const std::vector<std::vector<unsigned int>> facesUnalignedPoints = geometryUtilities.PolyhedronFacesUnalignedVertices(face2DVertices);
+
+
+      const std::vector<unsigned int> unalignedVertices = geometryUtilities.UnalignedPolyhedronPoints(polyhedron.Vertices,
+                                                                                                      polyhedron.Faces,
+                                                                                                      facesUnalignedPoints);
+
+      ASSERT_EQ(std::vector<unsigned int>({0, 2, 5, 9}),
+                unalignedVertices);
     }
   }
 }

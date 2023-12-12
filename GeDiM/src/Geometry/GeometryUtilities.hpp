@@ -1097,6 +1097,12 @@ namespace Gedim
                            const Eigen::Vector3d& secondLineOrigin,
                            const Eigen::Vector3d& secondLineTangent) const;
 
+      /// \brief verify if the polygon is in the coplana to a plane
+      bool IsPolygonCoplanar(const Eigen::Vector3d& planeNormal,
+                             const Eigen::Vector3d& planeOrigin,
+                             const Eigen::MatrixXd& polygonVertices,
+                             const std::vector<unsigned int>& polygonUnalignedVertices) const;
+
       /// \brief Compute the intersection between the two segments
       /// \param firstSegmentOrigin first segment origin
       /// \param firstSegmentEnd first segment end
@@ -1767,10 +1773,11 @@ namespace Gedim
                                                 const unsigned int numDesiredUnalignedPoints = 0) const;
 
       /// \brief Extract the circumscribed unaligned points (minimum 4) in a polyhedron
-      /// \return the unaligned points, size numUnalignedPoints, 2 <= numUnalignedPoints <= numPoints
-      std::vector<unsigned int> UnalignedPolyhedronPoints(const Eigen::Vector3d& polyhedronVertices,
+      /// \return the unaligned points, size numUnalignedPoints, 4 <= numUnalignedPoints <= numPoints
+      /// \warning works only for convex polyhedron
+      std::vector<unsigned int> UnalignedPolyhedronPoints(const Eigen::MatrixXd& polyhedronVertices,
                                                           const std::vector<Eigen::MatrixXi>& polyhedronFaces,
-                                                          const std::vector<Eigen::MatrixXd>& polyhedronFaceRotatedVertices) const;
+                                                          const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const;
 
 
       /// \param points the points, size 3 x numPoints
@@ -2014,6 +2021,11 @@ namespace Gedim
       std::vector<Eigen::MatrixXd> PolyhedronFaceRotatedVertices(const std::vector<Eigen::MatrixXd>& polyhedronFaceVertices,
                                                                  const std::vector<Eigen::Vector3d>& polyhedronFaceTranslations,
                                                                  const std::vector<Eigen::Matrix3d>& polyhedronFaceRotationMatrices) const;
+
+      /// \brief Compute Polyhedron Faces Unaligned Vertices Indices
+      /// \param polyhedronFacesRotatedVertices the polyhedron faces 2D vertices
+      /// \return for each face the unaligned vertices indices, size 1 x numFaces
+      std::vector<std::vector<unsigned int>> PolyhedronFacesUnalignedVertices(const std::vector<Eigen::MatrixXd>& polyhedronFacesRotatedVertices) const;
 
 
       /// \brief Compute Polyhedron Faces Normals
