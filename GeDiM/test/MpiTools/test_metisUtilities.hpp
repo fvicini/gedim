@@ -276,7 +276,8 @@ namespace UnitTesting
     Gedim::MetisUtilities::MetisNetwork network = metisUtilities.MeshToGraph(meshDAO.Cell0DTotalNumber(),
                                                                              edges,
                                                                              true,
-                                                                             verticesWeights);
+                                                                             verticesWeights,
+                                                                             edgesWeights);
 
     Gedim::MetisUtilities::NetworkPartitionOptions partitionOptions;
     partitionOptions.PartitionType = Gedim::MetisUtilities::NetworkPartitionOptions::PartitionTypes::CutBalancing;
