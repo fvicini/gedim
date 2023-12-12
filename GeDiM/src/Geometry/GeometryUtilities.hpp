@@ -1777,6 +1777,9 @@ namespace Gedim
       /// \warning works only for convex polyhedron
       std::vector<unsigned int> UnalignedPolyhedronPoints(const Eigen::MatrixXd& polyhedronVertices,
                                                           const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                          const std::vector<Eigen::Vector3d>& polyhedronFacesTranslation,
+                                                          const std::vector<Eigen::Matrix3d>& polyhedronFacesRotationMatrix,
+                                                          const std::vector<std::vector<unsigned int>>& polyhedronUnaligedFaces,
                                                           const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const;
 
 

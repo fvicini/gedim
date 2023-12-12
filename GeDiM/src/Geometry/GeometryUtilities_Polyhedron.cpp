@@ -1198,21 +1198,74 @@ namespace Gedim
   // ***************************************************************************
   std::vector<unsigned int> GeometryUtilities::UnalignedPolyhedronPoints(const Eigen::MatrixXd& polyhedronVertices,
                                                                          const std::vector<Eigen::MatrixXi>& polyhedronFaces,
+                                                                         const std::vector<Eigen::Vector3d>& polyhedronFacesTranslation,
+                                                                         const std::vector<Eigen::Matrix3d>& polyhedronFacesRotationMatrix,
+                                                                         const std::vector<std::vector<unsigned int>>& polyhedronUnaligedFaces,
                                                                          const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const
   {
     const unsigned int numFaces = polyhedronFaces.size();
 
     std::set<unsigned int> unalignedVertices;
 
-    for (unsigned int f = 0; f < numFaces; f++)
+    for (const std::vector<unsigned int>& faces : polyhedronUnaligedFaces)
     {
-      for (const unsigned int unalignedFaceLocalPoint : polyhedronFacesUnalignedVertices[f])
-      {
-        const unsigned int unalignedFacePoint = polyhedronFaces[f](0, unalignedFaceLocalPoint);
+      const unsigned int numAlignedFaces = faces.size();
+      Gedim::Output::Assert(numAlignedFaces > 0);
 
-        if (unalignedVertices.find(unalignedFacePoint) ==
-            unalignedVertices.end())
-          unalignedVertices.insert(unalignedFacePoint);
+      if (numAlignedFaces > 1)
+      {
+        std::vector<unsigned int> numFacesUnalignedVertices(numAlignedFaces + 1, 0);
+        for (unsigned int f = 0; f < numAlignedFaces; f++)
+          numFacesUnalignedVertices[f + 1] += numFacesUnalignedVertices[f] + polyhedronFacesUnalignedVertices[faces[f]].size();
+        Eigen::MatrixXd unifiedUnalignedFacesVertices(3, numFacesUnalignedVertices[numAlignedFaces]);
+
+        for (unsigned int f = 0; f < numAlignedFaces; f++)
+        {
+          const unsigned int polyhedronFace = faces[f];
+          for (unsigned int v = 0; v < polyhedronFacesUnalignedVertices[polyhedronFace].size(); v++)
+          {
+            const unsigned int vertexIndex = polyhedronFaces[polyhedronFace](0, polyhedronFacesUnalignedVertices[polyhedronFace][v]);
+            unifiedUnalignedFacesVertices.col(numFacesUnalignedVertices[f] + v) =
+                polyhedronVertices.col(vertexIndex);
+          }
+        }
+
+        const Eigen::MatrixXd unifiedUnalignedFacesVertices2D = RotatePointsFrom3DTo2D(unifiedUnalignedFacesVertices,
+                                                                                       polyhedronFacesRotationMatrix[faces[0]].transpose(),
+            polyhedronFacesTranslation[faces[0]]);
+
+        const std::vector<unsigned int> convexHull = ConvexHull(unifiedUnalignedFacesVertices2D,
+                                                                false);
+
+        for (const unsigned int convexHullVertex : convexHull)
+        {
+          unsigned int f = 0;
+          while (f < numAlignedFaces &&
+                 convexHullVertex > numFacesUnalignedVertices[f + 1])
+            f++;
+
+          Gedim::Output::Assert(convexHullVertex >= numFacesUnalignedVertices[f]);
+
+          const unsigned int polyhedronFace = faces[f];
+          const unsigned int faceUnalignedVertexIndex = convexHullVertex - numFacesUnalignedVertices[f];
+          const unsigned int polyhedronVertex = polyhedronFaces[polyhedronFace](0, faceUnalignedVertexIndex);
+
+          if (unalignedVertices.find(polyhedronVertex) ==
+              unalignedVertices.end())
+            unalignedVertices.insert(polyhedronVertex);
+         }
+      }
+      else
+      {
+        const unsigned int f = faces[0];
+        for (const unsigned int unalignedFaceLocalPoint : polyhedronFacesUnalignedVertices[f])
+        {
+          const unsigned int unalignedFacePoint = polyhedronFaces[f](0, unalignedFaceLocalPoint);
+
+          if (unalignedVertices.find(unalignedFacePoint) ==
+              unalignedVertices.end())
+            unalignedVertices.insert(unalignedFacePoint);
+        }
       }
     }
 

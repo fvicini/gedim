@@ -2126,8 +2126,19 @@ namespace GedimUnitTesting
       const std::vector<std::vector<unsigned int>> facesUnalignedPoints = geometryUtilities.PolyhedronFacesUnalignedVertices(face2DVertices);
 
 
+      const std::vector<std::vector<unsigned int>> polyhedronUnaligedFaces =
+      {
+        { 0 },
+        { 1 },
+        { 2 },
+        { 3, 4 }
+      };
+
       const std::vector<unsigned int> unalignedVertices = geometryUtilities.UnalignedPolyhedronPoints(polyhedron.Vertices,
                                                                                                       polyhedron.Faces,
+                                                                                                      faceTranslations,
+                                                                                                      faceRotationMatrices,
+                                                                                                      polyhedronUnaligedFaces,
                                                                                                       facesUnalignedPoints);
 
       ASSERT_EQ(std::vector<unsigned int>({0, 2, 5, 9}),
