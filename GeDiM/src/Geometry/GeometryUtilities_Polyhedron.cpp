@@ -1203,8 +1203,6 @@ namespace Gedim
                                                                          const std::vector<std::vector<unsigned int>>& polyhedronUnaligedFaces,
                                                                          const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const
   {
-    const unsigned int numFaces = polyhedronFaces.size();
-
     std::set<unsigned int> unalignedVertices;
 
     for (const std::vector<unsigned int>& faces : polyhedronUnaligedFaces)
