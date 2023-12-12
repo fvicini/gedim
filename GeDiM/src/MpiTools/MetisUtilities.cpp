@@ -183,8 +183,8 @@ namespace Gedim
                                                        adjacencyCols.end());
 
     network.NodesWeight = verticesWeight;
-    network.EdgesWeight = std::vector<unsigned int>(edgesWeight.begin(),
-                                                    edgesWeight.end());
+    network.EdgesWeight = std::vector<unsigned int>(networkEdgesWeight.begin(),
+                                                    networkEdgesWeight.end());
 
     return network;
   }
