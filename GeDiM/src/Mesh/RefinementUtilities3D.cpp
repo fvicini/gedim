@@ -126,7 +126,7 @@ namespace Gedim
                                                mesh.Cell3DVertex(cell3DIndex,
                                                                  newEdgeOrigin) :
                                                result.NewCell0DsIndex[newEdgeOrigin - numOriginalVertices];
-      const unsigned int cell0DIndexEnd = (newEdgeOrigin < numOriginalVertices) ?
+      const unsigned int cell0DIndexEnd = (newEdgeEnd < numOriginalVertices) ?
                                             mesh.Cell3DVertex(cell3DIndex,
                                                               newEdgeEnd) :
                                             result.NewCell0DsIndex[newEdgeEnd - numOriginalVertices];
@@ -141,6 +141,7 @@ namespace Gedim
                                 cell0DIndexEnd,
                                 cell0DIndexOrigin);
       mesh.Cell1DSetMarker(newCell1DIndex, 0);
+      std::cout<< "TODO: marker of face to find"<< std::endl;
       mesh.Cell1DSetState(newCell1DIndex, true);
       newCell1Ds.push_back(newCell1D);
     }
