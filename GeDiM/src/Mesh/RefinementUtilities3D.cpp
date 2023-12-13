@@ -84,7 +84,69 @@ namespace Gedim
                                                                                                                            planeRotationMatrix,
                                                                                                                            planeTranslation);
 
-    // Create new mesh vertices
+    // Create new mesh elements
+    const unsigned int numOriginalVertices = cell3DVertices.cols();
+    const unsigned int numNewVertices = split_cell.Vertices.NewVerticesOriginalEdge.size();
+
+    std::list<RefinePolyhedron_Result::RefinedCell1D> newCell1Ds;
+
+    // Create new vertices
+    result.NewCell0DsIndex.resize(numNewVertices);
+    for (unsigned int nv = 0; nv < numNewVertices; nv++)
+    {
+      const unsigned int originalEdgeIndex = split_cell.Vertices.NewVerticesOriginalEdge.at(nv);
+      const unsigned int originalCell1DIndex = mesh.Cell3DEdge(cell3DIndex,
+                                                               originalEdgeIndex);
+
+      const SplitCell1D_Result splitResult = SplitCell1D(originalCell1DIndex,
+                                                         split_cell.Vertices.Vertices.col(numOriginalVertices + nv),
+                                                         mesh);
+
+      result.NewCell0DsIndex[nv] = splitResult.NewCell0DIndex;
+
+      RefinePolyhedron_Result::RefinedCell1D refinedCell1D;
+      refinedCell1D.Type = RefinePolyhedron_Result::RefinedCell1D::Types::Updated;
+      refinedCell1D.NewCell1DsIndex = splitResult.NewCell1DsIndex;
+      refinedCell1D.OriginalCell1DIndex = originalCell1DIndex;
+      refinedCell1D.NewCell0DIndex = splitResult.NewCell0DIndex;
+      refinedCell1D.OriginalCell3DEdgeIndex = originalEdgeIndex;
+      newCell1Ds.push_back(refinedCell1D);
+    }
+
+    // Create new edges
+    for (unsigned int ne = 0; ne < split_cell.Edges.NewEdgesOriginalEdges.size(); ne++)
+    {
+      if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
+        continue;
+
+      const unsigned int newEdgeOrigin = split_cell.Edges.Edges(0, ne);
+      const unsigned int newEdgeEnd = split_cell.Edges.Edges(1, ne);
+
+      const unsigned int cell0DIndexOrigin = (newEdgeOrigin < numOriginalVertices) ?
+                                               mesh.Cell3DVertex(cell3DIndex,
+                                                                 newEdgeOrigin) :
+                                               result.NewCell0DsIndex[newEdgeOrigin - numOriginalVertices];
+      const unsigned int cell0DIndexEnd = (newEdgeOrigin < numOriginalVertices) ?
+                                            mesh.Cell3DVertex(cell3DIndex,
+                                                              newEdgeEnd) :
+                                            result.NewCell0DsIndex[newEdgeEnd - numOriginalVertices];
+
+      RefinePolyhedron_Result::RefinedCell1D newCell1D;
+      newCell1D.Type = RefinePolyhedron_Result::RefinedCell1D::Types::New;
+      newCell1D.NewCell1DsIndex.resize(1);
+
+      newCell1D.NewCell1DsIndex[0] = mesh.Cell1DAppend(1);
+      const unsigned int newCell1DIndex = newCell1D.NewCell1DsIndex[0];
+      mesh.Cell1DInsertExtremes(newCell1DIndex,
+                                cell0DIndexEnd,
+                                cell0DIndexOrigin);
+      mesh.Cell1DSetMarker(newCell1DIndex, 0);
+      mesh.Cell1DSetState(newCell1DIndex, true);
+      newCell1Ds.push_back(newCell1D);
+    }
+
+    result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
+                                                                                 newCell1Ds.end());
 
     return result;
   }

@@ -15,8 +15,9 @@ namespace Gedim
   {
   }
   // ***************************************************************************
-  RefinementUtilities::SplitCell1D_Result RefinementUtilities::SplitCell1D_MiddlePoint(const unsigned int& cell1DIndex,
-                                                                                       IMeshDAO& mesh) const
+  RefinementUtilities::SplitCell1D_Result RefinementUtilities::SplitCell1D(const unsigned int& cell1DIndex,
+                                                                           const Eigen::Vector3d& newVertexCoordinate,
+                                                                           IMeshDAO& mesh) const
   {
     SplitCell1D_Result result;
 
@@ -26,8 +27,7 @@ namespace Gedim
     result.NewCell0DIndex = mesh.Cell0DAppend(1);
     const unsigned int& newCell0DIndex = result.NewCell0DIndex;
     mesh.Cell0DInsertCoordinates(newCell0DIndex,
-                                 0.5 * (mesh.Cell0DCoordinates(cell1DOriginIndex) +
-                                        mesh.Cell0DCoordinates(cell1DEndIndex)));
+                                 newVertexCoordinate);
     mesh.Cell0DSetMarker(newCell0DIndex,
                          mesh.Cell1DMarker(cell1DIndex));
     mesh.Cell0DSetState(newCell0DIndex,

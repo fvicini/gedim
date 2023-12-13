@@ -238,8 +238,18 @@ namespace Gedim
                           const MeshUtilities& meshUtilities);
       ~RefinementUtilities();
 
-      SplitCell1D_Result SplitCell1D_MiddlePoint(const unsigned int& cell1DIndex,
-                                                 IMeshDAO& mesh) const;
+      SplitCell1D_Result SplitCell1D(const unsigned int& cell1DIndex,
+                                     const Eigen::Vector3d& newVertexCoordinate,
+                                     IMeshDAO& mesh) const;
+
+      inline SplitCell1D_Result SplitCell1D_MiddlePoint(const unsigned int& cell1DIndex,
+                                                        IMeshDAO& mesh) const
+      {
+        return SplitCell1D(cell1DIndex,
+                           0.5 * (mesh.Cell0DCoordinates(mesh.Cell1DOrigin(cell1DIndex)) +
+                                  mesh.Cell0DCoordinates(mesh.Cell1DEnd(cell1DIndex))),
+                           mesh);
+      }
 
       bool AreVerticesAligned(const Eigen::MatrixXd& cell2DVertices,
                               const unsigned int fromVertex,
