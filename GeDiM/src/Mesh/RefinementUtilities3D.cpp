@@ -88,9 +88,12 @@ namespace Gedim
     const unsigned int numOriginalVertices = cell3DVertices.cols();
     const unsigned int numNewVertices = split_cell.Vertices.NewVerticesOriginalEdge.size();
 
-    std::vector<unsigned int> splitCell0DsIndex(split_cell.Vertices.Vertices.cols());
-    std::vector<unsigned int> splitCell1DsIndex(split_cell.Edges.NewEdgesOriginalEdges.size());
-    std::vector<unsigned int> splitCell2DsIndex(split_cell.Faces.NewFacesOriginalFaces.size());
+    std::vector<unsigned int> splitCell0DsIndex(split_cell.Vertices.Vertices.cols(),
+                                                std::numeric_limits<unsigned int>::max());
+    std::vector<unsigned int> splitCell1DsIndex(split_cell.Edges.NewEdgesOriginalEdges.size(),
+                                                std::numeric_limits<unsigned int>::max());
+    std::vector<unsigned int> splitCell2DsIndex(split_cell.Faces.NewFacesOriginalFaces.size(),
+                                                std::numeric_limits<unsigned int>::max());
 
     std::list<RefinePolyhedron_Result::RefinedCell1D> newCell1Ds;
 
@@ -126,6 +129,9 @@ namespace Gedim
     {
       if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
       {
+        if (splitCell1DsIndex[ne] != std::numeric_limits<unsigned int>::max())
+          continue;
+
         splitCell1DsIndex[ne] = mesh.Cell3DEdge(cell3DIndex,
                                                 split_cell.Edges.NewEdgesOriginalEdges[ne]);
         continue;
@@ -159,6 +165,16 @@ namespace Gedim
     }
 
     // Create new Faces
+    for (unsigned int ne = 0; ne < split_cell.Edges.NewEdgesOriginalEdges.size(); ne++)
+    {
+      if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
+        continue;
+
+      const unsigned int originalFaceIndex = split_cell.Edges.NewEdgesOriginalFace.at(ne);
+      const unsigned int originalCell2DIndex = mesh.Cell3DFace(cell3DIndex,
+                                                               originalFaceIndex);
+    }
+
     for (unsigned int nf = 0; nf < split_cell.Faces.NewFacesOriginalFaces.size(); nf++)
     {
       if (split_cell.Faces.NewFacesOriginalFaces[nf] >= 0)

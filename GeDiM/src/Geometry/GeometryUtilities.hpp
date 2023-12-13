@@ -655,6 +655,8 @@ namespace Gedim
               std::vector<unsigned int> Faces;
           };
 
+          std::vector<std::vector<unsigned int>> OriginalEdgesNewEdges;
+          std::vector<std::vector<unsigned int>> OriginalFacesNewFaces;
           NewVertices Vertices;
           NewEdges Edges;
           NewFaces Faces;

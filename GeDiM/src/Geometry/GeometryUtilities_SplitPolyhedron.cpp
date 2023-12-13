@@ -505,6 +505,7 @@ namespace Gedim
     result.Edges.Edges.resize(2, newEdges.size());
     result.Edges.NewEdgesOriginalEdges.resize(newEdges.size(), -1);
     result.Edges.NewEdgesOriginalFace.resize(newEdges.size(), -1);
+    result.OriginalEdgesNewEdges.resize(originalEdges.size());
 
     {
       for (const auto& it : newEdges)
@@ -517,7 +518,13 @@ namespace Gedim
         result.Edges.Edges(0, newEdgeIndex) = newEdgeOriginEnd[0];
         result.Edges.Edges(1, newEdgeIndex) = newEdgeOriginEnd[1];
         result.Edges.NewEdgesOriginalEdges[newEdgeIndex] = originalEdge;
+
+        if (originalEdge >= 0)
+          result.OriginalEdgesNewEdges[originalEdge].push_back(newEdgeIndex);
       }
+
+      for (auto& originalEdgeNewEdges : result.OriginalEdgesNewEdges)
+        originalEdgeNewEdges.shrink_to_fit();
     }
 
     result.PositivePolyhedron.Edges.reserve(positiveEdges.size());
@@ -538,6 +545,7 @@ namespace Gedim
     result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1, -1);
     result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
     result.NegativePolyhedron.Faces.resize(negativePolyhedronFaces.size());
+    result.OriginalFacesNewFaces.resize(polyhedronFaces.size());
 
     {
       unsigned int f = 0;
@@ -556,6 +564,7 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = positivePolyhedronOriginalFaces[pf];
         result.PositivePolyhedron.Faces[pf] = f;
+        result.OriginalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
 
         for (unsigned int fv = 0; fv < newFace.cols(); fv++)
         {
@@ -581,9 +590,15 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = negativePolyhedronOriginalFaces[nf];
         result.NegativePolyhedron.Faces[nf] = f;
+        result.OriginalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
+
         nf++;
         f++;
       }
+
+      for (auto& originalFaceNewFaces : result.OriginalFacesNewFaces)
+        originalFaceNewFaces.shrink_to_fit();
+
     }
 
     //    cerr<< "RESULT"<< endl;
