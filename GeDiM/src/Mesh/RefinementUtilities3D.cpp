@@ -169,6 +169,18 @@ namespace Gedim
         cell2DExtremes(0, nfv) = splitCell0DsIndex.at(newFace(0, nfv));
         cell2DExtremes(1, nfv) = splitCell1DsIndex.at(newFace(1, nfv));
       }
+
+      RefinePolyhedron_Result::RefinedCell2D newCell2D;
+      newCell2D.Type = RefinePolyhedron_Result::RefinedCell2D::Types::New;
+      newCell2D.NewCell2DsIndex.resize(1);
+      newCell2D.NewCell2DsIndex[0] = mesh.Cell2DAppend(1);
+      const unsigned int newCell2DIndex = newCell2D.NewCell2DsIndex[0];
+      splitCell2DsIndex[nf] = newCell2DIndex;
+      mesh.Cell2DAddVerticesAndEdges(newCell2DIndex,
+                                     cell2DExtremes);
+
+      mesh.Cell2DSetMarker(newCell2DIndex, 0);
+      mesh.Cell2DSetState(newCell2DIndex, true);
     }
 
     result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
