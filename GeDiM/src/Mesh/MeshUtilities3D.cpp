@@ -789,6 +789,7 @@ namespace Gedim
     result.Cell3DsFaces2DCentroids.resize(convexMesh.Cell3DTotalNumber());
     result.Cell3DsFacesDiameters.resize(convexMesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdgeLengths.resize(convexMesh.Cell3DTotalNumber());
+    result.Cell3DsFacesEdge3DTangents.resize(convexMesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdge2DTangents.resize(convexMesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdge2DNormals.resize(convexMesh.Cell3DTotalNumber());
 
@@ -879,6 +880,7 @@ namespace Gedim
       result.Cell3DsFaces2DCentroids[c].resize(numFaces);
       result.Cell3DsFacesEdgeLengths[c].resize(numFaces);
       result.Cell3DsFacesEdge2DNormals[c].resize(numFaces);
+      result.Cell3DsFacesEdge3DTangents[c].resize(numFaces);
       result.Cell3DsFacesEdge2DTangents[c].resize(numFaces);
 
       for(unsigned int f = 0; f < numFaces; f++)
@@ -902,6 +904,7 @@ namespace Gedim
                                                                                  result.Cell3DsFacesAreas[c][f]);
         result.Cell3DsFacesDiameters[c][f] = geometryUtilities.PolygonDiameter(result.Cell3DsFaces2DVertices[c][f]);
         result.Cell3DsFacesEdgeLengths[c][f] = geometryUtilities.PolygonEdgeLengths(result.Cell3DsFaces2DVertices[c][f]);
+        result.Cell3DsFacesEdge3DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces3DVertices[c][f]);
         result.Cell3DsFacesEdge2DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces2DVertices[c][f]);
         result.Cell3DsFacesEdge2DNormals[c][f] = geometryUtilities.PolygonEdgeNormals(result.Cell3DsFaces2DVertices[c][f]);
       }
@@ -969,6 +972,7 @@ namespace Gedim
     result.Cell3DsFaces2DCentroids.resize(mesh.Cell3DTotalNumber());
     result.Cell3DsFacesDiameters.resize(mesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdgeLengths.resize(mesh.Cell3DTotalNumber());
+    result.Cell3DsFacesEdge3DTangents.resize(mesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdge2DTangents.resize(mesh.Cell3DTotalNumber());
     result.Cell3DsFacesEdge2DNormals.resize(mesh.Cell3DTotalNumber());
 
@@ -1096,6 +1100,7 @@ namespace Gedim
       result.Cell3DsFaces2DCentroids[c].resize(numFaces);
       result.Cell3DsFacesEdgeLengths[c].resize(numFaces);
       result.Cell3DsFacesEdge2DNormals[c].resize(numFaces);
+      result.Cell3DsFacesEdge3DTangents[c].resize(numFaces);
       result.Cell3DsFacesEdge2DTangents[c].resize(numFaces);
 
       for(unsigned int f = 0; f < numFaces; f++)
@@ -1119,6 +1124,7 @@ namespace Gedim
                                                                                  result.Cell3DsFacesAreas[c][f]);
         result.Cell3DsFacesDiameters[c][f] = geometryUtilities.PolygonDiameter(result.Cell3DsFaces2DVertices[c][f]);
         result.Cell3DsFacesEdgeLengths[c][f] = geometryUtilities.PolygonEdgeLengths(result.Cell3DsFaces2DVertices[c][f]);
+         result.Cell3DsFacesEdge3DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces3DVertices[c][f]);
         result.Cell3DsFacesEdge2DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces2DVertices[c][f]);
 
         const double facesNormalOrientation = face2DCCWOrientation[f] ? +1.0 : -1.0;

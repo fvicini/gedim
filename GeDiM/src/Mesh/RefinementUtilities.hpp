@@ -329,15 +329,22 @@ namespace Gedim
                                                      const Eigen::VectorXd& cell2DEdgesLength,
                                                      IMeshDAO& mesh) const;
 
-      /// \brief Refine Tetrahedron Cell3D By Edge
-      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
-      /// \param mesh the mesh to be updated
-      RefinePolyhedron_Result RefineTetrahedronCell_ByEdge(const unsigned int& cell3DIndex,
-                                                           const unsigned int& edgeIndex,
-                                                           const std::array<unsigned int, 2>& oppositeVerticesIndex,
+      /// \brief Refine Polyhedral Cell3D By Plane
+      RefinePolyhedron_Result RefinePolyhedronCell_ByPlane(const unsigned int& cell3DIndex,
+                                                           const Eigen::MatrixXd& cell3DVertices,
+                                                           const Eigen::MatrixXi& cell3DEdges,
                                                            const std::vector<bool>& cell3DEdgesDirection,
-                                                           const double& cell3DVolume,
                                                            const Eigen::VectorXd& cell3DEdgesLength,
+                                                           const std::vector<Eigen::MatrixXi>& cell3DFaces,
+                                                           const std::vector<Eigen::MatrixXd>& cell3DFaces3DVertices,
+                                                           const std::vector<Eigen::MatrixXd>& cell3DFacesEdges3DTangent,
+                                                           const std::vector<Eigen::Vector3d>& cell3DFacesTranslation,
+                                                           const std::vector<Eigen::Matrix3d>& cell3DFacesRotationMatrix,
+                                                           const double& cell3DVolume,
+                                                           const Eigen::Vector3d& planeNormal,
+                                                           const Eigen::Vector3d& planeOrigin,
+                                                           const Eigen::Matrix3d& planeRotationMatrix,
+                                                           const Eigen::Vector3d& planeTranslation,
                                                            IMeshDAO& mesh) const;
 
       /// \brief Update Cell1D neighbours of refined triangle by edge with refine by edge

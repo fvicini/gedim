@@ -138,7 +138,8 @@ namespace Gedim
           std::vector<std::vector<Eigen::Vector3d>> Cell3DsFaces2DCentroids; ///< faces centroids
           std::vector<std::vector<double>> Cell3DsFacesDiameters; ///< faces diameters
           std::vector<std::vector<Eigen::VectorXd>> Cell3DsFacesEdgeLengths; ///< faces edge lengths
-          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge3DTangents; ///< faces edge 3D tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge 2D tangents
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DNormals; ///< faces edge normals
       };
 

@@ -140,20 +140,45 @@ namespace GedimUnitTesting
 
     const unsigned int cell3DToRefineIndex = 0;
 
+    const Eigen::MatrixXd& cell3DVertices = meshGeometricData.Cell3DsVertices.at(cell3DToRefineIndex);
+    const Eigen::MatrixXi& cell3DEdges = meshGeometricData.Cell3DsEdges.at(cell3DToRefineIndex);
+    const std::vector<Eigen::MatrixXi>& cell3DFaces = meshGeometricData.Cell3DsFaces.at(cell3DToRefineIndex);
 
-    const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(meshGeometricData.Cell3DsEdges.at(cell3DToRefineIndex),
+    const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(cell3DEdges,
                                                                                                                                      meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex));
     EXPECT_EQ(2, direction.MaxEdgeIndex);
     EXPECT_EQ(2, direction.OppositeVerticesIndex[0]);
     EXPECT_EQ(3, direction.OppositeVerticesIndex[1]);
 
-    const Gedim::RefinementUtilities::RefinePolyhedron_Result result = refinementUtilities.RefineTetrahedronCell_ByEdge(cell3DToRefineIndex,
-                                                                                                                        direction.MaxEdgeIndex,
-                                                                                                                        direction.OppositeVerticesIndex,
-                                                                                                                        meshGeometricData.Cell3DsEdgeDirections.at(cell3DToRefineIndex),
-                                                                                                                        meshGeometricData.Cell3DsVolumes.at(cell3DToRefineIndex),
-                                                                                                                        meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex),
-                                                                                                                        meshDAO);
+    const Eigen::Vector3d planeOrigin = 0.5 * (cell3DVertices.col(cell3DEdges(0, direction.MaxEdgeIndex)) +
+                                               cell3DVertices.col(cell3DEdges(1, direction.MaxEdgeIndex)));
+
+    Eigen::Matrix3d planeTriangle;
+    planeTriangle.col(0)<< planeOrigin;
+    planeTriangle.col(1)<< cell3DVertices.col(direction.OppositeVerticesIndex[1]);
+    planeTriangle.col(2)<< cell3DVertices.col(direction.OppositeVerticesIndex[0]);
+
+    const Eigen::Vector3d planeNormal = geometryUtilities.PolygonNormal(planeTriangle);
+    const Eigen::Matrix3d planeRotationMatrix = geometryUtilities.PlaneRotationMatrix(planeNormal);
+    const Eigen::Vector3d planeTranslation = geometryUtilities.PlaneTranslation(planeOrigin);
+
+    const Gedim::RefinementUtilities::RefinePolyhedron_Result result =
+        refinementUtilities.RefinePolyhedronCell_ByPlane(cell3DToRefineIndex,
+                                                         cell3DVertices,
+                                                         cell3DEdges,
+                                                         meshGeometricData.Cell3DsEdgeDirections.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex),
+                                                         cell3DFaces,
+                                                         meshGeometricData.Cell3DsFaces3DVertices.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesEdge3DTangents.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesTranslations.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesRotationMatrices.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsVolumes.at(cell3DToRefineIndex),
+                                                         planeNormal,
+                                                         planeOrigin,
+                                                         planeRotationMatrix,
+                                                         planeTranslation,
+                                                         meshDAO);
     //    EXPECT_EQ(std::vector<unsigned int>({ 4 }),
     //              result.NewCell0DsIndex);
     //    EXPECT_EQ(2,
