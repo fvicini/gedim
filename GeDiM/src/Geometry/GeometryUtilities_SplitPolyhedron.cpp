@@ -504,6 +504,7 @@ namespace Gedim
     // Create new polyhedra edges
     result.Edges.Edges.resize(2, newEdges.size());
     result.Edges.NewEdgesOriginalEdges.resize(newEdges.size(), -1);
+    result.Edges.NewEdgesOriginalFace.resize(newEdges.size(), -1);
 
     {
       for (const auto& it : newEdges)
@@ -555,6 +556,16 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = positivePolyhedronOriginalFaces[pf];
         result.PositivePolyhedron.Faces[pf] = f;
+
+        for (unsigned int fv = 0; fv < newFace.cols(); fv++)
+        {
+          const unsigned int edgeIndex = newFace(1, fv);
+          if (result.Edges.NewEdgesOriginalEdges[edgeIndex] >= 0)
+            continue;
+
+          result.Edges.NewEdgesOriginalFace[edgeIndex] = positivePolyhedronOriginalFaces[pf];
+        }
+
         pf++;
         f++;
       }

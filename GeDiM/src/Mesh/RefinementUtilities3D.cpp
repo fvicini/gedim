@@ -131,6 +131,10 @@ namespace Gedim
         continue;
       }
 
+      const unsigned int originalFaceIndex = split_cell.Edges.NewEdgesOriginalFace.at(ne);
+      const unsigned int originalCell2DIndex = mesh.Cell3DFace(cell3DIndex,
+                                                               originalFaceIndex);
+
       const unsigned int newEdgeOrigin = split_cell.Edges.Edges(0, ne);
       const unsigned int newEdgeEnd = split_cell.Edges.Edges(1, ne);
 
@@ -148,8 +152,8 @@ namespace Gedim
       mesh.Cell1DInsertExtremes(newCell1DIndex,
                                 cell0DIndexEnd,
                                 cell0DIndexOrigin);
-      mesh.Cell1DSetMarker(newCell1DIndex, 0);
-      std::cout<< "TODO: marker of face to find"<< std::endl;
+      mesh.Cell1DSetMarker(newCell1DIndex,
+                           mesh.Cell2DMarker(originalCell2DIndex));
       mesh.Cell1DSetState(newCell1DIndex, true);
       newCell1Ds.push_back(newCell1D);
     }
