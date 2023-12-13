@@ -84,6 +84,8 @@ namespace Gedim
                                                                                                                            planeRotationMatrix,
                                                                                                                            planeTranslation);
 
+    // Create new mesh vertices
+
     return result;
   }
   // ***************************************************************************
