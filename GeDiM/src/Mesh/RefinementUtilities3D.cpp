@@ -181,6 +181,9 @@ namespace Gedim
 
       mesh.Cell2DSetMarker(newCell2DIndex, 0);
       mesh.Cell2DSetState(newCell2DIndex, true);
+      mesh.Cell2DInitializeNeighbourCell3Ds(newCell2DIndex,
+                                            2);
+      // TODO: add neighbours
     }
 
     result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
