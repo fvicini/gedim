@@ -145,6 +145,22 @@ namespace Gedim
               unsigned int OriginalCell3DEdgeIndex = 0;
           };
 
+          struct RefinedCell2D final
+          {
+              enum struct Types
+              {
+                Unknown = 0,
+                Updated = 1,
+                New = 2
+              };
+
+              Types Type = Types::Unknown;
+              std::vector<unsigned int> NewCell2DsIndex = {};
+              unsigned int OriginalCell2DIndex = 0;
+              unsigned int NewCell1DIndex = 0;
+              unsigned int OriginalCell3DFaceIndex = 0;
+          };
+
           ResultTypes ResultType = ResultTypes::Unknown;
           std::vector<unsigned int> NewCell0DsIndex = {};
           std::vector<RefinedCell1D> NewCell1DsIndex = {};

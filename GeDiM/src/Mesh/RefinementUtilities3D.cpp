@@ -88,7 +88,14 @@ namespace Gedim
     const unsigned int numOriginalVertices = cell3DVertices.cols();
     const unsigned int numNewVertices = split_cell.Vertices.NewVerticesOriginalEdge.size();
 
+    std::vector<unsigned int> splitCell0DsIndex(split_cell.Vertices.Vertices.cols());
+    std::vector<unsigned int> splitCell1DsIndex(split_cell.Edges.NewEdgesOriginalEdges.size());
+    std::vector<unsigned int> splitCell2DsIndex(split_cell.Faces.NewFacesOriginalFaces.size());
+
     std::list<RefinePolyhedron_Result::RefinedCell1D> newCell1Ds;
+
+    for (unsigned int v = 0; v < numOriginalVertices; v++)
+      splitCell0DsIndex[v] = mesh.Cell3DVertex(cell3DIndex, v);
 
     // Create new vertices
     result.NewCell0DsIndex.resize(numNewVertices);
@@ -103,6 +110,7 @@ namespace Gedim
                                                          mesh);
 
       result.NewCell0DsIndex[nv] = splitResult.NewCell0DIndex;
+      splitCell0DsIndex[numOriginalVertices + nv] = splitResult.NewCell0DIndex;
 
       RefinePolyhedron_Result::RefinedCell1D refinedCell1D;
       refinedCell1D.Type = RefinePolyhedron_Result::RefinedCell1D::Types::Updated;
@@ -117,19 +125,17 @@ namespace Gedim
     for (unsigned int ne = 0; ne < split_cell.Edges.NewEdgesOriginalEdges.size(); ne++)
     {
       if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
+      {
+        splitCell1DsIndex[ne] = mesh.Cell3DEdge(cell3DIndex,
+                                                split_cell.Edges.NewEdgesOriginalEdges[ne]);
         continue;
+      }
 
       const unsigned int newEdgeOrigin = split_cell.Edges.Edges(0, ne);
       const unsigned int newEdgeEnd = split_cell.Edges.Edges(1, ne);
 
-      const unsigned int cell0DIndexOrigin = (newEdgeOrigin < numOriginalVertices) ?
-                                               mesh.Cell3DVertex(cell3DIndex,
-                                                                 newEdgeOrigin) :
-                                               result.NewCell0DsIndex[newEdgeOrigin - numOriginalVertices];
-      const unsigned int cell0DIndexEnd = (newEdgeEnd < numOriginalVertices) ?
-                                            mesh.Cell3DVertex(cell3DIndex,
-                                                              newEdgeEnd) :
-                                            result.NewCell0DsIndex[newEdgeEnd - numOriginalVertices];
+      const unsigned int cell0DIndexOrigin = splitCell0DsIndex.at(newEdgeOrigin);
+      const unsigned int cell0DIndexEnd = splitCell0DsIndex.at(newEdgeEnd);
 
       RefinePolyhedron_Result::RefinedCell1D newCell1D;
       newCell1D.Type = RefinePolyhedron_Result::RefinedCell1D::Types::New;
@@ -137,6 +143,8 @@ namespace Gedim
 
       newCell1D.NewCell1DsIndex[0] = mesh.Cell1DAppend(1);
       const unsigned int newCell1DIndex = newCell1D.NewCell1DsIndex[0];
+      splitCell1DsIndex[ne] = newCell1DIndex;
+
       mesh.Cell1DInsertExtremes(newCell1DIndex,
                                 cell0DIndexEnd,
                                 cell0DIndexOrigin);
@@ -144,6 +152,23 @@ namespace Gedim
       std::cout<< "TODO: marker of face to find"<< std::endl;
       mesh.Cell1DSetState(newCell1DIndex, true);
       newCell1Ds.push_back(newCell1D);
+    }
+
+    // Create new Faces
+    for (unsigned int nf = 0; nf < split_cell.Faces.NewFacesOriginalFaces.size(); nf++)
+    {
+      if (split_cell.Faces.NewFacesOriginalFaces[nf] >= 0)
+        continue;
+
+      const Eigen::MatrixXi newFace = split_cell.Faces.Faces[nf];
+
+      Eigen::MatrixXi cell2DExtremes(2, newFace.cols());
+
+      for (unsigned int nfv = 0; nfv < newFace.cols(); nfv++)
+      {
+        cell2DExtremes(0, nfv) = splitCell0DsIndex.at(newFace(0, nfv));
+        cell2DExtremes(1, nfv) = splitCell1DsIndex.at(newFace(1, nfv));
+      }
     }
 
     result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
