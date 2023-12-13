@@ -835,6 +835,52 @@ namespace GedimUnitTesting {
           splitPolyhedra[1].Edges,
           splitPolyhedra[1].Faces,
           exportFolder + "/Negative_Polyhedron");
+
+      ASSERT_EQ(result.Type, Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::Types::Split);
+      ASSERT_EQ(result.Vertices.Vertices, (Eigen::MatrixXd(3, 12)<<
+                                           0,  0.1,    1, 0.75, 0.25,    0,    0,    0,  0.5,    0,    0,  0.5,
+                                           0,    0,    0,    0,    0,    0,    0,  0.5,  0.5,    1,  0.5,    0,
+                                           0,    0,    0, 0.25, 0.75,    1,  0.5,    0,    0,    0,  0.5,  0.5).finished());
+      ASSERT_EQ(result.Vertices.NewVerticesOriginalEdge, std::vector<unsigned int>({ 3 }));
+      ASSERT_EQ(result.Edges.Edges, (Eigen::MatrixXi(2, 17)<<
+                                      0,  0, 11,  7, 11,  4,  5,  6,  5,  9,  7,  1,  2,  3,  0,  9,  2,
+                                      7, 11,  9,  9,  4,  5,  6,  0, 10, 10, 10,  2,  3, 11,  1,  8,  8).finished());
+      ASSERT_EQ(result.Edges.NewEdgesOriginalEdges, std::vector<int>({ 7,-1,-1,8,3,4,5,6,11,12,13,1,2,3,0,9,10 }));
+
+      ASSERT_EQ(result.Faces.Faces.size(), 8);
+      ASSERT_EQ(result.Faces.Faces[0], (Eigen::MatrixXi(2, 5)<<
+                                        11,  4,  5,  6,  0,
+                                         4,  5,  6,  7,  1).finished());
+      ASSERT_EQ(result.Faces.Faces[1], (Eigen::MatrixXi(2, 5)<<
+                                        10,  5,  4, 11,  9,
+                                         8,  5,  4,  2,  9).finished());
+      ASSERT_EQ(result.Faces.Faces[2], (Eigen::MatrixXi(2, 5)<<
+                                        7 , 10,  5,  6,  0,
+                                        10,  8,  6,  7,  0).finished());
+      ASSERT_EQ(result.Faces.Faces[3], (Eigen::MatrixXi(2, 3)<<
+                                        9, 10,  7,
+                                        9, 10,  3).finished());
+      ASSERT_EQ(result.Faces.Faces[4], (Eigen::MatrixXi(2, 5)<<
+                                        1 , 2 , 3 , 11, 0,
+                                        11, 12, 13,  1, 14).finished());
+      ASSERT_EQ(result.Faces.Faces[5], (Eigen::MatrixXi(2, 5)<<
+                                        8 ,  9, 11,  3,  2,
+                                        15,  2, 13, 12, 16).finished());
+      ASSERT_EQ(result.Faces.Faces[6], (Eigen::MatrixXi(2, 6)<<
+                                        1 , 2 , 8 , 9, 7, 0,
+                                        11, 16, 15, 3, 0, 14).finished());
+      ASSERT_EQ(result.Faces.Faces[7], (Eigen::MatrixXi(2, 4)<<
+                                        7,  0, 11,  9,
+                                        0,  1,  2,  3).finished());
+      ASSERT_EQ(result.Faces.NewFacesOriginalFaces, std::vector<int>({ 0,1,3,4,0,1,2,-1 }));
+
+      ASSERT_EQ(result.PositivePolyhedron.Vertices, std::vector<unsigned int>({ 0,4,5,6,7,9,10,11 }));
+      ASSERT_EQ(result.PositivePolyhedron.Edges, std::vector<unsigned int>({ 0,1,2,3,4,5,6,7,8,9,10 }));
+      ASSERT_EQ(result.PositivePolyhedron.Faces, std::vector<unsigned int>({ 0,1,2,3,7 }));
+
+      ASSERT_EQ(result.NegativePolyhedron.Vertices, std::vector<unsigned int>({ 0,1,2,3,7,8,9,11 }));
+      ASSERT_EQ(result.NegativePolyhedron.Edges, std::vector<unsigned int>({ 0,1,2,3,11,12,13,14,15,16 }));
+      ASSERT_EQ(result.NegativePolyhedron.Faces, std::vector<unsigned int>({ 4,5,6,7 }));
     }
   }
 }
