@@ -197,6 +197,15 @@ namespace Gedim
           }
           
           positiveUsed = true;
+
+          for (unsigned int p = 0; p < splitFaceByPlane.PointsOnPlane.size(); p++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
+
+            polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PointsOnPlane[p]);
+            if (pointsOnPlaneIndices.find(polyhedronVertexIndex) == pointsOnPlaneIndices.end())
+              pointsOnPlaneIndices.insert(polyhedronVertexIndex);
+          }
         }
           break;
           
@@ -297,6 +306,15 @@ namespace Gedim
           }
 
           negativeUsed = true;
+
+          for (unsigned int p = 0; p < splitFaceByPlane.PointsOnPlane.size(); p++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
+
+            polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PointsOnPlane[p]);
+            if (pointsOnPlaneIndices.find(polyhedronVertexIndex) == pointsOnPlaneIndices.end())
+              pointsOnPlaneIndices.insert(polyhedronVertexIndex);
+          }
         }
           break;
         default:
