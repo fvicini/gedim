@@ -372,6 +372,7 @@ namespace Gedim
                                                                                                                           const unsigned int& cell2DIndex,
                                                                                                                           const unsigned int& newCell1DIndex,
                                                                                                                           const std::vector<unsigned int>& splitCell1DsOriginalIndex,
+                                                                                                                          const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
                                                                                                                           const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
                                                                                                                           const std::vector<unsigned int>& splitCell2DsIndex,
                                                                                                                           IMeshDAO& mesh) const
@@ -406,7 +407,7 @@ namespace Gedim
       const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(cell3DIndex);
       const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(cell3DIndex);
 
-      newCell3DsVertices[0].resize(originalVertices.size());
+      newCell3DsVertices[0].resize(originalVertices.size() + splitCell1DsOriginalIndex.size());
       newCell3DsEdges[0].resize(originalEdges.size() + splitCell1DsOriginalIndex.size() + 1);
       newCell3DsFaces[0].resize(originalFaces.size() + 1);
 
@@ -414,7 +415,6 @@ namespace Gedim
       std::copy(originalEdges.begin(), originalEdges.end(), newCell3DsEdges[0].begin());
       std::copy(originalFaces.begin(), originalFaces.end(), newCell3DsFaces[0].begin());
 
-      unsigned int newEdgeIndex = 0;
       for (unsigned int ne = 0; ne < splitCell1DsOriginalIndex.size(); ne++)
       {
         const unsigned int cell1DIndex = splitCell1DsOriginalIndex[ne];
@@ -422,10 +422,11 @@ namespace Gedim
                                                                 cell1DIndex);
 
         newCell3DsEdges[0][neighEdgeIndex] = splitCell1DsUpdatedIndices[ne][0];
-        newCell3DsEdges[0][originalEdges.size() + newEdgeIndex++] = splitCell1DsUpdatedIndices[ne][1];
+        newCell3DsEdges[0][originalEdges.size() + ne] = splitCell1DsUpdatedIndices[ne][1];
+        newCell3DsVertices[0][originalVertices.size() + ne] = splitCell1DsNewCell0DIndex[ne];
       }
 
-      newCell3DsEdges[0][originalEdges.size() + newEdgeIndex++] = newCell1DIndex;
+      newCell3DsEdges[0][originalEdges.size() + splitCell1DsOriginalIndex.size()] = newCell1DIndex;
 
       newCell3DsFaces[0][neighFaceIndex] = splitCell2DsIndex[0];
       newCell3DsFaces[0][originalFaces.size()] = splitCell2DsIndex[1];

@@ -389,6 +389,7 @@ namespace Gedim
                                                                                     const unsigned int& cell2DIndex,
                                                                                     const unsigned int& newCell1DIndex,
                                                                                     const std::vector<unsigned int>& splitCell1DsOriginalIndex,
+                                                                                    const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
                                                                                     const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
                                                                                     const std::vector<unsigned int>& splitCell2DsIndex,
                                                                                     IMeshDAO& mesh) const;

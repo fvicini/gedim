@@ -239,6 +239,7 @@ namespace GedimUnitTesting
       unsigned int numNeighs = meshDAO.Cell2DNumberNeighbourCell3D(cell2DIndex);
 
       std::list<unsigned int> splitCell1DsOriginalIndex;
+      std::list<unsigned int> splitCell1DsNewCell0DIndex;
       std::list<std::vector<unsigned int>> splitCell1DsUpdatedIndices;
 
       for (unsigned int e = 0; e < result.NewCell2DsIndex[f].NewCell1DsPosition.size(); e++)
@@ -251,6 +252,7 @@ namespace GedimUnitTesting
           continue;
 
         splitCell1DsOriginalIndex.push_back(refinedCell1D.OriginalCell1DIndex);
+        splitCell1DsNewCell0DIndex.push_back(refinedCell1D.NewCell0DIndex);
         splitCell1DsUpdatedIndices.push_back(refinedCell1D.NewCell1DsIndex);
       }
 
@@ -259,6 +261,8 @@ namespace GedimUnitTesting
                                                                                                                                                          result.NewCell2DsIndex[f].NewCell1DIndex,
                                                                                                                                                          std::vector<unsigned int>(splitCell1DsOriginalIndex.begin(),
                                                                                                                                                                                    splitCell1DsOriginalIndex.end()),
+                                                                                                                                                         std::vector<unsigned int>(splitCell1DsNewCell0DIndex.begin(),
+                                                                                                                                                                                   splitCell1DsNewCell0DIndex.end()),
                                                                                                                                                          std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
                                                                                                                                                                                                 splitCell1DsUpdatedIndices.end()),
                                                                                                                                                          result.NewCell2DsIndex[f].NewCell2DsIndex,
