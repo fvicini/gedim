@@ -26,7 +26,9 @@ namespace Gedim
       unsigned int NumberCell1D = 0; ///< number of Cell1D
       std::vector<unsigned int> Cell1DVertices = {}; ///< Cell1D vertices indices, size 2 x NumberCell1D (fromId,toId)
       std::vector<unsigned int> NumberCell1DNeighbourCell2D = { 0 }; ///< Cell1D neighbour Cell2D indices per cell, size  1 x NumberCell1D + 1
+      std::vector<unsigned int> NumberCell1DNeighbourCell3D = { 0 }; ///< Cell1D neighbour Cell3D indices per cell, size  1 x NumberCell1D + 1
       std::vector<unsigned int> Cell1DNeighbourCell2Ds = {}; ///< Cell1D neighbour Cell2D indices, size 1 x NumberCell1DNeighbourCell2D[NumberCell1D]
+      std::vector<unsigned int> Cell1DNeighbourCell3Ds = {}; ///< Cell1D neighbour Cell3D indices, size 1 x NumberCell1DNeighbourCell3D[NumberCell1D]
       std::vector<unsigned int> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
       std::vector<bool> ActiveCell1D = {}; ///< active Cell1D
       std::vector<unsigned int> Cell1DOriginalCell1Ds = {}; ///< for each cell1D the index of original cell1D, NumberCell1D is the default value (no original cell), size 1 x NumberCell1D

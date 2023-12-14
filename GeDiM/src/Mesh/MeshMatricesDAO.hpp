@@ -420,8 +420,8 @@ namespace Gedim
         return _mesh.Cell1DNeighbourCell2Ds[_mesh.NumberCell1DNeighbourCell2D[cell1DIndex] +
             neighbourIndex];
       }
-      bool Cell1DHasNeighbourCell2D(const unsigned int& cell1DIndex,
-                                    const unsigned int& neighbourIndex) const
+      inline bool Cell1DHasNeighbourCell2D(const unsigned int& cell1DIndex,
+                                           const unsigned int& neighbourIndex) const
       {
         Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
         Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell2D(cell1DIndex));
@@ -478,24 +478,47 @@ namespace Gedim
                                 std::list<unsigned int>& updatedCell1DIds) const;
       void Cell1DInitializeDoubleProperties(const unsigned int& numberDoubleProperties);
 
-      inline void Cell1DsInitializeNeighbourCell3Ds(const std::vector<unsigned int>&)
-      { return; }
-      inline void Cell1DInitializeNeighbourCell3Ds(const unsigned int& ,
-                                                   const unsigned int& ) { return; }
-      inline void Cell1DInsertNeighbourCell3D(const unsigned int& ,
-                                              const unsigned int& ,
-                                              const unsigned int& )
-      { throw std::runtime_error("Not implemented"); }
-      inline unsigned int Cell1DNumberNeighbourCell3D(const unsigned int& ) const { return 0; }
-      inline unsigned int Cell1DNeighbourCell3D(const unsigned int& ,
-                                                const unsigned int& ) const { throw std::runtime_error("Not implemented"); }
-      inline bool Cell1DHasNeighbourCell3D(const unsigned int& ,
-                                           const unsigned int& ) const
-      { throw std::runtime_error("Not implemented"); }
-      inline void Cell1DResetNeighbourCell3D(const unsigned int& ,
-                                             const unsigned int& )
+      void Cell1DsInitializeNeighbourCell3Ds(const std::vector<unsigned int>& numberNeighbourCell3Ds);
+      void Cell1DInitializeNeighbourCell3Ds(const unsigned int& cell1DIndex,
+                                            const unsigned int& numberNeighbourCell3Ds);
+      inline void Cell1DInsertNeighbourCell3D(const unsigned int& cell1DIndex,
+                                              const unsigned int& neighbourIndex,
+                                              const unsigned int& neigbourCell3DIndex)
       {
-        throw std::runtime_error("Not implemented");
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell3D(cell1DIndex));
+        Gedim::Output::Assert(neigbourCell3DIndex < Cell3DTotalNumber());
+
+        _mesh.Cell1DNeighbourCell3Ds[_mesh.NumberCell1DNeighbourCell3D[cell1DIndex] +
+            neighbourIndex] = neigbourCell3DIndex;
+      }
+      inline unsigned int Cell1DNumberNeighbourCell3D(const unsigned int& cell1DIndex) const
+      {
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        return _mesh.NumberCell1DNeighbourCell3D[cell1DIndex + 1] -
+            _mesh.NumberCell1DNeighbourCell3D[cell1DIndex];
+      }
+      inline unsigned int Cell1DNeighbourCell3D(const unsigned int& cell1DIndex,
+                                                const unsigned int& neighbourIndex) const
+      {
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell3D(cell1DIndex));
+        return _mesh.Cell1DNeighbourCell3Ds[_mesh.NumberCell1DNeighbourCell3D[cell1DIndex] +
+            neighbourIndex];
+      }
+      inline bool Cell1DHasNeighbourCell3D(const unsigned int& cell1DIndex,
+                                           const unsigned int& neighbourIndex) const
+      {
+        Gedim::Output::Assert(cell1DIndex < Cell1DTotalNumber());
+        Gedim::Output::Assert(neighbourIndex < Cell1DNumberNeighbourCell3D(cell1DIndex));
+        return _mesh.Cell1DNeighbourCell3Ds[_mesh.NumberCell1DNeighbourCell3D[cell1DIndex] +
+            neighbourIndex] < _mesh.NumberCell3D;
+      }
+      inline void Cell1DResetNeighbourCell3D(const unsigned int& cell1DIndex,
+                                             const unsigned int& neighbourIndex)
+      {
+        _mesh.Cell1DNeighbourCell3Ds[_mesh.NumberCell1DNeighbourCell3D[cell1DIndex] +
+            neighbourIndex] = std::numeric_limits<unsigned int>::max();
       }
 
       unsigned int Cell1DAddDoubleProperty(const std::string& propertyId);
