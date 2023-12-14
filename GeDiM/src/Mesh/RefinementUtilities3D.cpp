@@ -121,6 +121,36 @@ namespace Gedim
       refinedCell1D.OriginalCell1DIndex = originalCell1DIndex;
       refinedCell1D.NewCell0DIndex = splitResult.NewCell0DIndex;
       refinedCell1D.OriginalCell3DEdgeIndex = originalEdgeIndex;
+      const std::vector<unsigned int>& newEdges = split_cell.OriginalEdgesNewEdges[originalEdgeIndex];
+
+      const unsigned int newEdgeOneCell0DOrigin = splitCell0DsIndex.at(split_cell.Edges.Edges(0, newEdges[0]));
+      const unsigned int newEdgeOneCell0DEnd = splitCell0DsIndex.at(split_cell.Edges.Edges(1, newEdges[0]));
+
+      const unsigned int newCell1DOneOrigin = mesh.Cell1DOrigin(refinedCell1D.NewCell1DsIndex[0]);
+      const unsigned int newCell1DOneEnd = mesh.Cell1DEnd(refinedCell1D.NewCell1DsIndex[0]);
+      const unsigned int newCell1DTwoOrigin = mesh.Cell1DOrigin(refinedCell1D.NewCell1DsIndex[1]);
+      const unsigned int newCell1DTwoEnd = mesh.Cell1DEnd(refinedCell1D.NewCell1DsIndex[1]);
+
+      if ((newEdgeOneCell0DOrigin == newCell1DOneOrigin &&
+           newEdgeOneCell0DEnd == newCell1DOneEnd) ||
+          (newEdgeOneCell0DEnd == newCell1DOneOrigin &&
+           newEdgeOneCell0DOrigin == newCell1DOneEnd))
+      {
+        splitCell1DsIndex[newEdges[0]] = refinedCell1D.NewCell1DsIndex[0];
+        splitCell1DsIndex[newEdges[1]] = refinedCell1D.NewCell1DsIndex[1];
+      }
+      else if ((newEdgeOneCell0DOrigin == newCell1DTwoOrigin &&
+                newEdgeOneCell0DEnd == newCell1DTwoEnd) ||
+               (newEdgeOneCell0DEnd == newCell1DTwoOrigin &&
+                newEdgeOneCell0DOrigin == newCell1DTwoEnd))
+      {
+        splitCell1DsIndex[newEdges[0]] = refinedCell1D.NewCell1DsIndex[1];
+        splitCell1DsIndex[newEdges[1]] = refinedCell1D.NewCell1DsIndex[0];
+      }
+      else
+        throw std::runtime_error("Error on edge identification");
+
+
       newCell1Ds.push_back(refinedCell1D);
     }
 

@@ -590,7 +590,7 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = negativePolyhedronOriginalFaces[nf];
         result.NegativePolyhedron.Faces[nf] = f;
-        result.OriginalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
+        result.OriginalFacesNewFaces[negativePolyhedronOriginalFaces[nf]].push_back(f);
 
         nf++;
         f++;
