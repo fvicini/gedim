@@ -545,7 +545,8 @@ namespace Gedim
     result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1, -1);
     result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
     result.NegativePolyhedron.Faces.resize(negativePolyhedronFaces.size());
-    result.OriginalFacesNewFaces.resize(polyhedronFaces.size());
+    std::vector<std::list<unsigned int>> originalFacesNewFaces(polyhedronFaces.size());
+
 
     {
       unsigned int f = 0;
@@ -564,7 +565,7 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = positivePolyhedronOriginalFaces[pf];
         result.PositivePolyhedron.Faces[pf] = f;
-        result.OriginalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
+        originalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
 
         for (unsigned int fv = 0; fv < newFace.cols(); fv++)
         {
@@ -590,14 +591,17 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = negativePolyhedronOriginalFaces[nf];
         result.NegativePolyhedron.Faces[nf] = f;
-        result.OriginalFacesNewFaces[negativePolyhedronOriginalFaces[nf]].push_back(f);
+        originalFacesNewFaces[negativePolyhedronOriginalFaces[nf]].push_back(f);
 
         nf++;
         f++;
       }
 
-      for (auto& originalFaceNewFaces : result.OriginalFacesNewFaces)
-        originalFaceNewFaces.shrink_to_fit();
+      result.OriginalFacesNewFaces.resize(originalFacesNewFaces.size());
+      unsigned int of = 0;
+      for (const auto& originalFaceNewFaces : originalFacesNewFaces)
+        result.OriginalFacesNewFaces[of++] = std::vector<unsigned int>(originalFaceNewFaces.begin(),
+                                                                       originalFaceNewFaces.end());
 
     }
 
