@@ -164,7 +164,7 @@ namespace Gedim
           ResultTypes ResultType = ResultTypes::Unknown;
           std::vector<unsigned int> NewCell0DsIndex = {};
           std::vector<RefinedCell1D> NewCell1DsIndex = {};
-          std::vector<unsigned int> NewCell2DsIndex = {};
+          std::vector<RefinedCell2D> NewCell2DsIndex = {};
           std::vector<unsigned int> NewCell3DsIndex = {};
       };
 
