@@ -430,7 +430,24 @@ namespace Gedim
 
       newCell3DsFaces[0][neighFaceIndex] = splitCell2DsIndex[0];
       newCell3DsFaces[0][originalFaces.size()] = splitCell2DsIndex[1];
+
+      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
+                                                                                   newCell3DsVertices,
+                                                                                   newCell3DsEdges,
+                                                                                   newCell3DsFaces,
+                                                                                   mesh);
+
+      for (const unsigned int& newCell3D : newCell3DIndices)
+      {
+        RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D updatedCell3D;
+        updatedCell3D.OriginalCell3DIndex = neighCell3DIndex;
+        updatedCell3D.NewCell3DIndex = newCell3D;
+        newCell3DsIndex.push_back(updatedCell3D);
+      }
     }
+
+    result.UpdatedCell3Ds = std::vector<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D>(newCell3DsIndex.begin(),
+                                                                                                newCell3DsIndex.end());
 
     return result;
   }
