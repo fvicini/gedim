@@ -343,7 +343,48 @@ namespace Gedim
                                                                                                                           const std::vector<unsigned int>& splitCell2DsIndex,
                                                                                                                           IMeshDAO& mesh) const
   {
+    RefinePolyhedron_UpdateNeighbour_Result result;
 
+    std::list<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D> newCell3DsIndex;
+
+    // update neighbour cells
+    for (unsigned int n = 0; n < mesh.Cell2DNumberNeighbourCell3D(cell2DIndex); n++)
+    {
+      if (!mesh.Cell2DHasNeighbourCell3D(cell2DIndex, n))
+        continue;
+
+      const unsigned int neighCell3DIndex = mesh.Cell2DNeighbourCell3D(cell2DIndex, n);
+      if (neighCell3DIndex == cell3DIndex)
+        continue;
+
+      if (mesh.Cell3DHasUpdatedCell3Ds(neighCell3DIndex))
+        continue;
+
+      const unsigned int neighFaceIndex = mesh.Cell3DFindFace(neighCell3DIndex,
+                                                              cell2DIndex);
+
+      // update new cell3D
+      std::vector<std::vector<unsigned int>> newCell3DsVertices(1);
+      std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
+      std::vector<std::vector<unsigned int>> newCell3DsFaces(1);
+
+      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(cell3DIndex);
+      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(cell3DIndex);
+      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(cell3DIndex);
+
+      newCell3DsVertices[0].resize(originalVertices.size());
+      newCell3DsEdges[0].resize(originalEdges.size());
+      newCell3DsFaces[0].resize(originalFaces.size() + 1);
+
+      std::copy(originalVertices.begin(), originalVertices.end(), newCell3DsVertices[0].begin());
+      std::copy(originalEdges.begin(), originalEdges.end(), newCell3DsEdges[0].begin());
+      std::copy(originalFaces.begin(), originalFaces.end(), newCell3DsFaces[0].begin());
+
+      newCell3DsFaces[0][neighFaceIndex] = splitCell2DsIndex[0];
+      newCell3DsFaces[0][originalFaces.size()] = splitCell2DsIndex[1];
+    }
+
+    return result;
   }
   // ***************************************************************************
 }

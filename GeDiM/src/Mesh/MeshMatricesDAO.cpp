@@ -1289,6 +1289,45 @@ namespace Gedim
                        facesCell2DIndices[e]);
   }
   // ***************************************************************************
+  unsigned int MeshMatricesDAO::Cell3DFindVertex(const unsigned int& cell3DIndex,
+                                                 const unsigned int& cell0DIndex) const
+  {
+    const vector<unsigned int> vertices = Cell3DVertices(cell3DIndex);
+    const vector<unsigned int>::const_iterator it = std::find(vertices.begin(),
+                                                              vertices.end(),
+                                                              cell0DIndex);
+    if (it != vertices.end())
+      return std::distance(vertices.begin(), it);
+    else
+      throw runtime_error("Vertex not found");
+  }
+  // ***************************************************************************
+  unsigned int MeshMatricesDAO::Cell3DFindEdge(const unsigned int& cell3DIndex,
+                                               const unsigned int& cell1DIndex) const
+  {
+    const vector<unsigned int> edges = Cell3DEdges(cell3DIndex);
+    const vector<unsigned int>::const_iterator it = std::find(edges.begin(),
+                                                              edges.end(),
+                                                              cell1DIndex);
+    if (it != edges.end())
+      return std::distance(edges.begin(), it);
+    else
+      throw runtime_error("Edge not found");
+  }
+  // ***************************************************************************
+  unsigned int MeshMatricesDAO::Cell3DFindFace(const unsigned int& cell3DIndex,
+                                               const unsigned int& cell2DIndex) const
+  {
+    const vector<unsigned int> faces = Cell3DFaces(cell3DIndex);
+    const vector<unsigned int>::const_iterator it = std::find(faces.begin(),
+                                                              faces.end(),
+                                                              cell2DIndex);
+    if (it != faces.end())
+      return std::distance(faces.begin(), it);
+    else
+      throw runtime_error("Face not found");
+  }
+  // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell3DFindEdgeByExtremes(const unsigned int& cell3DIndex,
                                                          const unsigned int& originCell0DIndex,
                                                          const unsigned int& endCell0DIndex) const

@@ -856,6 +856,22 @@ namespace Gedim
       virtual void Cell3DAddEdges(const unsigned int& cell3DIndex,
                                   const std::vector<unsigned int>& edgesCell0DIndices) = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
+      /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
+      /// \return the index of the cell0DIndex on the cell3D from 0 to NumberCell3DVertices(cell3DIndex), exception otherwise
+      virtual unsigned int Cell3DFindVertex(const unsigned int& cell3DIndex,
+                                    const unsigned int& cell0DIndex) const = 0;
+      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
+      /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
+      /// \return the index of the cell1DIndex on the cell3D from 0 to NumberCell3DEdges(cell3DIndex), exception otherwise
+      virtual unsigned int Cell3DFindEdge(const unsigned int& cell3DIndex,
+                                  const unsigned int& cell1DIndex) const = 0;
+      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
+      /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
+      /// \return the index of the cell2DIndex on the cell3D from 0 to NumberCell3DFaces(cell3DIndex), exception otherwise
+      virtual unsigned int Cell3DFindFace(const unsigned int& cell3DIndex,
+                                  const unsigned int& cell2DIndex) const = 0;
+
+      /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param originCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
       /// \param endCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
       /// \return the index of the cell1DIndex on the cell2D from 0 to NumberCell2DEdges(cell3DIndex), NumberCell2DEdges(cell2DIndex) otherwise

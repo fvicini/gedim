@@ -909,6 +909,13 @@ namespace Gedim
       void Cell3DAddFaces(const unsigned int& cell3DIndex,
                           const std::vector<unsigned int>& facesCell2DIndices);
 
+      unsigned int Cell3DFindVertex(const unsigned int& cell3DIndex,
+                                    const unsigned int& cell0DIndex) const;
+      unsigned int Cell3DFindEdge(const unsigned int& cell3DIndex,
+                                  const unsigned int& cell1DIndex) const;
+      unsigned int Cell3DFindFace(const unsigned int& cell3DIndex,
+                                  const unsigned int& cell2DIndex) const;
+
       unsigned int Cell3DFindEdgeByExtremes(const unsigned int& cell3DIndex,
                                             const unsigned int& originCell0DIndex,
                                             const unsigned int& endCell0DIndex) const;
