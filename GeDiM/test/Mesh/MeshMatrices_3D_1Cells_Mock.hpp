@@ -36,6 +36,8 @@ namespace GedimUnitTesting
         Mesh.UpdatedCell1Ds = {};
         Mesh.NumberCell1DNeighbourCell2D = { 0,0,0,0,0,0,0,0,0,0,0,0,0 };
         Mesh.Cell1DNeighbourCell2Ds = {};
+        Mesh.NumberCell1DNeighbourCell3D.resize(Mesh.NumberCell1D + 1, 0);
+        Mesh.Cell1DNeighbourCell3Ds = { };
         Mesh.Cell1DDoublePropertyIds = {};
         Mesh.Cell1DDoublePropertyIndices = {};
         Mesh.Cell1DDoublePropertySizes = {};
