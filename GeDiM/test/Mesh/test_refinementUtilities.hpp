@@ -221,14 +221,14 @@ namespace GedimUnitTesting
               result.NewCell2DsIndex[1].OriginalCell2DIndex);
     ASSERT_EQ(62,
               result.NewCell2DsIndex[1].NewCell1DIndex);
-    ASSERT_EQ(2,
+    ASSERT_EQ(0,
               result.NewCell2DsIndex[1].OriginalCell3DFaceIndex);
     ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::New,
               result.NewCell2DsIndex[2].Type);
     ASSERT_EQ(std::vector<unsigned int>({ 66 }),
               result.NewCell2DsIndex[2].NewCell2DsIndex);
-//    ASSERT_EQ(std::vector<unsigned int>({ 2, 3 }),
-//              result.NewCell2DsIndex);
+    ASSERT_EQ(std::vector<unsigned int>({ 22, 23 }),
+              result.NewCell3DsIndex);
 
     //    for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
     //    {
