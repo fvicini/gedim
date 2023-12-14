@@ -211,7 +211,7 @@ namespace GedimUnitTesting
               result.NewCell2DsIndex[0].OriginalCell2DIndex);
     ASSERT_EQ(61,
               result.NewCell2DsIndex[0].NewCell1DIndex);
-    ASSERT_EQ(2,
+    ASSERT_EQ(3,
               result.NewCell2DsIndex[0].OriginalCell3DFaceIndex);
     ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated,
               result.NewCell2DsIndex[1].Type);
@@ -221,7 +221,7 @@ namespace GedimUnitTesting
               result.NewCell2DsIndex[1].OriginalCell2DIndex);
     ASSERT_EQ(62,
               result.NewCell2DsIndex[1].NewCell1DIndex);
-    ASSERT_EQ(3,
+    ASSERT_EQ(2,
               result.NewCell2DsIndex[1].OriginalCell3DFaceIndex);
     ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::New,
               result.NewCell2DsIndex[2].Type);

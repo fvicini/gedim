@@ -278,6 +278,8 @@ namespace Gedim
       mesh.Cell2DSetState(newCell2DIndex, true);
       mesh.Cell2DInitializeNeighbourCell3Ds(newCell2DIndex,
                                             2);
+
+      newCell2Ds.push_back(newCell2D);
     }
 
     // Create new cell3Ds
