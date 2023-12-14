@@ -101,7 +101,7 @@ namespace Gedim
     for (unsigned int v = 0; v < numOriginalVertices; v++)
       splitCell0DsIndex[v] = mesh.Cell3DVertex(cell3DIndex, v);
 
-    // Create new vertices
+    // Create new Cell0Ds
     result.NewCell0DsIndex.resize(numNewVertices);
     for (unsigned int nv = 0; nv < numNewVertices; nv++)
     {
@@ -155,7 +155,7 @@ namespace Gedim
       newCell1Ds.push_back(refinedCell1D);
     }
 
-    // Create new edges
+    // Create new Cell1Ds
     for (unsigned int ne = 0; ne < split_cell.Edges.NewEdgesOriginalEdges.size(); ne++)
     {
       if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
@@ -195,7 +195,7 @@ namespace Gedim
       newCell1Ds.push_back(newCell1D);
     }
 
-    // Create new Faces
+    // Create new Cell2Ds
     for (unsigned int ne = 0; ne < split_cell.Edges.NewEdgesOriginalEdges.size(); ne++)
     {
       if (split_cell.Edges.NewEdgesOriginalEdges[ne] >= 0)
@@ -278,13 +278,59 @@ namespace Gedim
       mesh.Cell2DSetState(newCell2DIndex, true);
       mesh.Cell2DInitializeNeighbourCell3Ds(newCell2DIndex,
                                             2);
-      // TODO: add neighbours
+    }
+
+    // Create new cell3Ds
+    std::vector<std::vector<unsigned int>> newCell3DsVertices(2);
+    std::vector<std::vector<unsigned int>> newCell3DsEdges(2);
+    std::vector<std::vector<unsigned int>> newCell3DsFaces(2);
+
+    for (unsigned int nc = 0; nc < 2; nc++)
+    {
+      const Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::NewPolyhedron newPolyhedron =
+          (nc == 0) ?
+            split_cell.PositivePolyhedron :
+            split_cell.NegativePolyhedron;
+
+      newCell3DsVertices[nc].resize(newPolyhedron.Vertices.size());
+      newCell3DsEdges[nc].resize(newPolyhedron.Edges.size());
+      newCell3DsFaces[nc].resize(newPolyhedron.Faces.size());
+
+      for (const unsigned int v : newPolyhedron.Vertices)
+        newCell3DsVertices[nc][v] = splitCell0DsIndex.at(v);
+      for (const unsigned int e : newPolyhedron.Edges)
+        newCell3DsEdges[nc][e] = splitCell1DsIndex.at(e);
+      for (const unsigned int f : newPolyhedron.Faces)
+        newCell3DsFaces[nc][f] = splitCell2DsIndex.at(f);
+    }
+
+    const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
+                                                                                 newCell3DsVertices,
+                                                                                 newCell3DsEdges,
+                                                                                 newCell3DsFaces,
+                                                                                 mesh);
+
+    for (unsigned int nf = 0; nf < split_cell.Faces.NewFacesOriginalFaces.size(); nf++)
+    {
+      if (split_cell.Faces.NewFacesOriginalFaces[nf] >= 0)
+        continue;
+
+      const unsigned newCell2DIndex = splitCell2DsIndex.at(nf);
+      mesh.Cell2DInsertNeighbourCell3D(newCell2DIndex,
+                                       0,
+                                       newCell3DIndices[0]);
+      mesh.Cell2DInsertNeighbourCell3D(newCell2DIndex,
+                                       1,
+                                       newCell3DIndices[1]);
+
     }
 
     result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
                                                                                  newCell1Ds.end());
     result.NewCell2DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell2D>(newCell2Ds.begin(),
                                                                                  newCell2Ds.end());
+
+    result.NewCell3DsIndex = newCell3DIndices;
 
     return result;
   }
