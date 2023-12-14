@@ -238,11 +238,31 @@ namespace GedimUnitTesting
       const unsigned int cell2DIndex = result.NewCell2DsIndex[f].OriginalCell2DIndex;
       unsigned int numNeighs = meshDAO.Cell2DNumberNeighbourCell3D(cell2DIndex);
 
+      std::list<unsigned int> splitCell1DsOriginalIndex;
+      std::list<std::vector<unsigned int>> splitCell1DsUpdatedIndices;
+
+      for (unsigned int e = 0; e < result.NewCell2DsIndex[f].NewCell1DsPosition.size(); e++)
+      {
+        const Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D& refinedCell1D =
+            result.NewCell1DsIndex.at(result.NewCell2DsIndex[f].NewCell1DsPosition[e]);
+
+        if (refinedCell1D.Type !=
+            Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated)
+          continue;
+
+        splitCell1DsOriginalIndex.push_back(refinedCell1D.OriginalCell1DIndex);
+        splitCell1DsUpdatedIndices.push_back(refinedCell1D.NewCell1DsIndex);
+      }
+
       const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateNeighbours(cell3DToRefineIndex,
-                                                                                                                                                   cell2DIndex,
-                                                                                                                                                   result.NewCell2DsIndex[f].NewCell1DIndex,
-                                                                                                                                                   result.NewCell2DsIndex[f].NewCell2DsIndex,
-                                                                                                                                                   meshDAO);
+                                                                                                                                                         cell2DIndex,
+                                                                                                                                                         result.NewCell2DsIndex[f].NewCell1DIndex,
+                                                                                                                                                         std::vector<unsigned int>(splitCell1DsOriginalIndex.begin(),
+                                                                                                                                                                                   splitCell1DsOriginalIndex.end()),
+                                                                                                                                                         std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
+                                                                                                                                                                                                splitCell1DsUpdatedIndices.end()),
+                                                                                                                                                         result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                         meshDAO);
     }
 
     //    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
