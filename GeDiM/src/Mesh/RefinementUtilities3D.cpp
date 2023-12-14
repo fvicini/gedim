@@ -296,12 +296,12 @@ namespace Gedim
       newCell3DsEdges[nc].resize(newPolyhedron.Edges.size());
       newCell3DsFaces[nc].resize(newPolyhedron.Faces.size());
 
-      for (const unsigned int v : newPolyhedron.Vertices)
-        newCell3DsVertices[nc][v] = splitCell0DsIndex.at(v);
-      for (const unsigned int e : newPolyhedron.Edges)
-        newCell3DsEdges[nc][e] = splitCell1DsIndex.at(e);
-      for (const unsigned int f : newPolyhedron.Faces)
-        newCell3DsFaces[nc][f] = splitCell2DsIndex.at(f);
+      for (unsigned int v = 0; v < newPolyhedron.Vertices.size(); v++)
+        newCell3DsVertices[nc][v] = splitCell0DsIndex.at(newPolyhedron.Vertices.at(v));
+      for (unsigned int e = 0; e < newPolyhedron.Edges.size(); e++)
+        newCell3DsEdges[nc][e] = splitCell1DsIndex.at(newPolyhedron.Edges.at(e));
+      for (unsigned int f = 0; f < newPolyhedron.Faces.size(); f++)
+        newCell3DsFaces[nc][f] = splitCell2DsIndex.at(newPolyhedron.Faces.at(f));
     }
 
     const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
