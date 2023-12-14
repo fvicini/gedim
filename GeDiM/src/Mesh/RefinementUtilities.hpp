@@ -158,6 +158,7 @@ namespace Gedim
               std::vector<unsigned int> NewCell2DsIndex = {};
               unsigned int OriginalCell2DIndex = 0;
               unsigned int NewCell1DIndex = 0;
+              std::vector<unsigned int> NewCell1DsPosition = {}; ///< Position in NewCell1DsIndex array
               unsigned int OriginalCell3DFaceIndex = 0;
           };
 

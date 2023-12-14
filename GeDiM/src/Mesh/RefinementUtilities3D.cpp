@@ -97,6 +97,7 @@ namespace Gedim
 
     std::list<RefinePolyhedron_Result::RefinedCell1D> newCell1Ds;
     std::list<RefinePolyhedron_Result::RefinedCell2D> newCell2Ds;
+    std::unordered_map<unsigned int, unsigned int> edgeIndexToNewCell1Ds;
 
     for (unsigned int v = 0; v < numOriginalVertices; v++)
       splitCell0DsIndex[v] = mesh.Cell3DVertex(cell3DIndex, v);
@@ -152,6 +153,10 @@ namespace Gedim
         throw std::runtime_error("Error on edge identification");
 
 
+      edgeIndexToNewCell1Ds.insert(std::make_pair(newEdges[0],
+                                                  newCell1Ds.size()));
+      edgeIndexToNewCell1Ds.insert(std::make_pair(newEdges[1],
+                                                  newCell1Ds.size()));
       newCell1Ds.push_back(refinedCell1D);
     }
 
@@ -192,6 +197,9 @@ namespace Gedim
       mesh.Cell1DSetMarker(newCell1DIndex,
                            mesh.Cell2DMarker(originalCell2DIndex));
       mesh.Cell1DSetState(newCell1DIndex, true);
+
+      edgeIndexToNewCell1Ds.insert(std::make_pair(ne,
+                                                  newCell1Ds.size()));
       newCell1Ds.push_back(newCell1D);
     }
 
@@ -214,16 +222,37 @@ namespace Gedim
       subCells[0].resize(2, newFaceOne.cols());
       subCells[1].resize(2, newFaceTwo.cols());
 
+      std::set<unsigned int> newCell1DsPosition;
+
       for (unsigned int v = 0; v < newFaceOne.cols(); v++)
       {
         subCells[0](0, v) = splitCell0DsIndex.at(newFaceOne(0, v));
         subCells[0](1, v) = splitCell1DsIndex.at(newFaceOne(1, v));
+
+        const auto& edgeIndexToNewCell1D = edgeIndexToNewCell1Ds.find(newFaceOne(1, v));
+        if (edgeIndexToNewCell1D !=
+            edgeIndexToNewCell1Ds.end())
+        {
+          if (newCell1DsPosition.find(edgeIndexToNewCell1D->second) ==
+              newCell1DsPosition.end())
+          newCell1DsPosition.insert(edgeIndexToNewCell1D->second);
+        }
       }
 
+      std::list<unsigned int> newFaceTwoNewEdges;
       for (unsigned int v = 0; v < newFaceTwo.cols(); v++)
       {
         subCells[1](0, v) = splitCell0DsIndex.at(newFaceTwo(0, v));
         subCells[1](1, v) = splitCell1DsIndex.at(newFaceTwo(1, v));
+
+        const auto& edgeIndexToNewCell1D = edgeIndexToNewCell1Ds.find(newFaceTwo(1, v));
+        if (edgeIndexToNewCell1D !=
+            edgeIndexToNewCell1Ds.end())
+        {
+          if (newCell1DsPosition.find(edgeIndexToNewCell1D->second) ==
+              newCell1DsPosition.end())
+          newCell1DsPosition.insert(edgeIndexToNewCell1D->second);
+        }
       }
 
       const std::vector<unsigned int> newCell2DIndices = meshUtilities.SplitCell2D(originalCell2DIndex,
@@ -236,6 +265,8 @@ namespace Gedim
       refinedCell2D.OriginalCell2DIndex = originalCell2DIndex;
       refinedCell2D.NewCell1DIndex = splitCell1DsIndex[ne];
       refinedCell2D.OriginalCell3DFaceIndex = originalFaceIndex;
+      refinedCell2D.NewCell1DsPosition = std::vector<unsigned int>(newCell1DsPosition.begin(),
+                                                                   newCell1DsPosition.end());
 
       splitCell2DsIndex[newFaces[0]] = newCell2DIndices[0];
       splitCell2DsIndex[newFaces[1]] = newCell2DIndices[1];
