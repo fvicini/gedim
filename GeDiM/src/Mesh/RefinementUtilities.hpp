@@ -215,6 +215,17 @@ namespace Gedim
           std::vector<UpdatedCell2D> UpdatedCell2Ds = {};
       };
 
+      struct RefinePolyhedron_UpdateNeighbour_Result final
+      {
+          struct UpdatedCell3D final
+          {
+              unsigned int OriginalCell3DIndex = 0;
+              unsigned int NewCell3DIndex = 0;
+          };
+
+          std::vector<UpdatedCell3D> UpdatedCell3Ds = {};
+      };
+
       struct Cell2Ds_GeometricData final
       {
           struct Cell2D_GeometricData final
@@ -372,6 +383,13 @@ namespace Gedim
                                                            const Eigen::Matrix3d& planeRotationMatrix,
                                                            const Eigen::Vector3d& planeTranslation,
                                                            IMeshDAO& mesh) const;
+
+      RefinePolyhedron_UpdateNeighbour_Result RefinePolyhedronCell_UpdateNeighbours(const unsigned int& cell3DIndex,
+                                                                                    const unsigned int& cell2DIndex,
+                                                                                    const unsigned int& newCell1DIndex,
+                                                                                    const std::vector<unsigned int>& splitCell2DsIndex,
+                                                                                    IMeshDAO& mesh) const;
+
 
       /// \brief Update Cell1D neighbours of refined triangle by edge with refine by edge
       /// \param cell2DIndex the index of Cell2D refined, from 0 to Cell2DTotalNumber()

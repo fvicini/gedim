@@ -230,25 +230,20 @@ namespace GedimUnitTesting
     ASSERT_EQ(std::vector<unsigned int>({ 22, 23 }),
               result.NewCell3DsIndex);
 
-    //    for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
-    //    {
-    //      if (result.NewCell1DsIndex[e].Type != Gedim::RefinementUtilities::RefinePolygon_Result::RefinedCell1D::Types::Updated)
-    //        continue;
+    for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
+    {
+      if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
+        continue;
 
-    //      const unsigned int cell1DIndex = result.NewCell1DsIndex[e].OriginalCell1DIndex;
-    //      unsigned int numNeighs = meshDAO.Cell1DNumberNeighbourCell2D(cell1DIndex);
-    //      std::vector<Eigen::Matrix3d> cell2DsRotation(numNeighs, Eigen::Matrix3d::Identity());
-    //      std::vector<Eigen::Vector3d> cell2DsTranslation(numNeighs, Eigen::Vector3d::Zero());
+      const unsigned int cell2DIndex = result.NewCell2DsIndex[f].OriginalCell2DIndex;
+      unsigned int numNeighs = meshDAO.Cell2DNumberNeighbourCell3D(cell2DIndex);
 
-    //      refinementUtilities.RefineTriangleCell_UpdateNeighbours(cell2DToRefineIndex,
-    //                                                              result.NewCell1DsIndex[e].OriginalCell1DIndex,
-    //                                                              result.NewCell1DsIndex[e].NewCell0DIndex,
-    //                                                              result.NewCell1DsIndex[e].NewCell1DsIndex,
-    //                                                              meshGeometricData.Cell2DsEdgeDirections.at(cell2DToRefineIndex).at(result.NewCell1DsIndex[e].OriginalCell2DEdgeIndex),
-    //                                                              cell2DsRotation,
-    //                                                              cell2DsTranslation,
-    //                                                              meshDAO);
-    //    }
+      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateNeighbours(cell3DToRefineIndex,
+                                                                                                                                                   cell2DIndex,
+                                                                                                                                                   result.NewCell2DsIndex[f].NewCell1DIndex,
+                                                                                                                                                   result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                   meshDAO);
+    }
 
     //    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
     //    meshUtilities.ExtractActiveMesh(meshDAO,
