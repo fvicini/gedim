@@ -389,6 +389,7 @@ namespace Gedim
         continue;
 
       const unsigned int neighCell3DIndex = mesh.Cell2DNeighbourCell3D(cell2DIndex, n);
+
       if (neighCell3DIndex == cell3DIndex)
         continue;
 
@@ -431,7 +432,7 @@ namespace Gedim
       newCell3DsFaces[0][neighFaceIndex] = splitCell2DsIndex[0];
       newCell3DsFaces[0][originalFaces.size()] = splitCell2DsIndex[1];
 
-      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
+      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(neighCell3DIndex,
                                                                                    newCell3DsVertices,
                                                                                    newCell3DsEdges,
                                                                                    newCell3DsFaces,
@@ -494,7 +495,7 @@ namespace Gedim
       newCell3DsEdges[0][neighEdgeIndex] = newCell1DsIndex[1];
       newCell3DsEdges[0][originalEdges.size()] = newCell1DsIndex[1];
 
-      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
+      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(neighCell3DIndex,
                                                                                    newCell3DsVertices,
                                                                                    newCell3DsEdges,
                                                                                    newCell3DsFaces,

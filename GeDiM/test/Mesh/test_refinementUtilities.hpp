@@ -237,7 +237,6 @@ namespace GedimUnitTesting
         continue;
 
       const unsigned int cell2DIndex = result.NewCell2DsIndex[f].OriginalCell2DIndex;
-      unsigned int numNeighs = meshDAO.Cell2DNumberNeighbourCell3D(cell2DIndex);
 
       std::list<unsigned int> splitCell1DsOriginalIndex;
       std::list<unsigned int> splitCell1DsNewCell0DIndex;
@@ -276,7 +275,6 @@ namespace GedimUnitTesting
         continue;
 
       const unsigned int cell1DIndex = result.NewCell1DsIndex[e].OriginalCell1DIndex;
-      unsigned int numNeighs = meshDAO.Cell1DNumberNeighbourCell3D(cell1DIndex);
 
       const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateEdgeNeighbours(cell3DToRefineIndex,
                                                                                                                                                              cell1DIndex,
