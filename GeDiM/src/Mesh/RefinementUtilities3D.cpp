@@ -368,14 +368,14 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
-  RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result RefinementUtilities::RefinePolyhedronCell_UpdateNeighbours(const unsigned int& cell3DIndex,
-                                                                                                                          const unsigned int& cell2DIndex,
-                                                                                                                          const unsigned int& newCell1DIndex,
-                                                                                                                          const std::vector<unsigned int>& splitCell1DsOriginalIndex,
-                                                                                                                          const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
-                                                                                                                          const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
-                                                                                                                          const std::vector<unsigned int>& splitCell2DsIndex,
-                                                                                                                          IMeshDAO& mesh) const
+  RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result RefinementUtilities::RefinePolyhedronCell_UpdateFaceNeighbours(const unsigned int& cell3DIndex,
+                                                                                                                              const unsigned int& cell2DIndex,
+                                                                                                                              const unsigned int& newCell1DIndex,
+                                                                                                                              const std::vector<unsigned int>& splitCell1DsOriginalIndex,
+                                                                                                                              const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
+                                                                                                                              const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
+                                                                                                                              const std::vector<unsigned int>& splitCell2DsIndex,
+                                                                                                                              IMeshDAO& mesh) const
   {
     RefinePolyhedron_UpdateNeighbour_Result result;
 
@@ -448,6 +448,70 @@ namespace Gedim
 
     result.UpdatedCell3Ds = std::vector<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D>(newCell3DsIndex.begin(),
                                                                                                 newCell3DsIndex.end());
+    return result;
+  }
+  // ***************************************************************************
+  RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result RefinementUtilities::RefinePolyhedronCell_UpdateEdgeNeighbours(const unsigned int& cell3DIndex, const unsigned int& cell1DIndex, const std::vector<unsigned int>& newCell1DsIndex, const unsigned int& newCell0DIndex, IMeshDAO& mesh) const
+  {
+    RefinePolyhedron_UpdateNeighbour_Result result;
+
+    std::list<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D> newCell3DsIndex;
+
+    // update neighbour cells
+    for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell3D(cell1DIndex); n++)
+    {
+      if (!mesh.Cell1DHasNeighbourCell3D(cell1DIndex, n))
+        continue;
+
+      const unsigned int neighCell3DIndex = mesh.Cell1DNeighbourCell3D(cell1DIndex, n);
+      if (neighCell3DIndex == cell3DIndex)
+        continue;
+
+      if (mesh.Cell3DHasUpdatedCell3Ds(neighCell3DIndex))
+        continue;
+
+      const unsigned int neighEdgeIndex = mesh.Cell3DFindEdge(neighCell3DIndex,
+                                                              cell1DIndex);
+
+      // update new cell3D
+      std::vector<std::vector<unsigned int>> newCell3DsVertices(1);
+      std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
+      std::vector<std::vector<unsigned int>> newCell3DsFaces(1);
+
+      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(cell3DIndex);
+      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(cell3DIndex);
+      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(cell3DIndex);
+
+      newCell3DsVertices[0].resize(originalVertices.size() + 1);
+      newCell3DsEdges[0].resize(originalEdges.size() + 1);
+      newCell3DsFaces[0].resize(originalFaces.size());
+
+      std::copy(originalVertices.begin(), originalVertices.end(), newCell3DsVertices[0].begin());
+      std::copy(originalEdges.begin(), originalEdges.end(), newCell3DsEdges[0].begin());
+      std::copy(originalFaces.begin(), originalFaces.end(), newCell3DsFaces[0].begin());
+
+      newCell3DsVertices[0][originalVertices.size()] = newCell0DIndex;
+      newCell3DsEdges[0][neighEdgeIndex] = newCell1DsIndex[1];
+      newCell3DsEdges[0][originalEdges.size()] = newCell1DsIndex[1];
+
+      const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(cell3DIndex,
+                                                                                   newCell3DsVertices,
+                                                                                   newCell3DsEdges,
+                                                                                   newCell3DsFaces,
+                                                                                   mesh);
+
+      for (const unsigned int& newCell3D : newCell3DIndices)
+      {
+        RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D updatedCell3D;
+        updatedCell3D.OriginalCell3DIndex = neighCell3DIndex;
+        updatedCell3D.NewCell3DIndex = newCell3D;
+        newCell3DsIndex.push_back(updatedCell3D);
+      }
+    }
+
+    result.UpdatedCell3Ds = std::vector<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D>(newCell3DsIndex.begin(),
+                                                                                                newCell3DsIndex.end());
+
 
     return result;
   }

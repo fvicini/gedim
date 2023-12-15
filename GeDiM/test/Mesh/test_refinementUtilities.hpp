@@ -257,17 +257,32 @@ namespace GedimUnitTesting
         splitCell1DsUpdatedIndices.push_back(refinedCell1D.NewCell1DsIndex);
       }
 
-      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateNeighbours(cell3DToRefineIndex,
-                                                                                                                                                         cell2DIndex,
-                                                                                                                                                         result.NewCell2DsIndex[f].NewCell1DIndex,
-                                                                                                                                                         std::vector<unsigned int>(splitCell1DsOriginalIndex.begin(),
-                                                                                                                                                                                   splitCell1DsOriginalIndex.end()),
-                                                                                                                                                         std::vector<unsigned int>(splitCell1DsNewCell0DIndex.begin(),
-                                                                                                                                                                                   splitCell1DsNewCell0DIndex.end()),
-                                                                                                                                                         std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
-                                                                                                                                                                                                splitCell1DsUpdatedIndices.end()),
-                                                                                                                                                         result.NewCell2DsIndex[f].NewCell2DsIndex,
-                                                                                                                                                         meshDAO);
+      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateFaceNeighbours(cell3DToRefineIndex,
+                                                                                                                                                             cell2DIndex,
+                                                                                                                                                             result.NewCell2DsIndex[f].NewCell1DIndex,
+                                                                                                                                                             std::vector<unsigned int>(splitCell1DsOriginalIndex.begin(),
+                                                                                                                                                                                       splitCell1DsOriginalIndex.end()),
+                                                                                                                                                             std::vector<unsigned int>(splitCell1DsNewCell0DIndex.begin(),
+                                                                                                                                                                                       splitCell1DsNewCell0DIndex.end()),
+                                                                                                                                                             std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
+                                                                                                                                                                                                    splitCell1DsUpdatedIndices.end()),
+                                                                                                                                                             result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                             meshDAO);
+    }
+
+    for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
+    {
+      if (result.NewCell1DsIndex[e].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated)
+        continue;
+
+      const unsigned int cell1DIndex = result.NewCell1DsIndex[e].OriginalCell1DIndex;
+      unsigned int numNeighs = meshDAO.Cell1DNumberNeighbourCell3D(cell1DIndex);
+
+      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateEdgeNeighbours(cell3DToRefineIndex,
+                                                                                                                                                             cell1DIndex,
+                                                                                                                                                             result.NewCell1DsIndex[e].NewCell1DsIndex,
+                                                                                                                                                             result.NewCell1DsIndex[e].NewCell0DIndex,
+                                                                                                                                                             meshDAO);
     }
 
     //    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;

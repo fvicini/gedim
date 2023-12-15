@@ -385,14 +385,20 @@ namespace Gedim
                                                            const Eigen::Vector3d& planeTranslation,
                                                            IMeshDAO& mesh) const;
 
-      RefinePolyhedron_UpdateNeighbour_Result RefinePolyhedronCell_UpdateNeighbours(const unsigned int& cell3DIndex,
-                                                                                    const unsigned int& cell2DIndex,
-                                                                                    const unsigned int& newCell1DIndex,
-                                                                                    const std::vector<unsigned int>& splitCell1DsOriginalIndex,
-                                                                                    const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
-                                                                                    const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
-                                                                                    const std::vector<unsigned int>& splitCell2DsIndex,
-                                                                                    IMeshDAO& mesh) const;
+      RefinePolyhedron_UpdateNeighbour_Result RefinePolyhedronCell_UpdateFaceNeighbours(const unsigned int& cell3DIndex,
+                                                                                        const unsigned int& cell2DIndex,
+                                                                                        const unsigned int& newCell1DIndex,
+                                                                                        const std::vector<unsigned int>& splitCell1DsOriginalIndex,
+                                                                                        const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
+                                                                                        const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
+                                                                                        const std::vector<unsigned int>& splitCell2DsIndex,
+                                                                                        IMeshDAO& mesh) const;
+
+      RefinePolyhedron_UpdateNeighbour_Result RefinePolyhedronCell_UpdateEdgeNeighbours(const unsigned int& cell3DIndex,
+                                                                                        const unsigned int& cell1DIndex,
+                                                                                        const std::vector<unsigned int>& newCell1DsIndex,
+                                                                                        const unsigned int& newCell0DIndex,
+                                                                                        IMeshDAO& mesh) const;
 
 
       /// \brief Update Cell1D neighbours of refined triangle by edge with refine by edge
