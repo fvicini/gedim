@@ -283,13 +283,14 @@ namespace GedimUnitTesting
                                                                                                                                                              meshDAO);
     }
 
-    //    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
-    //    meshUtilities.ExtractActiveMesh(meshDAO,
-    //                                    extractionData);
+    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
+    meshUtilities.ExtractActiveMesh(meshDAO,
+                                    extractionData);
 
-    //    EXPECT_EQ(5, meshDAO.Cell0DTotalNumber());
-    //    EXPECT_EQ(8, meshDAO.Cell1DTotalNumber());
-    //    EXPECT_EQ(4, meshDAO.Cell2DTotalNumber());
+    ASSERT_EQ(21, meshDAO.Cell0DTotalNumber());
+    ASSERT_EQ(62, meshDAO.Cell1DTotalNumber());
+    ASSERT_EQ(65, meshDAO.Cell2DTotalNumber());
+    ASSERT_EQ(23, meshDAO.Cell3DTotalNumber());
 
     meshUtilities.ExportMeshToVTU(meshDAO,
                                   exportFolder,
