@@ -338,6 +338,7 @@ namespace GedimUnitTesting
     std::iota(std::begin(cell2DsAligned),
               std::end(cell2DsAligned),
               1);
+    unsigned int maxCell2DAligned = meshDAO.Cell2DTotalNumber();
 
     for (unsigned int r = 0; r < maxRefinements; r++)
     {
@@ -453,6 +454,33 @@ namespace GedimUnitTesting
                                                              planeRotationMatrix,
                                                              planeTranslation,
                                                              meshDAO);
+
+        cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
+
+        for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
+        {
+          switch (result.NewCell2DsIndex[f].Type)
+          {
+            case Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated:
+            {
+              const unsigned int cell2DIndex = result.NewCell2DsIndex[f].OriginalCell2DIndex;
+              for (const unsigned int newCell2DIndex : result.NewCell2DsIndex[f].NewCell2DsIndex)
+                cell2DsAligned[newCell2DIndex] = cell2DsAligned.at(cell2DIndex);
+            }
+              break;
+            case Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::New:
+            {
+              const unsigned int newCell2DIndex = result.NewCell2DsIndex[f].NewCell2DsIndex[0];
+              cell2DsAligned[newCell2DIndex] = maxCell2DAligned++;
+            }
+              break;
+            default:
+              throw std::runtime_error("Unknown face type");
+          }
+
+          if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
+            continue;
+        }
 
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
         {
