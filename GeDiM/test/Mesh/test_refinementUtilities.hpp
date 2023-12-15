@@ -231,6 +231,10 @@ namespace GedimUnitTesting
     ASSERT_EQ(std::vector<unsigned int>({ 22, 23 }),
               result.NewCell3DsIndex);
 
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step0");
+
     for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
     {
       if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
@@ -269,6 +273,10 @@ namespace GedimUnitTesting
                                                                                                                                                              meshDAO);
     }
 
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step1");
+
     for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
     {
       if (result.NewCell1DsIndex[e].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated)
@@ -282,6 +290,10 @@ namespace GedimUnitTesting
                                                                                                                                                              result.NewCell1DsIndex[e].NewCell0DIndex,
                                                                                                                                                              meshDAO);
     }
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step2");
 
     Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
     meshUtilities.ExtractActiveMesh(meshDAO,

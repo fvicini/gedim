@@ -492,7 +492,7 @@ namespace Gedim
       std::copy(originalFaces.begin(), originalFaces.end(), newCell3DsFaces[0].begin());
 
       newCell3DsVertices[0][originalVertices.size()] = newCell0DIndex;
-      newCell3DsEdges[0][neighEdgeIndex] = newCell1DsIndex[1];
+      newCell3DsEdges[0][neighEdgeIndex] = newCell1DsIndex[0];
       newCell3DsEdges[0][originalEdges.size()] = newCell1DsIndex[1];
 
       const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(neighCell3DIndex,
