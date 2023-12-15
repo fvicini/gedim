@@ -64,6 +64,26 @@ namespace Gedim
           std::unordered_map<unsigned int, unsigned int> NewCell3DToOldCell3D; ///< each pair is {new Cell3D index, old Cell3D index}
       };
 
+      struct FilterMeshData final
+      {
+          std::vector<unsigned int> Cell0Ds = {};
+          std::vector<unsigned int> Cell1Ds = {};
+          std::vector<unsigned int> Cell2Ds = {};
+          std::vector<unsigned int> Cell3Ds = {};
+      };
+
+      struct ExtractMeshData final
+      {
+          std::vector<unsigned int> OldCell0DToNewCell0D = {}; ///< each element is [old Cell0D index] = new Cell0D index
+          std::vector<unsigned int> OldCell1DToNewCell1D = {}; ///< each element is [old Cell1D index] = new Cell1D index
+          std::vector<unsigned int> OldCell2DToNewCell2D = {}; ///< each element is [old Cell2D index] = new Cell2D index
+          std::vector<unsigned int> OldCell3DToNewCell3D = {}; ///< each element is [old Cell3D index] = new Cell3D index
+          std::vector<unsigned int> NewCell0DToOldCell0D = {}; ///< each element is [new Cell0D index] = old Cell0D index
+          std::vector<unsigned int> NewCell1DToOldCell1D = {}; ///< each element is [new Cell1D index] = old Cell1D index
+          std::vector<unsigned int> NewCell2DToOldCell2D = {}; ///< each element is [new Cell2D index] = old Cell2D index
+          std::vector<unsigned int> NewCell3DToOldCell3D = {}; ///< each element is [new Cell3D index] = old Cell3D index
+      };
+
       struct ComputeMesh2DCell1DsResult final
       {
           Eigen::MatrixXi Cell1Ds; /// Cell1Ds vertices, size 2 x Cell1DTotalNumber()
@@ -100,6 +120,7 @@ namespace Gedim
           std::vector<double> Cell3DsVolumes;
           std::vector<double> Cell3DsDiameters;
           std::vector<Eigen::Vector3d> Cell3DsCentroids;
+          std::vector<Eigen::VectorXd> Cell3DsEdgeLengths;
           std::vector<Eigen::MatrixXd> Cell3DsEdgeTangents;
           std::vector<std::vector<bool>> Cell3DsEdgeDirections;
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsTetrahedronPoints;
@@ -117,7 +138,8 @@ namespace Gedim
           std::vector<std::vector<Eigen::Vector3d>> Cell3DsFaces2DCentroids; ///< faces centroids
           std::vector<std::vector<double>> Cell3DsFacesDiameters; ///< faces diameters
           std::vector<std::vector<Eigen::VectorXd>> Cell3DsFacesEdgeLengths; ///< faces edge lengths
-          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge3DTangents; ///< faces edge 3D tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge 2D tangents
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DNormals; ///< faces edge normals
       };
 
@@ -176,6 +198,25 @@ namespace Gedim
       /// \note the resulting mesh has no inactive elements
       void ExtractActiveMesh(IMeshDAO& mesh,
                              ExtractActiveMeshData& extractionData) const;
+
+      /// \brief Extract mesh1D cells from a mesh
+      FilterMeshData FilterMesh1D(const std::vector<unsigned int>& cell1DsFilter,
+                                  const IMeshDAO& mesh) const;
+
+      /// \brief Extract mesh2D cells from a mesh
+      FilterMeshData FilterMesh2D(const std::vector<unsigned int>& cell2DsFilter,
+                                  const IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh1D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh2D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const std::vector<unsigned int>& cell2DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh) const;
 
       /// \brief Fill Mesh 1D From segment Coordinates
       /// \param segmentOrigin the segment origin
@@ -340,6 +381,10 @@ namespace Gedim
       /// \brief Compute Cell1D Cell2DNeighbours with given mesh data
       /// \param mesh the resulting mesh
       void ComputeCell1DCell2DNeighbours(IMeshDAO& mesh) const;
+
+      /// \brief Compute Cell1D Cell3DNeighbours with given mesh data
+      /// \param mesh the resulting mesh
+      void ComputeCell1DCell3DNeighbours(IMeshDAO& mesh) const;
 
       /// \brief Compute Cell2D Cell3DNeighbours with given mesh data
       /// \param mesh the resulting mesh
@@ -506,7 +551,18 @@ namespace Gedim
       /// \param mesh the mesh to update
       /// \return the list of new cell2Ds indices, from 0 to Cell2DTotalNumber()
       std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
-                                            const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                            const std::vector<Eigen::MatrixXi>& subCell2Ds,
+                                            IMeshDAO& mesh) const;
+
+      /// \brief Split cell3D into subcells
+      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
+      /// \param subCell3Ds the list of sub-cells 3D mesh vertices and edges indices, size numSubCells x (2 x numVertices)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell3Ds indices, from 0 to Cell3DTotalNumber()
+      std::vector<unsigned int> SplitCell3D(const unsigned int& cell3DIndex,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsVertices,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsEdges,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsFaces,
                                             IMeshDAO& mesh) const;
 
       void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,

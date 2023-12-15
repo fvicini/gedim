@@ -26,7 +26,9 @@ namespace Gedim
       unsigned int NumberCell1D = 0; ///< number of Cell1D
       std::vector<unsigned int> Cell1DVertices = {}; ///< Cell1D vertices indices, size 2 x NumberCell1D (fromId,toId)
       std::vector<unsigned int> NumberCell1DNeighbourCell2D = { 0 }; ///< Cell1D neighbour Cell2D indices per cell, size  1 x NumberCell1D + 1
+      std::vector<unsigned int> NumberCell1DNeighbourCell3D = { 0 }; ///< Cell1D neighbour Cell3D indices per cell, size  1 x NumberCell1D + 1
       std::vector<unsigned int> Cell1DNeighbourCell2Ds = {}; ///< Cell1D neighbour Cell2D indices, size 1 x NumberCell1DNeighbourCell2D[NumberCell1D]
+      std::vector<unsigned int> Cell1DNeighbourCell3Ds = {}; ///< Cell1D neighbour Cell3D indices, size 1 x NumberCell1DNeighbourCell3D[NumberCell1D]
       std::vector<unsigned int> Cell1DMarkers = {}; ///< Cell1D propertoes, size 1 x NumberCell1D (marker)
       std::vector<bool> ActiveCell1D = {}; ///< active Cell1D
       std::vector<unsigned int> Cell1DOriginalCell1Ds = {}; ///< for each cell1D the index of original cell1D, NumberCell1D is the default value (no original cell), size 1 x NumberCell1D
@@ -61,6 +63,7 @@ namespace Gedim
       std::vector<unsigned int> Cell3DFaces = {}; ///< Cell3D Cell2D indices, size 1 x NumberCell3DFaces[NumberCell3D]
       std::vector<unsigned int> Cell3DMarkers = {}; ///< Cell3D markers, size 1 x NumberCell3D (marker)
       std::vector<bool> ActiveCell3D = {}; ///< active Cell3D
+      std::vector<unsigned int> Cell3DOriginalCell3Ds = {}; ///< for each cell3D the index of original cell3D, NumberCell3D is the default value (no original cell), size 1 x NumberCell3D
       std::unordered_map<unsigned int, std::unordered_set<unsigned int>> UpdatedCell3Ds = {}; ///< for each cell3D the list to the new cell3Ds
       std::vector<std::string> Cell3DDoublePropertyIds = {}; ///< Cell3D double property id - double property index
       std::unordered_map<std::string, unsigned int> Cell3DDoublePropertyIndices = {}; ///< Cell3D double property id - double property index

@@ -1579,4 +1579,27 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
+  bool GeometryUtilities::IsPolygonCoplanar(const Eigen::Vector3d& planeNormal,
+                                            const Eigen::Vector3d& planeOrigin,
+                                            const Eigen::MatrixXd& polygonVertices,
+                                            const std::vector<unsigned int>& polygonUnalignedVertices) const
+  {
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(0)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(1)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(2)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    return true;
+  }
+  // ***************************************************************************
 }

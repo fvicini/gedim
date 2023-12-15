@@ -7,6 +7,7 @@
 
 #include "MeshMatrices_2D_1Cells_Mock.hpp"
 #include "MeshMatrices_2D_2Cells_Mock.hpp"
+#include "MeshMatrices_3D_22Cells_Mock.hpp"
 
 #include "ConformMeshUtilities.hpp"
 #include "MeshMatricesDAO.hpp"
@@ -14,6 +15,8 @@
 #include "RefinementUtilities.hpp"
 #include "CommonUtilities.hpp"
 #include "VTKUtilities.hpp"
+
+#include <array>
 
 using namespace testing;
 using namespace std;
@@ -47,7 +50,7 @@ namespace GedimUnitTesting
     const Eigen::Matrix3d cell2DRotation = Eigen::Matrix3d::Identity();
     const Eigen::Vector3d cell2DTranslation = Eigen::Vector3d::Zero();
 
-    const Gedim::RefinementUtilities::MaxEdgeDirection direction = refinementUtilities.ComputeTriangleMaxEdgeDirection(meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex));
+    const Gedim::RefinementUtilities::TriangleMaxEdgeDirection direction = refinementUtilities.ComputeTriangleMaxEdgeDirection(meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex));
     EXPECT_EQ(2, direction.MaxEdgeIndex);
     EXPECT_EQ(1, direction.OppositeVertexIndex);
 
@@ -106,6 +109,200 @@ namespace GedimUnitTesting
     EXPECT_EQ(5, meshDAO.Cell0DTotalNumber());
     EXPECT_EQ(8, meshDAO.Cell1DTotalNumber());
     EXPECT_EQ(4, meshDAO.Cell2DTotalNumber());
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined");
+  }
+
+  TEST(TestRefinementUtilities, TestRefineTetrahedrons)
+  {
+    std::string exportFolder = "./Export/TestRefinementUtilities/TestRefineTetrahedron";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance1D = 1.0e-6;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    Gedim::MeshUtilities meshUtilities;
+    Gedim::RefinementUtilities refinementUtilities(geometryUtilities,
+                                                   meshUtilities);
+    MeshMatrices_3D_22Cells_Mock mockMesh;
+    Gedim::MeshMatricesDAO meshDAO(mockMesh.Mesh);
+    meshUtilities.ComputeCell1DCell3DNeighbours(meshDAO);
+    meshUtilities.ComputeCell2DCell3DNeighbours(meshDAO);
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Original");
+
+    Gedim::MeshUtilities::MeshGeometricData3D meshGeometricData = meshUtilities.FillMesh3DGeometricData(geometryUtilities,
+                                                                                                        meshDAO);
+
+    const unsigned int cell3DToRefineIndex = 0;
+
+    const Eigen::MatrixXd& cell3DVertices = meshGeometricData.Cell3DsVertices.at(cell3DToRefineIndex);
+    const Eigen::MatrixXi& cell3DEdges = meshGeometricData.Cell3DsEdges.at(cell3DToRefineIndex);
+    const std::vector<Eigen::MatrixXi>& cell3DFaces = meshGeometricData.Cell3DsFaces.at(cell3DToRefineIndex);
+
+    const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(cell3DEdges,
+                                                                                                                                     meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex));
+    EXPECT_EQ(2, direction.MaxEdgeIndex);
+    EXPECT_EQ(2, direction.OppositeVerticesIndex[0]);
+    EXPECT_EQ(3, direction.OppositeVerticesIndex[1]);
+
+    const Eigen::Vector3d planeOrigin = 0.5 * (cell3DVertices.col(cell3DEdges(0, direction.MaxEdgeIndex)) +
+                                               cell3DVertices.col(cell3DEdges(1, direction.MaxEdgeIndex)));
+
+    Eigen::Matrix3d planeTriangle;
+    planeTriangle.col(0)<< planeOrigin;
+    planeTriangle.col(1)<< cell3DVertices.col(direction.OppositeVerticesIndex[1]);
+    planeTriangle.col(2)<< cell3DVertices.col(direction.OppositeVerticesIndex[0]);
+
+    const Eigen::Vector3d planeNormal = geometryUtilities.PolygonNormal(planeTriangle);
+    const Eigen::Matrix3d planeRotationMatrix = geometryUtilities.PlaneRotationMatrix(planeNormal);
+    const Eigen::Vector3d planeTranslation = geometryUtilities.PlaneTranslation(planeOrigin);
+
+    const Gedim::RefinementUtilities::RefinePolyhedron_Result result =
+        refinementUtilities.RefinePolyhedronCell_ByPlane(cell3DToRefineIndex,
+                                                         cell3DVertices,
+                                                         cell3DEdges,
+                                                         meshGeometricData.Cell3DsEdgeDirections.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsEdgeLengths.at(cell3DToRefineIndex),
+                                                         cell3DFaces,
+                                                         meshGeometricData.Cell3DsFaces3DVertices.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesEdge3DTangents.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesTranslations.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsFacesRotationMatrices.at(cell3DToRefineIndex),
+                                                         meshGeometricData.Cell3DsVolumes.at(cell3DToRefineIndex),
+                                                         planeNormal,
+                                                         planeOrigin,
+                                                         planeRotationMatrix,
+                                                         planeTranslation,
+                                                         meshDAO);
+    ASSERT_EQ(std::vector<unsigned int>({ 20 }),
+              result.NewCell0DsIndex);
+    ASSERT_EQ(3,
+              result.NewCell1DsIndex.size());
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated,
+              result.NewCell1DsIndex[0].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 59, 60 }),
+              result.NewCell1DsIndex[0].NewCell1DsIndex);
+    ASSERT_EQ(2,
+              result.NewCell1DsIndex[0].OriginalCell1DIndex);
+    ASSERT_EQ(20,
+              result.NewCell1DsIndex[0].NewCell0DIndex);
+    ASSERT_EQ(2,
+              result.NewCell1DsIndex[0].OriginalCell3DEdgeIndex);
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::New,
+              result.NewCell1DsIndex[1].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 61 }),
+              result.NewCell1DsIndex[1].NewCell1DsIndex);
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::New,
+              result.NewCell1DsIndex[2].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 62 }),
+              result.NewCell1DsIndex[2].NewCell1DsIndex);
+    ASSERT_EQ(3,
+              result.NewCell2DsIndex.size());
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated,
+              result.NewCell2DsIndex[0].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 62, 63 }),
+              result.NewCell2DsIndex[0].NewCell2DsIndex);
+    ASSERT_EQ(2,
+              result.NewCell2DsIndex[0].OriginalCell2DIndex);
+    ASSERT_EQ(61,
+              result.NewCell2DsIndex[0].NewCell1DIndex);
+    ASSERT_EQ(3,
+              result.NewCell2DsIndex[0].OriginalCell3DFaceIndex);
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated,
+              result.NewCell2DsIndex[1].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 64, 65 }),
+              result.NewCell2DsIndex[1].NewCell2DsIndex);
+    ASSERT_EQ(3,
+              result.NewCell2DsIndex[1].OriginalCell2DIndex);
+    ASSERT_EQ(62,
+              result.NewCell2DsIndex[1].NewCell1DIndex);
+    ASSERT_EQ(0,
+              result.NewCell2DsIndex[1].OriginalCell3DFaceIndex);
+    ASSERT_EQ(Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::New,
+              result.NewCell2DsIndex[2].Type);
+    ASSERT_EQ(std::vector<unsigned int>({ 66 }),
+              result.NewCell2DsIndex[2].NewCell2DsIndex);
+    ASSERT_EQ(std::vector<unsigned int>({ 22, 23 }),
+              result.NewCell3DsIndex);
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step0");
+
+    for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
+    {
+      if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
+        continue;
+
+      const unsigned int cell2DIndex = result.NewCell2DsIndex[f].OriginalCell2DIndex;
+
+      std::list<unsigned int> splitCell1DsOriginalIndex;
+      std::list<unsigned int> splitCell1DsNewCell0DIndex;
+      std::list<std::vector<unsigned int>> splitCell1DsUpdatedIndices;
+
+      for (unsigned int e = 0; e < result.NewCell2DsIndex[f].NewCell1DsPosition.size(); e++)
+      {
+        const Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D& refinedCell1D =
+            result.NewCell1DsIndex.at(result.NewCell2DsIndex[f].NewCell1DsPosition[e]);
+
+        if (refinedCell1D.Type !=
+            Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated)
+          continue;
+
+        splitCell1DsOriginalIndex.push_back(refinedCell1D.OriginalCell1DIndex);
+        splitCell1DsNewCell0DIndex.push_back(refinedCell1D.NewCell0DIndex);
+        splitCell1DsUpdatedIndices.push_back(refinedCell1D.NewCell1DsIndex);
+      }
+
+      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateFaceNeighbours(cell3DToRefineIndex,
+                                                                                                                                                             cell2DIndex,
+                                                                                                                                                             result.NewCell2DsIndex[f].NewCell1DIndex,
+                                                                                                                                                             std::vector<unsigned int>(splitCell1DsOriginalIndex.begin(),
+                                                                                                                                                                                       splitCell1DsOriginalIndex.end()),
+                                                                                                                                                             std::vector<unsigned int>(splitCell1DsNewCell0DIndex.begin(),
+                                                                                                                                                                                       splitCell1DsNewCell0DIndex.end()),
+                                                                                                                                                             std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
+                                                                                                                                                                                                    splitCell1DsUpdatedIndices.end()),
+                                                                                                                                                             result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                             meshDAO);
+    }
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step1");
+
+    for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
+    {
+      if (result.NewCell1DsIndex[e].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell1D::Types::Updated)
+        continue;
+
+      const unsigned int cell1DIndex = result.NewCell1DsIndex[e].OriginalCell1DIndex;
+
+      const Gedim::RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result updateResult = refinementUtilities.RefinePolyhedronCell_UpdateEdgeNeighbours(cell3DToRefineIndex,
+                                                                                                                                                             cell1DIndex,
+                                                                                                                                                             result.NewCell1DsIndex[e].NewCell1DsIndex,
+                                                                                                                                                             result.NewCell1DsIndex[e].NewCell0DIndex,
+                                                                                                                                                             meshDAO);
+    }
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Refined_Step2");
+
+    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
+    meshUtilities.ExtractActiveMesh(meshDAO,
+                                    extractionData);
+
+    ASSERT_EQ(21, meshDAO.Cell0DTotalNumber());
+    ASSERT_EQ(62, meshDAO.Cell1DTotalNumber());
+    ASSERT_EQ(65, meshDAO.Cell2DTotalNumber());
+    ASSERT_EQ(23, meshDAO.Cell3DTotalNumber());
 
     meshUtilities.ExportMeshToVTU(meshDAO,
                                   exportFolder,
@@ -173,7 +370,7 @@ namespace GedimUnitTesting
         const Eigen::Matrix3d cell2DRotation = Eigen::Matrix3d::Identity();
         const Eigen::Vector3d cell2DTranslation = Eigen::Vector3d::Zero();
 
-        const Gedim::RefinementUtilities::MaxEdgeDirection direction = refinementUtilities.ComputeTriangleMaxEdgeDirection(meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex));
+        const Gedim::RefinementUtilities::TriangleMaxEdgeDirection direction = refinementUtilities.ComputeTriangleMaxEdgeDirection(meshGeometricData.Cell2DsEdgeLengths.at(cell2DToRefineIndex));
 
         const Gedim::RefinementUtilities::RefinePolygon_Result refineResult = refinementUtilities.RefineTriangleCell_ByEdge(cell2DToRefineIndex,
                                                                                                                             direction.MaxEdgeIndex,

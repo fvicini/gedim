@@ -394,6 +394,7 @@ namespace GedimUnitTesting
     ASSERT_EQ(mesh.Mesh.ActiveCell3D, importedMesh.ActiveCell3D);
     ASSERT_EQ(mesh.Mesh.Cell3DDoublePropertyIds, importedMesh.Cell3DDoublePropertyIds);
     ASSERT_EQ(mesh.Mesh.UpdatedCell3Ds, importedMesh.UpdatedCell3Ds);
+    ASSERT_EQ(mesh.Mesh.Cell3DOriginalCell3Ds, importedMesh.Cell3DOriginalCell3Ds);
   }
 
   TEST(TestMesh, MeshDAOImporter2DFromCsv)
