@@ -231,9 +231,11 @@ namespace GedimUnitTesting
     ASSERT_EQ(std::vector<unsigned int>({ 22, 23 }),
               result.NewCell3DsIndex);
 
+    unsigned int step = 0;
+
     meshUtilities.ExportMeshToVTU(meshDAO,
                                   exportFolder,
-                                  "Mesh_Refined_Step0");
+                                  "Mesh_Refined_Step" + std::to_string(step++));
 
     for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
     {
@@ -271,11 +273,10 @@ namespace GedimUnitTesting
                                                                                                                                                                                                     splitCell1DsUpdatedIndices.end()),
                                                                                                                                                              result.NewCell2DsIndex[f].NewCell2DsIndex,
                                                                                                                                                              meshDAO);
+      meshUtilities.ExportMeshToVTU(meshDAO,
+                                    exportFolder,
+                                    "Mesh_Refined_Step" + std::to_string(step++));
     }
-
-    meshUtilities.ExportMeshToVTU(meshDAO,
-                                  exportFolder,
-                                  "Mesh_Refined_Step1");
 
     for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
     {
@@ -289,11 +290,10 @@ namespace GedimUnitTesting
                                                                                                                                                              result.NewCell1DsIndex[e].NewCell1DsIndex,
                                                                                                                                                              result.NewCell1DsIndex[e].NewCell0DIndex,
                                                                                                                                                              meshDAO);
+      meshUtilities.ExportMeshToVTU(meshDAO,
+                                    exportFolder,
+                                    "Mesh_Refined_Step" + std::to_string(step++));
     }
-
-    meshUtilities.ExportMeshToVTU(meshDAO,
-                                  exportFolder,
-                                  "Mesh_Refined_Step2");
 
     Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
     meshUtilities.ExtractActiveMesh(meshDAO,

@@ -404,9 +404,9 @@ namespace Gedim
       std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
       std::vector<std::vector<unsigned int>> newCell3DsFaces(1);
 
-      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(cell3DIndex);
-      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(cell3DIndex);
-      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(cell3DIndex);
+      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(neighCell3DIndex);
+      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(neighCell3DIndex);
+      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(neighCell3DIndex);
 
       newCell3DsVertices[0].resize(originalVertices.size() + splitCell1DsOriginalIndex.size());
       newCell3DsEdges[0].resize(originalEdges.size() + splitCell1DsOriginalIndex.size() + 1);
@@ -479,9 +479,9 @@ namespace Gedim
       std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
       std::vector<std::vector<unsigned int>> newCell3DsFaces(1);
 
-      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(cell3DIndex);
-      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(cell3DIndex);
-      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(cell3DIndex);
+      const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(neighCell3DIndex);
+      const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(neighCell3DIndex);
+      const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(neighCell3DIndex);
 
       newCell3DsVertices[0].resize(originalVertices.size() + 1);
       newCell3DsEdges[0].resize(originalEdges.size() + 1);
