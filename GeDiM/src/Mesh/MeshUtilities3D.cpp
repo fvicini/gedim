@@ -1537,6 +1537,22 @@ namespace Gedim
       mesh.Cell3DInsertUpdatedCell3D(cell3DIndex,
                                      newCell3DIndex);
 
+      for (unsigned int e = 0; e < mesh.Cell3DNumberEdges(newCell3DIndex); e++)
+      {
+        const unsigned int cell1DIndex = mesh.Cell3DEdge(newCell3DIndex, e);
+
+        for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell3D(cell1DIndex); n++)
+        {
+          if (!mesh.Cell1DHasNeighbourCell3D(cell1DIndex, n))
+            continue;
+
+          if (mesh.Cell1DNeighbourCell3D(cell1DIndex, n) == cell3DIndex)
+            mesh.Cell1DInsertNeighbourCell3D(cell1DIndex,
+                                             n,
+                                             newCell3DIndex);
+        }
+      }
+
       for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(newCell3DIndex); f++)
       {
         const unsigned int cell2DIndex = mesh.Cell3DFace(newCell3DIndex, f);

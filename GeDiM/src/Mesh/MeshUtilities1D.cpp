@@ -193,21 +193,41 @@ namespace Gedim
 
       const unsigned int numCell1DNumberNeighbourCell2D = mesh.Cell1DNumberNeighbourCell2D(cell1DIndex);
 
-      if (numCell1DNumberNeighbourCell2D == 0)
-        continue;
-
-      mesh.Cell1DInitializeNeighbourCell2Ds(newCell1DIndex,
-                                            numCell1DNumberNeighbourCell2D);
-
-      for (unsigned int n = 0; n < numCell1DNumberNeighbourCell2D; n++)
+      if (numCell1DNumberNeighbourCell2D > 0)
       {
-        if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, n))
-          continue;
 
-        mesh.Cell1DInsertNeighbourCell2D(newCell1DIndex,
-                                         n,
-                                         mesh.Cell1DNeighbourCell2D(cell1DIndex,
-                                                                    n));
+        mesh.Cell1DInitializeNeighbourCell2Ds(newCell1DIndex,
+                                              numCell1DNumberNeighbourCell2D);
+
+        for (unsigned int n = 0; n < numCell1DNumberNeighbourCell2D; n++)
+        {
+          if (!mesh.Cell1DHasNeighbourCell2D(cell1DIndex, n))
+            continue;
+
+          mesh.Cell1DInsertNeighbourCell2D(newCell1DIndex,
+                                           n,
+                                           mesh.Cell1DNeighbourCell2D(cell1DIndex,
+                                                                      n));
+        }
+      }
+
+      const unsigned int numCell1DNumberNeighbourCell3D = mesh.Cell1DNumberNeighbourCell3D(cell1DIndex);
+
+      if (numCell1DNumberNeighbourCell3D > 0)
+      {
+        mesh.Cell1DInitializeNeighbourCell3Ds(newCell1DIndex,
+                                              numCell1DNumberNeighbourCell3D);
+
+        for (unsigned int n = 0; n < numCell1DNumberNeighbourCell3D; n++)
+        {
+          if (!mesh.Cell1DHasNeighbourCell3D(cell1DIndex, n))
+            continue;
+
+          mesh.Cell1DInsertNeighbourCell3D(newCell1DIndex,
+                                           n,
+                                           mesh.Cell1DNeighbourCell3D(cell1DIndex,
+                                                                      n));
+        }
       }
     }
 
