@@ -334,6 +334,11 @@ namespace GedimUnitTesting
     const unsigned int seed = 10;
     const unsigned int maxRefinements = 5;
 
+    std::vector<unsigned int> cell2DsAligned(meshDAO.Cell2DTotalNumber());
+    std::iota(std::begin(cell2DsAligned),
+              std::end(cell2DsAligned),
+              1);
+
     for (unsigned int r = 0; r < maxRefinements; r++)
     {
       Gedim::MeshUtilities::MeshGeometricData3D meshGeometricData = meshUtilities.FillMesh3DGeometricData(geometryUtilities,
@@ -377,6 +382,28 @@ namespace GedimUnitTesting
 
         const std::vector<std::vector<unsigned int>> facesUnalignedPoints = geometryUtilities.PolyhedronFacesUnalignedVertices(meshGeometricData.Cell3DsFaces2DVertices.at(cell3DToRefineIndex));
 
+        std::map<unsigned int, std::list<unsigned int>> polyhedronUnaligedFacesList;
+        for (unsigned int f = 0; f < cell3DFaces.size(); f++)
+        {
+          const unsigned int cell2DIndex = meshDAO.Cell3DFace(cell3DToRefineIndex, f);
+          const unsigned int cell2DAligned = cell2DsAligned.at(cell2DIndex);
+
+          if (polyhedronUnaligedFacesList.find(cell2DAligned) ==
+              polyhedronUnaligedFacesList.end())
+          {
+            polyhedronUnaligedFacesList.insert(std::make_pair(cell2DAligned,
+                                                              std::list<unsigned int>()));
+          }
+
+          polyhedronUnaligedFacesList[cell2DAligned].push_back(f);
+        }
+
+        std::vector<std::vector<unsigned int>> polyhedronUnaligedFaces(polyhedronUnaligedFacesList.size());
+        unsigned int uf = 0;
+        for (const auto& polyhedronUnaligedFaceList : polyhedronUnaligedFacesList)
+          polyhedronUnaligedFaces[uf++] = std::vector<unsigned int>(polyhedronUnaligedFaceList.second.begin(),
+                                                                    polyhedronUnaligedFaceList.second.end());
+
         const std::vector<unsigned int> unalignedVertices = geometryUtilities.UnalignedPolyhedronPoints(cell3DVertices,
                                                                                                         cell3DFaces,
                                                                                                         meshGeometricData.Cell3DsFacesTranslations.at(cell3DToRefineIndex),
@@ -385,10 +412,10 @@ namespace GedimUnitTesting
                                                                                                         facesUnalignedPoints);
 
         // create unaligned tetrahedron
-        const Gedim::GeometryUtilities::Polyhedron unalignedTetrahedron = geometryUtilities.CreateTetrahedronWithVertices(polyhedronVertices.col(unalignedVertices.at(0)),
-                                                                                                                          polyhedronVertices.col(unalignedVertices.at(1)),
-                                                                                                                          polyhedronVertices.col(unalignedVertices.at(2)),
-                                                                                                                          polyhedronVertices.col(unalignedVertices.at(3)));
+        const Gedim::GeometryUtilities::Polyhedron unalignedTetrahedron = geometryUtilities.CreateTetrahedronWithVertices(cell3DVertices.col(unalignedVertices.at(0)),
+                                                                                                                          cell3DVertices.col(unalignedVertices.at(1)),
+                                                                                                                          cell3DVertices.col(unalignedVertices.at(2)),
+                                                                                                                          cell3DVertices.col(unalignedVertices.at(3)));
 
         const Eigen::VectorXd unalignedEdgesLength = geometryUtilities.PolyhedronEdgesLength(unalignedTetrahedron.Vertices,
                                                                                              unalignedTetrahedron.Edges);
