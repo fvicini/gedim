@@ -129,6 +129,7 @@ namespace GedimUnitTesting
                                                    meshUtilities);
     MeshMatrices_3D_22Cells_Mock mockMesh;
     Gedim::MeshMatricesDAO meshDAO(mockMesh.Mesh);
+    meshUtilities.ComputeCell1DCell3DNeighbours(meshDAO);
     meshUtilities.ComputeCell2DCell3DNeighbours(meshDAO);
 
     meshUtilities.ExportMeshToVTU(meshDAO,

@@ -1360,6 +1360,35 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
+  void MeshUtilities::ComputeCell1DCell3DNeighbours(IMeshDAO& mesh) const
+  {
+    // Compute Cell1D neighbours starting from cell3Ds
+    std::vector<std::list<unsigned int>> cell1DsNeighbours(mesh.Cell1DTotalNumber());
+    for (unsigned int c3D = 0; c3D < mesh.Cell3DTotalNumber(); c3D++)
+    {
+      const unsigned int numCell3DEdges = mesh.Cell3DNumberEdges(c3D);
+      for (unsigned int e = 0; e < numCell3DEdges; e++)
+      {
+        const unsigned int cell1D = mesh.Cell3DEdge(c3D, e);
+        cell1DsNeighbours[cell1D].push_back(c3D);
+      }
+    }
+
+    std::vector<unsigned int> cell1DsNumNeighbours3D(mesh.Cell1DTotalNumber());
+    for (unsigned int c1D = 0; c1D < mesh.Cell1DTotalNumber(); c1D++)
+      cell1DsNumNeighbours3D[c1D] = cell1DsNeighbours[c1D].size();
+
+    mesh.Cell1DsInitializeNeighbourCell3Ds(cell1DsNumNeighbours3D);
+    for (unsigned int c1D = 0; c1D < mesh.Cell1DTotalNumber(); c1D++)
+    {
+      unsigned int n = 0;
+      for (const auto& cell3DIndex : cell1DsNeighbours[c1D])
+        mesh.Cell1DInsertNeighbourCell3D(c1D,
+                                         n++,
+                                         cell3DIndex);
+    }
+  }
+  // ***************************************************************************
   void MeshUtilities::ComputeCell2DCell3DNeighbours(IMeshDAO& mesh) const
   {
     // Compute Cell2D neighbours starting from cell3Ds
