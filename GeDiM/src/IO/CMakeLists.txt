@@ -12,6 +12,8 @@ list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/Configurations.hpp)
 list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationPropertySupportedTypes.hpp)
 list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/VTKUtilities.hpp)
 
+list(APPEND gedim_src_headers ${CMAKE_CURRENT_SOURCE_DIR}/TimeUtilities.hpp)
+
 list(APPEND gedim_src_includes ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(gedim_src_sources ${gedim_src_sources} PARENT_SCOPE)
