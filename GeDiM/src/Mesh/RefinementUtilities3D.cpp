@@ -84,6 +84,18 @@ namespace Gedim
                                                                                                                            planeRotationMatrix,
                                                                                                                            planeTranslation);
 
+
+    switch (split_cell.Type)
+    {
+      case Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::Types::None:
+        result.ResultType = RefinePolyhedron_Result::ResultTypes::Cell3DSplitNone;
+        return result;
+      case Gedim::GeometryUtilities::SplitPolyhedronWithPlaneResult::Types::Split:
+        break;
+      default:
+        throw std::runtime_error("Split polyhedron unknown");
+    }
+
     // Create new mesh elements
     const unsigned int numOriginalVertices = cell3DVertices.cols();
     const unsigned int numNewVertices = split_cell.Vertices.NewVerticesOriginalEdge.size();
@@ -364,6 +376,7 @@ namespace Gedim
                                                                                  newCell2Ds.end());
 
     result.NewCell3DsIndex = newCell3DIndices;
+    result.ResultType = RefinePolyhedron_Result::ResultTypes::Successfull;
 
     return result;
   }

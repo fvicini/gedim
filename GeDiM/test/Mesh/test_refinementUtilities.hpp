@@ -424,13 +424,19 @@ namespace GedimUnitTesting
         const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(unalignedTetrahedron.Edges,
                                                                                                                                          unalignedEdgesLength);
 
-        const Eigen::Vector3d planeOrigin = 0.5 * (cell3DVertices.col(cell3DEdges(0, direction.MaxEdgeIndex)) +
-                                                   cell3DVertices.col(cell3DEdges(1, direction.MaxEdgeIndex)));
+        const Eigen::Vector3d planeOrigin = 0.5 * (unalignedTetrahedron.Vertices.col(cell3DEdges(0, direction.MaxEdgeIndex)) +
+                                                   unalignedTetrahedron.Vertices.col(cell3DEdges(1, direction.MaxEdgeIndex)));
 
         Eigen::Matrix3d planeTriangle;
         planeTriangle.col(0)<< planeOrigin;
-        planeTriangle.col(1)<< cell3DVertices.col(direction.OppositeVerticesIndex[1]);
-        planeTriangle.col(2)<< cell3DVertices.col(direction.OppositeVerticesIndex[0]);
+        planeTriangle.col(1)<< unalignedTetrahedron.Vertices.col(direction.OppositeVerticesIndex[1]);
+        planeTriangle.col(2)<< unalignedTetrahedron.Vertices.col(direction.OppositeVerticesIndex[0]);
+
+        {
+          Gedim::VTKUtilities exporter;
+          exporter.AddPolygon(planeTriangle);
+          exporter.Export(exportFolder + "/Plane.vtu");
+        }
 
         const Eigen::Vector3d planeNormal = geometryUtilities.PolygonNormal(planeTriangle);
         const Eigen::Matrix3d planeRotationMatrix = geometryUtilities.PlaneRotationMatrix(planeNormal);

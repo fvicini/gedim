@@ -126,7 +126,8 @@ namespace Gedim
             Unknown = 0,
             Successfull = 1,
             Cell3DAlreadySplitted = 2,
-            Cell3DSplitUnderTolerance = 3
+            Cell3DSplitUnderTolerance = 3,
+            Cell3DSplitNone = 4
           };
 
           struct RefinedCell1D final
