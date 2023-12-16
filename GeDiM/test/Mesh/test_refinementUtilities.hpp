@@ -434,6 +434,14 @@ namespace GedimUnitTesting
 
         {
           Gedim::VTKUtilities exporter;
+          exporter.AddPolyhedron(unalignedTetrahedron.Vertices,
+                                 unalignedTetrahedron.Edges,
+                                 unalignedTetrahedron.Faces);
+          exporter.Export(exportFolder + "/CellToSPlit.vtu");
+        }
+
+        {
+          Gedim::VTKUtilities exporter;
           exporter.AddPolygon(planeTriangle);
           exporter.Export(exportFolder + "/Plane.vtu");
         }
