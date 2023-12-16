@@ -424,8 +424,8 @@ namespace GedimUnitTesting
         const Gedim::RefinementUtilities::TetrahedronMaxEdgeDirection direction = refinementUtilities.ComputeTetrahedronMaxEdgeDirection(unalignedTetrahedron.Edges,
                                                                                                                                          unalignedEdgesLength);
 
-        const Eigen::Vector3d planeOrigin = 0.5 * (unalignedTetrahedron.Vertices.col(cell3DEdges(0, direction.MaxEdgeIndex)) +
-                                                   unalignedTetrahedron.Vertices.col(cell3DEdges(1, direction.MaxEdgeIndex)));
+        const Eigen::Vector3d planeOrigin = 0.5 * (unalignedTetrahedron.Vertices.col(unalignedTetrahedron.Edges(0, direction.MaxEdgeIndex)) +
+                                                   unalignedTetrahedron.Vertices.col(unalignedTetrahedron.Edges(1, direction.MaxEdgeIndex)));
 
         Eigen::Matrix3d planeTriangle;
         planeTriangle.col(0)<< planeOrigin;
