@@ -491,9 +491,6 @@ namespace GedimUnitTesting
             default:
               throw std::runtime_error("Unknown face type");
           }
-
-          if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
-            continue;
         }
 
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)

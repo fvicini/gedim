@@ -795,6 +795,11 @@ namespace Gedim
 
     for(unsigned int c = 0; c <  convexMesh.Cell3DTotalNumber(); c++)
     {
+      if (!convexMesh.Cell3DIsActive(c))
+        continue;
+
+      std::cout<< "Compute cell "<< c<< std::endl;
+
       const GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(convexMesh,
                                                                               c);
 
@@ -978,6 +983,9 @@ namespace Gedim
 
     for(unsigned int c = 0; c <  mesh.Cell3DTotalNumber(); c++)
     {
+      if (!mesh.Cell3DIsActive(c))
+        continue;
+
       const vector<unsigned int>& convexCell3DIndices = meshCell3DToConvexCell3DIndices[c];
       const unsigned int& numConvexCell3Ds = convexCell3DIndices.size();
 
@@ -1124,7 +1132,7 @@ namespace Gedim
                                                                                  result.Cell3DsFacesAreas[c][f]);
         result.Cell3DsFacesDiameters[c][f] = geometryUtilities.PolygonDiameter(result.Cell3DsFaces2DVertices[c][f]);
         result.Cell3DsFacesEdgeLengths[c][f] = geometryUtilities.PolygonEdgeLengths(result.Cell3DsFaces2DVertices[c][f]);
-         result.Cell3DsFacesEdge3DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces3DVertices[c][f]);
+        result.Cell3DsFacesEdge3DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces3DVertices[c][f]);
         result.Cell3DsFacesEdge2DTangents[c][f] = geometryUtilities.PolygonEdgeTangents(result.Cell3DsFaces2DVertices[c][f]);
 
         const double facesNormalOrientation = face2DCCWOrientation[f] ? +1.0 : -1.0;

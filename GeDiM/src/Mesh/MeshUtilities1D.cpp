@@ -150,6 +150,9 @@ namespace Gedim
 
     for (unsigned int c = 0; c < convexMesh.Cell1DTotalNumber(); c++)
     {
+      if (!convexMesh.Cell1DIsActive(c))
+        continue;
+
       // Extract original cell1D geometric information
 
       result.Cell1DsVertices[c] = convexMesh.Cell1DCoordinates(c);
