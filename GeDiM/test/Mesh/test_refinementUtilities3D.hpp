@@ -239,9 +239,12 @@ namespace GedimUnitTesting
     meshUtilities.ComputeCell1DCell3DNeighbours(meshDAO);
     meshUtilities.ComputeCell2DCell3DNeighbours(meshDAO);
 
+    unsigned int step = 0;
     meshUtilities.ExportMeshToVTU(meshDAO,
                                   exportFolder,
-                                  "Mesh_Original");
+                                  "Mesh_R" +
+                                  to_string(step++),
+                                  true);
 
     const unsigned int seed = 10;
     const unsigned int maxRefinements = 5;
@@ -381,6 +384,17 @@ namespace GedimUnitTesting
                                                              planeTranslation,
                                                              meshDAO);
 
+        {
+          using namespace Gedim;
+          std::cout<< "NewCell3DsIndex "<< cell3DToRefineIndex<< " To "<< result.NewCell3DsIndex<< std::endl;
+        }
+
+        meshUtilities.ExportMeshToVTU(meshDAO,
+                                      exportFolder,
+                                      "Mesh_R" +
+                                      to_string(step++),
+                                      true);
+
         cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
 
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
@@ -445,6 +459,18 @@ namespace GedimUnitTesting
                                                                                                                                                                  meshGeometricData.Cell3DsFacesEdgeDirections,
                                                                                                                                                                  updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
+
+          {
+            using namespace Gedim;
+            for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
+              std::cout<< "updateFaceResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
+          }
+
+          meshUtilities.ExportMeshToVTU(meshDAO,
+                                        exportFolder,
+                                        "Mesh_R" +
+                                        to_string(step++),
+                                        true);
         }
 
         for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
@@ -461,25 +487,30 @@ namespace GedimUnitTesting
                                                                                                                                                                  meshGeometricData.Cell3DsFacesEdgeDirections,
                                                                                                                                                                  updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
+          {
+            using namespace Gedim;
+            for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
+              std::cout<< "updateEdgeResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
+          }
+
+          meshUtilities.ExportMeshToVTU(meshDAO,
+                                        exportFolder,
+                                        "Mesh_R" +
+                                        to_string(step++),
+                                        true);
         }
 
         cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
 
         for (const auto& updatedNeighCell2D : updatedNeighCell2Ds)
           cell2DsAligned[updatedNeighCell2D.second] = cell2DsAligned.at(updatedNeighCell2D.first);
-
-        meshUtilities.ExportMeshToVTU(meshDAO,
-                                      exportFolder,
-                                      "Mesh_R" +
-                                      to_string(r) +
-                                      "_C" +
-                                      to_string(c));
       }
 
       meshUtilities.ExportMeshToVTU(meshDAO,
                                     exportFolder,
                                     "Mesh_R" +
-                                    to_string(r));
+                                    to_string(step++),
+                                    true);
     }
 
     Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
@@ -488,7 +519,9 @@ namespace GedimUnitTesting
 
     meshUtilities.ExportMeshToVTU(meshDAO,
                                   exportFolder,
-                                  "Mesh_Refined");
+                                  "Mesh_R" +
+                                  to_string(step++),
+                                  true);
 
     Gedim::MeshUtilities::CheckMesh3DConfiguration checkConfig;
     meshUtilities.CheckMesh3D(checkConfig,

@@ -1,6 +1,7 @@
 #include "MeshUtilities.hpp"
 
 #include "MeshDAOExporterToCsv.hpp"
+#include "StringsUtilities.hpp"
 #include "VTKUtilities.hpp"
 #include "OpenVolumeMeshInterface.hpp"
 #include "ObjectFileFormatInterface.hpp"
@@ -156,8 +157,27 @@ namespace Gedim
   // ***************************************************************************
   void MeshUtilities::ExportMeshToVTU(const IMeshDAO& mesh,
                                       const string& exportFolder,
-                                      const string& fileName) const
+                                      const string& fileName,
+                                      const bool& separateFile) const
   {
+    string cell0DsFolder = exportFolder;
+    string cell1DsFolder = exportFolder;
+    string cell2DsFolder = exportFolder;
+    string cell3DsFolder = exportFolder;
+
+    if (separateFile)
+    {
+      Gedim::Output::CreateFolder(exportFolder + "/Cell0Ds");
+      Gedim::Output::CreateFolder(exportFolder + "/Cell1Ds");
+      Gedim::Output::CreateFolder(exportFolder + "/Cell2Ds");
+      Gedim::Output::CreateFolder(exportFolder + "/Cell3Ds");
+
+      cell0DsFolder = exportFolder + "/Cell0Ds";
+      cell1DsFolder = exportFolder + "/Cell1Ds";
+      cell2DsFolder = exportFolder + "/Cell2Ds";
+      cell3DsFolder = exportFolder + "/Cell3Ds";
+    }
+
     // Export Cell0Ds
     if (mesh.Cell0DTotalNumber() > 0)
     {
@@ -214,7 +234,7 @@ namespace Gedim
       Gedim::VTKUtilities vtpUtilities;
       vtpUtilities.AddPoints(mesh.Cell0DsCoordinates(),
                              properties);
-      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell0Ds.vtu");
+      vtpUtilities.Export(cell0DsFolder + "/" + fileName + "_Cell0Ds.vtu");
     }
 
     // Export Cell1Ds
@@ -274,7 +294,7 @@ namespace Gedim
       vtpUtilities.AddSegments(mesh.Cell0DsCoordinates(),
                                mesh.Cell1DsExtremes(),
                                properties);
-      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell1Ds.vtu");
+      vtpUtilities.Export(cell1DsFolder + "/" + fileName + "_Cell1Ds.vtu");
     }
 
     // Export Cell2Ds
@@ -334,7 +354,7 @@ namespace Gedim
       vtpUtilities.AddPolygons(mesh.Cell0DsCoordinates(),
                                mesh.Cell2DsVertices(),
                                properties);
-      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell2Ds.vtu");
+      vtpUtilities.Export(cell2DsFolder + "/" + fileName + "_Cell2Ds.vtu");
     }
 
     // Export Cell3Ds
@@ -394,7 +414,7 @@ namespace Gedim
       vtpUtilities.AddPolyhedrons(mesh.Cell0DsCoordinates(),
                                   mesh.Cell3DsFacesVertices(),
                                   properties);
-      vtpUtilities.Export(exportFolder + "/" + fileName + "_Cell3Ds.vtu");
+      vtpUtilities.Export(cell3DsFolder + "/" + fileName + "_Cell3Ds.vtu");
     }
   }
   // ***************************************************************************
