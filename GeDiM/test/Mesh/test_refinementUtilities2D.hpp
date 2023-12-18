@@ -1,5 +1,5 @@
-#ifndef __TEST_REFINEMENT_UTILITIES_H
-#define __TEST_REFINEMENT_UTILITIES_H
+#ifndef __TEST_REFINEMENT_UTILITIES_2D_H
+#define __TEST_REFINEMENT_UTILITIES_2D_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -1797,4 +1797,4 @@ namespace GedimUnitTesting
   }
 }
 
-#endif // __TEST_REFINEMENT_UTILITIES_H
+#endif // __TEST_REFINEMENT_UTILITIES_2D_H
