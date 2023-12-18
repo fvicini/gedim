@@ -798,8 +798,6 @@ namespace Gedim
       if (!convexMesh.Cell3DIsActive(c))
         continue;
 
-      std::cout<< "Compute cell "<< c<< " / "<< convexMesh.Cell3DTotalNumber()<< std::endl;
-
       const GeometryUtilities::Polyhedron polyhedron = MeshCell3DToPolyhedron(convexMesh,
                                                                               c);
 
@@ -1456,24 +1454,11 @@ namespace Gedim
       polyhedron.Edges(1, e) = cell0DIndexToVertexIndex.at(mesh.Cell1DEnd(cell1DIndex));
     }
 
-    if (cell3DIndex == 24)
-    {
-      std::cout<< "cell0DIndexToVertexIndex "<< cell0DIndexToVertexIndex<< std::endl;
-      std::cout<< "cell1DIndexToEdgeIndex "<< cell1DIndexToEdgeIndex<< std::endl;
-    }
-
     for (unsigned int f = 0; f < polyhedron.Faces.size(); f++)
     {
       const unsigned int cell2DIndex = mesh.Cell3DFace(cell3DIndex,
                                                        f);
       const unsigned int numFaceVertices = mesh.Cell2DNumberVertices(cell2DIndex);
-
-      if (cell3DIndex == 24)
-      {
-        std::cout<< "f "<< f<< " cell2DIndex "<< cell2DIndex<< " ";
-        std::cout<< "cell2DVertices "<< mesh.Cell2DVertices(cell2DIndex)<< " ";
-        std::cout<< "cell2DEdges "<< mesh.Cell2DEdges(cell2DIndex)<< std::endl;
-      }
 
       polyhedron.Faces[f].resize(2, numFaceVertices);
       for (unsigned int v = 0; v < numFaceVertices; v++)
