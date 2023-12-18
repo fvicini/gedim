@@ -237,6 +237,8 @@ namespace GedimUnitTesting
                                   exportFolder,
                                   "Mesh_Refined_Step" + std::to_string(step++));
 
+    std::map<unsigned int, unsigned int> updatedNeighCell2Ds;
+
     for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
     {
       if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
@@ -272,6 +274,8 @@ namespace GedimUnitTesting
                                                                                                                                                              std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
                                                                                                                                                                                                     splitCell1DsUpdatedIndices.end()),
                                                                                                                                                              result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                             meshGeometricData.Cell3DsFacesEdgeDirections,
+                                                                                                                                                             updatedNeighCell2Ds,
                                                                                                                                                              meshDAO);
       meshUtilities.ExportMeshToVTU(meshDAO,
                                     exportFolder,
@@ -289,6 +293,8 @@ namespace GedimUnitTesting
                                                                                                                                                              cell1DIndex,
                                                                                                                                                              result.NewCell1DsIndex[e].NewCell1DsIndex,
                                                                                                                                                              result.NewCell1DsIndex[e].NewCell0DIndex,
+                                                                                                                                                             meshGeometricData.Cell3DsFacesEdgeDirections,
+                                                                                                                                                             updatedNeighCell2Ds,
                                                                                                                                                              meshDAO);
       meshUtilities.ExportMeshToVTU(meshDAO,
                                     exportFolder,
@@ -493,6 +499,8 @@ namespace GedimUnitTesting
           }
         }
 
+        std::map<unsigned int, unsigned int> updatedNeighCell2Ds;
+
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
         {
           if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)
@@ -528,6 +536,8 @@ namespace GedimUnitTesting
                                                                                                                                                                  std::vector<std::vector<unsigned int>>(splitCell1DsUpdatedIndices.begin(),
                                                                                                                                                                                                         splitCell1DsUpdatedIndices.end()),
                                                                                                                                                                  result.NewCell2DsIndex[f].NewCell2DsIndex,
+                                                                                                                                                                 meshGeometricData.Cell3DsFacesEdgeDirections,
+                                                                                                                                                                 updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
         }
 
@@ -542,6 +552,8 @@ namespace GedimUnitTesting
                                                                                                                                                                  cell1DIndex,
                                                                                                                                                                  result.NewCell1DsIndex[e].NewCell1DsIndex,
                                                                                                                                                                  result.NewCell1DsIndex[e].NewCell0DIndex,
+                                                                                                                                                                 meshGeometricData.Cell3DsFacesEdgeDirections,
+                                                                                                                                                                 updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
         }
 

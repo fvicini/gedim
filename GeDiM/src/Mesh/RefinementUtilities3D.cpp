@@ -388,12 +388,12 @@ namespace Gedim
                                                                                                                               const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
                                                                                                                               const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
                                                                                                                               const std::vector<unsigned int>& splitCell2DsIndex,
+                                                                                                                              const std::vector<std::vector<std::vector<bool>>>& cell3DsFacesEdgesDirection,
+                                                                                                                              std::map<unsigned int, unsigned int>& updatedCell2Ds,
                                                                                                                               IMeshDAO& mesh) const
   {
     RefinePolyhedron_UpdateNeighbour_Result result;
 
-    std::unordered_map<unsigned int,
-        RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell2D> newCell2DsIndex;
     std::list<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D> newCell3DsIndex;
 
 
@@ -452,22 +452,31 @@ namespace Gedim
 
           const unsigned int cell1DCell2DIndex = originalFaces.at(nef);
 
-          const unsigned int localFaceIndex = mesh.Cell2DFindEdge(cell1DCell2DIndex,
-                                                                  cell1DIndex);
-          if (localFaceIndex == mesh.Cell2DNumberVertices(cell1DCell2DIndex))
+          const unsigned int localFaceEdgeIndex = mesh.Cell2DFindEdge(cell1DCell2DIndex,
+                                                                      cell1DIndex);
+          if (localFaceEdgeIndex == mesh.Cell2DNumberVertices(cell1DCell2DIndex))
             continue;
 
-          if (newCell2DsIndex.find(cell1DCell2DIndex) ==
-              newCell2DsIndex.end())
-          {
-            UpdateCell2D(cell1DCell2DIndex,
-                         cell1DIndex,
-                         localFaceIndex,
-                         splitCell1DsUpdatedIndices[ne],
-                         splitCell1DsNewCell0DIndex[ne],
-                         mesh);
-          }
+          const unsigned int localFaceIndex = mesh.Cell3DFindFace(neighCell3DIndex,
+                                                                  cell1DCell2DIndex);
+          Gedim::Output::Assert(localFaceIndex < originalFaces.size());
 
+          if (updatedCell2Ds.find(cell1DCell2DIndex) ==
+              updatedCell2Ds.end())
+          {
+            const unsigned int updatedCell2DIndex = UpdateCell2D_NewVertex(cell1DCell2DIndex,
+                                                                           cell1DIndex,
+                                                                           cell3DsFacesEdgesDirection.at(neighCell3DIndex).at(localFaceIndex).at(localFaceEdgeIndex),
+                                                                           localFaceEdgeIndex,
+                                                                           splitCell1DsUpdatedIndices[ne],
+                                                                           splitCell1DsNewCell0DIndex[ne],
+                                                                           mesh);
+            newCell3DsFaces[0][localFaceIndex] = updatedCell2DIndex;
+            updatedCell2Ds.insert(std::make_pair(cell1DCell2DIndex,
+                                                 updatedCell2DIndex));
+          }
+          else
+            newCell3DsFaces[0][localFaceIndex] = updatedCell2Ds.at(cell1DCell2DIndex);
         }
       }
 
@@ -496,7 +505,13 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
-  RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result RefinementUtilities::RefinePolyhedronCell_UpdateEdgeNeighbours(const unsigned int& cell3DIndex, const unsigned int& cell1DIndex, const std::vector<unsigned int>& newCell1DsIndex, const unsigned int& newCell0DIndex, IMeshDAO& mesh) const
+  RefinementUtilities::RefinePolyhedron_UpdateNeighbour_Result RefinementUtilities::RefinePolyhedronCell_UpdateEdgeNeighbours(const unsigned int& cell3DIndex,
+                                                                                                                              const unsigned int& cell1DIndex,
+                                                                                                                              const std::vector<unsigned int>& newCell1DsIndex,
+                                                                                                                              const unsigned int& newCell0DIndex,
+                                                                                                                              const std::vector<std::vector<std::vector<bool>>>& cell3DsFacesEdgesDirection,
+                                                                                                                              std::map<unsigned int, unsigned int>& updatedCell2Ds,
+                                                                                                                              IMeshDAO& mesh) const
   {
     RefinePolyhedron_UpdateNeighbour_Result result;
 
@@ -539,6 +554,38 @@ namespace Gedim
       newCell3DsVertices[0][originalVertices.size()] = newCell0DIndex;
       newCell3DsEdges[0][neighEdgeIndex] = newCell1DsIndex[0];
       newCell3DsEdges[0][originalEdges.size()] = newCell1DsIndex[1];
+
+      // update faces with new edges
+      for (unsigned int nef = 0; nef < originalFaces.size(); nef++)
+      {
+        const unsigned int cell2DIndex = originalFaces.at(nef);
+
+        const unsigned int localFaceEdgeIndex = mesh.Cell2DFindEdge(cell2DIndex,
+                                                                    cell1DIndex);
+        if (localFaceEdgeIndex == mesh.Cell2DNumberVertices(cell2DIndex))
+          continue;
+
+        const unsigned int localFaceIndex = mesh.Cell3DFindFace(neighCell3DIndex,
+                                                                cell2DIndex);
+        Gedim::Output::Assert(localFaceIndex < originalFaces.size());
+
+        if (updatedCell2Ds.find(cell2DIndex) ==
+            updatedCell2Ds.end())
+        {
+          const unsigned int updatedCell2DIndex = UpdateCell2D_NewVertex(cell2DIndex,
+                                                                         cell1DIndex,
+                                                                         cell3DsFacesEdgesDirection.at(neighCell3DIndex).at(localFaceIndex).at(localFaceEdgeIndex),
+                                                                         localFaceEdgeIndex,
+                                                                         newCell1DsIndex,
+                                                                         newCell0DIndex,
+                                                                         mesh);
+          newCell3DsFaces[0][localFaceIndex] = updatedCell2DIndex;
+          updatedCell2Ds.insert(std::make_pair(cell2DIndex,
+                                               updatedCell2DIndex));
+        }
+        else
+          newCell3DsFaces[0][localFaceIndex] = updatedCell2Ds.at(cell2DIndex);
+      }
 
       const std::vector<unsigned int> newCell3DIndices = meshUtilities.SplitCell3D(neighCell3DIndex,
                                                                                    newCell3DsVertices,

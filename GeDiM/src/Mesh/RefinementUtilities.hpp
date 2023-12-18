@@ -219,19 +219,12 @@ namespace Gedim
 
       struct RefinePolyhedron_UpdateNeighbour_Result final
       {
-          struct UpdatedCell2D final
-          {
-              unsigned int OriginalCell2DIndex = 0;
-              unsigned int NewCell2DIndex = 0;
-          };
-
           struct UpdatedCell3D final
           {
               unsigned int OriginalCell3DIndex = 0;
               unsigned int NewCell3DIndex = 0;
           };
 
-          std::vector<UpdatedCell3D> UpdatedCell2Ds = {};
           std::vector<UpdatedCell3D> UpdatedCell3Ds = {};
       };
 
@@ -277,13 +270,14 @@ namespace Gedim
       SplitCell1D_Result SplitCell1D(const unsigned int& cell1DIndex,
                                      const Eigen::Vector3d& newVertexCoordinate,
                                      IMeshDAO& mesh) const;
-      /// \brief update cell2DIndex with a new splitted edge cell1DIndex
-      unsigned int UpdateCell2D(const unsigned int cell2DIndex,
-                                const unsigned int cell1DIndex,
-                                const unsigned int edgePosition,
-                                const std::vector<unsigned int>& newCell1DsIndex,
-                                const unsigned int newCell0DIndex,
-                                IMeshDAO& mesh) const;
+      /// \brief update cell2DIndex with a new splitted edge cell1DIndex by newCell0DIndex
+      unsigned int UpdateCell2D_NewVertex(const unsigned int cell2DIndex,
+                                          const unsigned int cell1DIndex,
+                                          const bool cell2DEdgeDirection,
+                                          const unsigned int cell2DEdgePosition,
+                                          const std::vector<unsigned int>& newCell1DsIndex,
+                                          const unsigned int newCell0DIndex,
+                                          IMeshDAO& mesh) const;
 
       inline SplitCell1D_Result SplitCell1D_MiddlePoint(const unsigned int& cell1DIndex,
                                                         IMeshDAO& mesh) const
@@ -407,12 +401,16 @@ namespace Gedim
                                                                                         const std::vector<unsigned int>& splitCell1DsNewCell0DIndex,
                                                                                         const std::vector<std::vector<unsigned int>>& splitCell1DsUpdatedIndices,
                                                                                         const std::vector<unsigned int>& splitCell2DsIndex,
+                                                                                        const std::vector<std::vector<std::vector<bool>>>& cell3DsFacesEdgesDirection,
+                                                                                        std::map<unsigned int, unsigned int>& updatedCell2Ds,
                                                                                         IMeshDAO& mesh) const;
 
       RefinePolyhedron_UpdateNeighbour_Result RefinePolyhedronCell_UpdateEdgeNeighbours(const unsigned int& cell3DIndex,
                                                                                         const unsigned int& cell1DIndex,
                                                                                         const std::vector<unsigned int>& newCell1DsIndex,
                                                                                         const unsigned int& newCell0DIndex,
+                                                                                        const std::vector<std::vector<std::vector<bool>>>& cell3DsFacesEdgesDirection,
+                                                                                        std::map<unsigned int, unsigned int>& updatedCell2Ds,
                                                                                         IMeshDAO& mesh) const;
 
 
