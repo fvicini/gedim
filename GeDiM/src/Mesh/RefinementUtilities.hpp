@@ -272,7 +272,6 @@ namespace Gedim
                                      IMeshDAO& mesh) const;
       /// \brief update cell2DIndex with a new splitted edge cell1DIndex by newCell0DIndex
       unsigned int UpdateCell2D_NewVertex(const unsigned int cell2DIndex,
-                                          const unsigned int cell1DIndex,
                                           const bool cell2DEdgeDirection,
                                           const unsigned int cell2DEdgePosition,
                                           const std::vector<unsigned int>& newCell1DsIndex,

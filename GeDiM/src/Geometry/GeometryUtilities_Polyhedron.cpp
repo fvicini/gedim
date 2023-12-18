@@ -1239,7 +1239,7 @@ namespace Gedim
         {
           unsigned int f = 0;
           while (f < numAlignedFaces &&
-                 convexHullVertex > numFacesUnalignedVertices[f + 1])
+                 convexHullVertex >= numFacesUnalignedVertices[f + 1])
             f++;
 
           Gedim::Output::Assert(convexHullVertex >= numFacesUnalignedVertices[f]);

@@ -463,10 +463,17 @@ namespace GedimUnitTesting
                                                                                                                                                                  meshDAO);
         }
 
+        cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
+
+        for (const auto& updatedNeighCell2D : updatedNeighCell2Ds)
+          cell2DsAligned[updatedNeighCell2D.second] = cell2DsAligned.at(updatedNeighCell2D.first);
+
         meshUtilities.ExportMeshToVTU(meshDAO,
                                       exportFolder,
                                       "Mesh_R" +
-                                      to_string(r));
+                                      to_string(r) +
+                                      "_C" +
+                                      to_string(c));
       }
 
       meshUtilities.ExportMeshToVTU(meshDAO,

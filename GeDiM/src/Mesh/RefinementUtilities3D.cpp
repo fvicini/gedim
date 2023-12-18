@@ -465,7 +465,6 @@ namespace Gedim
               updatedCell2Ds.end())
           {
             const unsigned int updatedCell2DIndex = UpdateCell2D_NewVertex(cell1DCell2DIndex,
-                                                                           cell1DIndex,
                                                                            cell3DsFacesEdgesDirection.at(neighCell3DIndex).at(localFaceIndex).at(localFaceEdgeIndex),
                                                                            localFaceEdgeIndex,
                                                                            splitCell1DsUpdatedIndices[ne],
@@ -573,7 +572,6 @@ namespace Gedim
             updatedCell2Ds.end())
         {
           const unsigned int updatedCell2DIndex = UpdateCell2D_NewVertex(cell2DIndex,
-                                                                         cell1DIndex,
                                                                          cell3DsFacesEdgesDirection.at(neighCell3DIndex).at(localFaceIndex).at(localFaceEdgeIndex),
                                                                          localFaceEdgeIndex,
                                                                          newCell1DsIndex,

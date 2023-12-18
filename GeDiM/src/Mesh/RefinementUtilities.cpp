@@ -45,7 +45,6 @@ namespace Gedim
   }
   // ***************************************************************************
   unsigned int RefinementUtilities::UpdateCell2D_NewVertex(const unsigned int cell2DIndex,
-                                                           const unsigned int cell1DIndex,
                                                            const bool cell2DEdgeDirection,
                                                            const unsigned int cell2DEdgePosition,
                                                            const std::vector<unsigned int>& newCell1DsIndex,
@@ -80,6 +79,7 @@ namespace Gedim
     const std::vector<unsigned int> newCell2DIndices = meshUtilities.SplitCell2D(cell2DIndex,
                                                                                  { newFace },
                                                                                  mesh);
+
     Gedim::Output::Assert(newCell2DIndices.size() == 1);
     return newCell2DIndices.at(0);
   }
