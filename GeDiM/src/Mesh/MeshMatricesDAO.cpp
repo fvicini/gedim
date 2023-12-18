@@ -968,7 +968,7 @@ namespace Gedim
     if (it != vertices.end())
       return std::distance(vertices.begin(), it);
     else
-      throw runtime_error("Vertex not found");
+      return vertices.size();
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell2DFindEdge(const unsigned int& cell2DIndex,
@@ -981,7 +981,7 @@ namespace Gedim
     if (it != edges.end())
       return std::distance(edges.begin(), it);
     else
-      throw runtime_error("Edge not found");
+      return edges.size();
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell2DFindEdgeByExtremes(const unsigned int& cell2DIndex,
@@ -1338,7 +1338,7 @@ namespace Gedim
     if (it != vertices.end())
       return std::distance(vertices.begin(), it);
     else
-      throw runtime_error("Vertex not found");
+      return vertices.size();
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell3DFindEdge(const unsigned int& cell3DIndex,
@@ -1351,7 +1351,7 @@ namespace Gedim
     if (it != edges.end())
       return std::distance(edges.begin(), it);
     else
-      throw runtime_error("Edge not found");
+      return edges.size();
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell3DFindFace(const unsigned int& cell3DIndex,
@@ -1364,7 +1364,7 @@ namespace Gedim
     if (it != faces.end())
       return std::distance(faces.begin(), it);
     else
-      throw runtime_error("Face not found");
+      return faces.size();
   }
   // ***************************************************************************
   unsigned int MeshMatricesDAO::Cell3DFindEdgeByExtremes(const unsigned int& cell3DIndex,

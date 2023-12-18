@@ -392,6 +392,8 @@ namespace Gedim
   {
     RefinePolyhedron_UpdateNeighbour_Result result;
 
+    std::unordered_map<unsigned int,
+        RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell2D> newCell2DsIndex;
     std::list<RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D> newCell3DsIndex;
 
 
@@ -409,9 +411,6 @@ namespace Gedim
       if (mesh.Cell3DHasUpdatedCell3Ds(neighCell3DIndex))
         continue;
 
-      const unsigned int neighFaceIndex = mesh.Cell3DFindFace(neighCell3DIndex,
-                                                              cell2DIndex);
-
       // update new cell3D
       std::vector<std::vector<unsigned int>> newCell3DsVertices(1);
       std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
@@ -420,6 +419,10 @@ namespace Gedim
       const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(neighCell3DIndex);
       const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(neighCell3DIndex);
       const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(neighCell3DIndex);
+
+      const unsigned int neighFaceIndex = mesh.Cell3DFindFace(neighCell3DIndex,
+                                                              cell2DIndex);
+      Gedim::Output::Assert(neighFaceIndex < originalFaces.size());
 
       newCell3DsVertices[0].resize(originalVertices.size() + splitCell1DsOriginalIndex.size());
       newCell3DsEdges[0].resize(originalEdges.size() + splitCell1DsOriginalIndex.size() + 1);
@@ -435,9 +438,37 @@ namespace Gedim
         const unsigned int neighEdgeIndex = mesh.Cell3DFindEdge(neighCell3DIndex,
                                                                 cell1DIndex);
 
+        Gedim::Output::Assert(neighEdgeIndex < originalEdges.size());
+
         newCell3DsEdges[0][neighEdgeIndex] = splitCell1DsUpdatedIndices[ne][0];
         newCell3DsEdges[0][originalEdges.size() + ne] = splitCell1DsUpdatedIndices[ne][1];
         newCell3DsVertices[0][originalVertices.size() + ne] = splitCell1DsNewCell0DIndex[ne];
+
+        // update faces with no new edges
+        for (unsigned int nef = 0; nef < originalFaces.size(); nef++)
+        {
+          if (nef == neighFaceIndex)
+            continue;
+
+          const unsigned int cell1DCell2DIndex = originalFaces.at(nef);
+
+          const unsigned int localFaceIndex = mesh.Cell2DFindEdge(cell1DCell2DIndex,
+                                                                  cell1DIndex);
+          if (localFaceIndex == mesh.Cell2DNumberVertices(cell1DCell2DIndex))
+            continue;
+
+          if (newCell2DsIndex.find(cell1DCell2DIndex) ==
+              newCell2DsIndex.end())
+          {
+            UpdateCell2D(cell1DCell2DIndex,
+                         cell1DIndex,
+                         localFaceIndex,
+                         splitCell1DsUpdatedIndices[ne],
+                         splitCell1DsNewCell0DIndex[ne],
+                         mesh);
+          }
+
+        }
       }
 
       newCell3DsEdges[0][originalEdges.size() + splitCell1DsOriginalIndex.size()] = newCell1DIndex;
@@ -484,9 +515,6 @@ namespace Gedim
       if (mesh.Cell3DHasUpdatedCell3Ds(neighCell3DIndex))
         continue;
 
-      const unsigned int neighEdgeIndex = mesh.Cell3DFindEdge(neighCell3DIndex,
-                                                              cell1DIndex);
-
       // update new cell3D
       std::vector<std::vector<unsigned int>> newCell3DsVertices(1);
       std::vector<std::vector<unsigned int>> newCell3DsEdges(1);
@@ -495,6 +523,10 @@ namespace Gedim
       const std::vector<unsigned int> originalVertices = mesh.Cell3DVertices(neighCell3DIndex);
       const std::vector<unsigned int> originalEdges = mesh.Cell3DEdges(neighCell3DIndex);
       const std::vector<unsigned int> originalFaces = mesh.Cell3DFaces(neighCell3DIndex);
+
+      const unsigned int neighEdgeIndex = mesh.Cell3DFindEdge(neighCell3DIndex,
+                                                              cell1DIndex);
+      Gedim::Output::Assert(neighEdgeIndex < originalEdges.size());
 
       newCell3DsVertices[0].resize(originalVertices.size() + 1);
       newCell3DsEdges[0].resize(originalEdges.size() + 1);

@@ -392,7 +392,7 @@ namespace Gedim
         else if (_mesh.Cell1DVertices[2 * cell1DIndex + 1] == cell0DIndex)
           return 1;
         else
-          throw std::runtime_error("Not found");
+          return 2;
       }
       inline Eigen::MatrixXd Cell1DCoordinates(const unsigned int& cell1DIndex) const
       {

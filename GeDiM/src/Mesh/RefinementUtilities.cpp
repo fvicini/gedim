@@ -44,6 +44,33 @@ namespace Gedim
     return result;
   }
   // ***************************************************************************
+  unsigned int RefinementUtilities::UpdateCell2D(const unsigned int cell2DIndex,
+                                                 const unsigned int cell1DIndex,
+                                                 const unsigned int edgePosition,
+                                                 const std::vector<unsigned int>& newCell1DsIndex,
+                                                 const unsigned int newCell0DIndex,
+                                                 IMeshDAO& mesh) const
+  {
+    const unsigned int numVertices = mesh.Cell2DNumberVertices(cell2DIndex);
+    const std::vector<unsigned int> originalVertices = mesh.Cell2DVertices(cell2DIndex);
+    const std::vector<unsigned int> onewFaceOriginalEdges = mesh.Cell2DVertices(cell2DIndex);
+
+    // create new face 2D
+    Eigen::MatrixXi newFace(2, numVertices + 1);
+
+    for (unsigned int e = 0; e < edgePosition; e++)
+      newFace.col(e)<< originalVertices.at(e), onewFaceOriginalEdges.at(e);
+
+    for (unsigned int e = edgePosition + 1; e < numVertices; e++)
+      newFace.col(e + 1)<< originalVertices.at(e), onewFaceOriginalEdges.at(e);
+
+    const std::vector<unsigned int> newCell2DIndices = meshUtilities.SplitCell2D(cell2DIndex,
+                                                                                 { newFace },
+                                                                                 mesh);
+    Gedim::Output::Assert(newCell2DIndices.size() == 1);
+    return newCell2DIndices.at(0);
+  }
+  // ***************************************************************************
   bool RefinementUtilities::AreVerticesAligned(const Eigen::MatrixXd& cell2DVertices,
                                                const unsigned int fromVertex,
                                                const unsigned int toVertex) const

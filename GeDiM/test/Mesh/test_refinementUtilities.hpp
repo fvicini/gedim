@@ -544,6 +544,11 @@ namespace GedimUnitTesting
                                                                                                                                                                  result.NewCell1DsIndex[e].NewCell0DIndex,
                                                                                                                                                                  meshDAO);
         }
+
+        meshUtilities.ExportMeshToVTU(meshDAO,
+                                      exportFolder,
+                                      "Mesh_R" +
+                                      to_string(r));
       }
 
       meshUtilities.ExportMeshToVTU(meshDAO,

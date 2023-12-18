@@ -322,8 +322,7 @@ namespace Gedim
       virtual unsigned int Cell1DEnd(const unsigned int& cell1DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
-      /// \return the index of the cell0DIndex on the cell1D from 0 to 2
-      /// \throw exception if not found
+      /// \return the index of the cell0DIndex on the cell1D from 0 to 1, 2 if not found
       virtual unsigned int Cell1DFindExtreme(const unsigned int& cell1DIndex,
                                              const unsigned int& cell0DIndex) const = 0;
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
@@ -610,8 +609,7 @@ namespace Gedim
       virtual Eigen::MatrixXd Cell2DVerticesCoordinates(const unsigned int& cell2DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
-      /// \return the index of the cell0DIndex on the cell2D from 0 to NumberCell2DVertices(cell2DIndex)
-      /// \throw exception if not found
+      /// \return the index of the cell0DIndex on the cell2D from 0 to NumberCell2DVertices(cell2DIndex), NumberCell2DVertices(cell2DIndex) if not found
       virtual unsigned int Cell2DFindVertex(const unsigned int& cell2DIndex,
                                             const unsigned int& cell0DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
@@ -624,8 +622,7 @@ namespace Gedim
                                       const unsigned int& edgeIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
-      /// \return the index of the cell1DIndex on the cell2D from 0 to NumberCell2DEdges(cell2DIndex)
-      /// \throw exception if not found
+      /// \return the index of the cell1DIndex on the cell2D from 0 to NumberCell2DEdges(cell2DIndex), NumberCell2DEdges(cell2DIndex) if not found
       virtual unsigned int Cell2DFindEdge(const unsigned int& cell2DIndex,
                                           const unsigned int& cell1DIndex) const = 0;
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
@@ -857,17 +854,17 @@ namespace Gedim
                                   const std::vector<unsigned int>& edgesCell0DIndices) = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
-      /// \return the index of the cell0DIndex on the cell3D from 0 to NumberCell3DVertices(cell3DIndex), exception otherwise
+      /// \return the index of the cell0DIndex on the cell3D from 0 to NumberCell3DVertices(cell3DIndex), NumberCell3DVertices(cell3DIndex) if not found
       virtual unsigned int Cell3DFindVertex(const unsigned int& cell3DIndex,
                                     const unsigned int& cell0DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
-      /// \return the index of the cell1DIndex on the cell3D from 0 to NumberCell3DEdges(cell3DIndex), exception otherwise
+      /// \return the index of the cell1DIndex on the cell3D from 0 to NumberCell3DEdges(cell3DIndex), NumberCell3DEdges(cell3DIndex) if not found
       virtual unsigned int Cell3DFindEdge(const unsigned int& cell3DIndex,
                                   const unsigned int& cell1DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
-      /// \return the index of the cell2DIndex on the cell3D from 0 to NumberCell3DFaces(cell3DIndex), exception otherwise
+      /// \return the index of the cell2DIndex on the cell3D from 0 to NumberCell3DFaces(cell3DIndex), NumberCell3DFaces(cell3DIndex) if not found
       virtual unsigned int Cell3DFindFace(const unsigned int& cell3DIndex,
                                   const unsigned int& cell2DIndex) const = 0;
 

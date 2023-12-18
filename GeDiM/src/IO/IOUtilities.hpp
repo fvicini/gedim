@@ -467,10 +467,17 @@ namespace Gedim
   std::ostream& operator<<(std::ostream& out,
                            const std::map<map_key, map_val*>& mapToPrint)
   {
+    unsigned int counter = 0;
+
+    out<< "{";
     for (typename std::map<map_key, map_val*>::const_iterator it = mapToPrint.begin();
          it != mapToPrint.end();
          ++it)
-      out << it->first << " => " << *(it->second) << '\n';
+    {
+      out<< (counter != 0 ? "," : "") << "{"<< it->first << ", " << (it->second == nullptr ? "NULL" : (*it->second))<< "}";
+      counter++;
+    }
+    out<< "}";
 
     return out;
   }
@@ -479,10 +486,17 @@ namespace Gedim
   std::ostream& operator<<(std::ostream& out,
                            const std::unordered_map<map_key, map_val>& mapToPrint)
   {
+    unsigned int counter = 0;
+
+    out<< "{";
     for (typename std::unordered_map<map_key, map_val>::const_iterator it = mapToPrint.begin();
          it != mapToPrint.end();
          ++it)
-      out << it->first << " => " << it->second << '\n';
+    {
+      out<< (counter != 0 ? "," : "") << "{"<< it->first << ", " << it->second<< "}";
+      counter++;
+    }
+    out<< "}";
 
     return out;
   }
