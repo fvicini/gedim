@@ -386,12 +386,6 @@ namespace GedimUnitTesting
                                                              planeTranslation,
                                                              meshDAO);
 
-        meshUtilities.ExportMeshToVTU(meshDAO,
-                                      exportFolder,
-                                      "Mesh_R" +
-                                      to_string(step++),
-                                      true);
-
         cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
 
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
@@ -461,12 +455,6 @@ namespace GedimUnitTesting
             for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
               std::cout<< "updateFaceResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
           }
-
-          meshUtilities.ExportMeshToVTU(meshDAO,
-                                        exportFolder,
-                                        "Mesh_R" +
-                                        to_string(step++),
-                                        true);
         }
 
         for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
@@ -488,12 +476,6 @@ namespace GedimUnitTesting
             for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
               std::cout<< "updateEdgeResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
           }
-
-          meshUtilities.ExportMeshToVTU(meshDAO,
-                                        exportFolder,
-                                        "Mesh_R" +
-                                        to_string(step++),
-                                        true);
         }
 
         cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
