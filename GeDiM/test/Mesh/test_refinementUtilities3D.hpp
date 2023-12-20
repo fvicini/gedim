@@ -386,11 +386,6 @@ namespace GedimUnitTesting
                                                              planeTranslation,
                                                              meshDAO);
 
-        {
-          using namespace Gedim;
-          std::cout<< "NewCell3DsIndex "<< cell3DToRefineIndex<< " To "<< result.NewCell3DsIndex<< std::endl;
-        }
-
         meshUtilities.ExportMeshToVTU(meshDAO,
                                       exportFolder,
                                       "Mesh_R" +
@@ -422,23 +417,6 @@ namespace GedimUnitTesting
         }
 
         std::map<unsigned int, unsigned int> updatedNeighCell2Ds;
-
-        {
-          constexpr unsigned int testCell2D = 273;
-          if (meshDAO.Cell2DTotalNumber() > testCell2D &&
-              meshDAO.Cell2DNumberNeighbourCell3D(testCell2D) > 0)
-          {
-            std::cout<< "HERE!!"<< std::endl;
-            for (unsigned int n = 0; n < meshDAO.Cell2DNumberNeighbourCell3D(testCell2D); n++)
-            {
-              if (!meshDAO.Cell2DHasNeighbourCell3D(testCell2D, n))
-                continue;
-
-              std::cout<< "Neigh "<< n<< " cell3D "<< meshDAO.Cell2DNeighbourCell3D(testCell2D, n)<< std::endl;
-            }
-          }
-        }
-
         for (unsigned int f = 0; f < result.NewCell2DsIndex.size(); f++)
         {
           if (result.NewCell2DsIndex[f].Type != Gedim::RefinementUtilities::RefinePolyhedron_Result::RefinedCell2D::Types::Updated)

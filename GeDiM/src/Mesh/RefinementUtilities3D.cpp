@@ -561,19 +561,6 @@ namespace Gedim
                                                                                    newCell3DsFaces,
                                                                                    mesh);
 
-      if (neighCell3DIndex == 100)
-      {
-        std::cout<< "neighCell3DIndex "<< neighCell3DIndex<< std::endl;
-        std::cout<< "originalVertices "<< originalVertices<< std::endl;
-        std::cout<< "originalEdges "<< originalEdges<< std::endl;
-        std::cout<< "originalFaces "<< originalFaces<< std::endl;
-
-        std::cout<< "New cell3D "<< newCell3DIndices<< std::endl;
-        std::cout<< "newCell3DsVertices "<< newCell3DsVertices<< std::endl;
-        std::cout<< "newCell3DsEdges "<< newCell3DsEdges<< std::endl;
-        std::cout<< "newCell3DsFaces "<< newCell3DsFaces<< std::endl;
-      }
-
       for (const unsigned int& newCell3D : newCell3DIndices)
       {
         RefinePolyhedron_UpdateNeighbour_Result::UpdatedCell3D updatedCell3D;
