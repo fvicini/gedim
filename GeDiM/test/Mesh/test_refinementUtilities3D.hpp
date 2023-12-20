@@ -450,11 +450,6 @@ namespace GedimUnitTesting
                                                                                                                                                                  updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
 
-          {
-            using namespace Gedim;
-            for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
-              std::cout<< "updateFaceResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
-          }
         }
 
         for (unsigned int e = 0; e < result.NewCell1DsIndex.size(); e++)
@@ -471,11 +466,6 @@ namespace GedimUnitTesting
                                                                                                                                                                  meshGeometricData.Cell3DsFacesEdgeDirections,
                                                                                                                                                                  updatedNeighCell2Ds,
                                                                                                                                                                  meshDAO);
-          {
-            using namespace Gedim;
-            for (const auto& updateFaceResult : updateResult.UpdatedCell3Ds)
-              std::cout<< "updateEdgeResult "<< updateFaceResult.OriginalCell3DIndex<< " to "<< updateFaceResult.NewCell3DIndex<< std::endl;
-          }
         }
 
         cell2DsAligned.resize(meshDAO.Cell2DTotalNumber());
