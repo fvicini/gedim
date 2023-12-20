@@ -223,7 +223,7 @@ namespace GedimUnitTesting
 
   TEST(TestRefinementUtilities, TestRefineTetrahedrons_ByVolume)
   {
-    GTEST_SKIP();
+    //GTEST_SKIP();
 
     std::string exportFolder = "./Export/TestRefinementUtilities/TestRefineTetrahedrons_ByArea";
     Gedim::Output::CreateFolder(exportFolder);

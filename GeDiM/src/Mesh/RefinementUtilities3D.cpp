@@ -322,6 +322,14 @@ namespace Gedim
       {
         cell2DExtremes(0, nfv) = splitCell0DsIndex.at(newFace(0, nfv));
         cell2DExtremes(1, nfv) = splitCell1DsIndex.at(newFace(1, nfv));
+
+        if (split_cell.Edges.NewEdgesOriginalEdges.at(newFace(1, nfv)) >= 0)
+        {
+          const unsigned int cell1DIndex = cell2DExtremes(1, nfv);
+          const unsigned int numCell1DNeigh3Ds = mesh.Cell1DNumberNeighbourCell3D(cell1DIndex);
+          mesh.Cell1DInitializeNeighbourCell3Ds(cell1DIndex,
+                                                numCell1DNeigh3Ds + 1);
+        }
       }
 
       RefinePolyhedron_Result::RefinedCell2D newCell2D;
@@ -383,6 +391,38 @@ namespace Gedim
       mesh.Cell2DInsertNeighbourCell3D(newCell2DIndex,
                                        1,
                                        newCell3DIndices[1]);
+
+      const Eigen::MatrixXi newFace = split_cell.Faces.Faces[nf];
+
+      for (unsigned int nfe = 0; nfe < newFace.cols(); nfe++)
+      {
+        if (split_cell.Edges.NewEdgesOriginalEdges.at(newFace(1, nfe)) >= 0)
+        {
+          const unsigned int cell1DIndex = splitCell1DsIndex.at(newFace(1, nfe));
+
+          const unsigned int numCell1DNeigh3Ds = mesh.Cell1DNumberNeighbourCell3D(cell1DIndex);
+          bool hasPositiveCell3D = false;
+
+          for (unsigned int nfen = 0; nfen < numCell1DNeigh3Ds - 1; nfen++)
+          {
+            if (!mesh.Cell1DHasNeighbourCell3D(cell1DIndex, nfen))
+              continue;
+
+            if (mesh.Cell1DNeighbourCell3D(cell1DIndex, nfen) == newCell3DIndices.at(0))
+            {
+              hasPositiveCell3D = true;
+              break;
+            }
+          }
+
+          mesh.Cell1DInsertNeighbourCell3D(cell1DIndex,
+                                           numCell1DNeigh3Ds - 1,
+                                           hasPositiveCell3D ?
+                                             newCell3DIndices.at(1) :
+                                             newCell3DIndices.at(0));
+
+        }
+      }
 
     }
 
