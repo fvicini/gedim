@@ -209,6 +209,22 @@ namespace Gedim
       mesh.Cell1DSetMarker(newCell1DIndex,
                            mesh.Cell2DMarker(originalCell2DIndex));
       mesh.Cell1DSetState(newCell1DIndex, true);
+      mesh.Cell1DInitializeNeighbourCell3Ds(newCell1DIndex,
+                                            3);
+      for (unsigned int nf = 0; nf < mesh.Cell2DNumberNeighbourCell3D(originalCell2DIndex); nf++)
+      {
+        if (!mesh.Cell2DHasNeighbourCell3D(originalCell2DIndex, nf))
+          continue;
+
+        const unsigned int neighCell3DIndex = mesh.Cell2DNeighbourCell3D(originalCell2DIndex, nf);
+
+        if (neighCell3DIndex == cell3DIndex)
+          continue;
+
+        mesh.Cell1DInsertNeighbourCell3D(newCell1DIndex,
+                                         0,
+                                         neighCell3DIndex);
+      }
 
       edgeIndexToNewCell1Ds.insert(std::make_pair(ne,
                                                   newCell1Ds.size()));
@@ -368,6 +384,21 @@ namespace Gedim
                                        1,
                                        newCell3DIndices[1]);
 
+    }
+
+    for (const RefinePolyhedron_Result::RefinedCell1D& newCell1D : newCell1Ds)
+    {
+      if (newCell1D.Type != RefinePolyhedron_Result::RefinedCell1D::Types::New)
+        continue;
+
+      const unsigned int cell1DIndex = newCell1D.NewCell1DsIndex[0];
+
+      mesh.Cell1DInsertNeighbourCell3D(cell1DIndex,
+                                       1,
+                                       newCell3DIndices[0]);
+      mesh.Cell1DInsertNeighbourCell3D(cell1DIndex,
+                                       2,
+                                       newCell3DIndices[1]);
     }
 
     result.NewCell1DsIndex = std::vector<RefinePolyhedron_Result::RefinedCell1D>(newCell1Ds.begin(),
