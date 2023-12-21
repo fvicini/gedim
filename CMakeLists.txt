@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
 project(GeDiMProject LANGUAGES CXX C VERSION 1.0)
 
+set(ENABLE_UNIT_TESTS ON CACHE BOOL "Enable Unit Tests")
+
 # Include library
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/GeDiM)
 
 # Include unit tests
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/GeDiM/test)
+if(${ENABLE_UNIT_TESTS})
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/GeDiM/test)
+endif()
