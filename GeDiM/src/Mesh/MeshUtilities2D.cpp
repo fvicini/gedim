@@ -167,6 +167,27 @@ namespace Gedim
                newCell2Ds,
                mesh);
 
+    for (unsigned int v = 0; v < cell0DsFilter.size(); v++)
+    {
+      const unsigned int oldCell0DIndex = result.NewCell0DToOldCell0D[v];
+      mesh.Cell0DSetMarker(v, originalMesh.Cell0DMarker(oldCell0DIndex));
+      mesh.Cell0DSetState(v, originalMesh.Cell0DIsActive(oldCell0DIndex));
+    }
+
+    for (unsigned int e = 0; e < cell1DsFilter.size(); e++)
+    {
+      const unsigned int oldCell1DIndex = result.NewCell1DToOldCell1D[e];
+      mesh.Cell1DSetMarker(e, originalMesh.Cell1DMarker(oldCell1DIndex));
+      mesh.Cell1DSetState(e, originalMesh.Cell1DIsActive(oldCell1DIndex));
+    }
+
+    for (unsigned int f = 0; f < cell2DsFilter.size(); f++)
+    {
+      const unsigned int oldCell2DIndex = result.NewCell2DToOldCell2D[f];
+      mesh.Cell2DSetMarker(f, originalMesh.Cell2DMarker(oldCell2DIndex));
+      mesh.Cell2DSetState(f, originalMesh.Cell2DIsActive(oldCell2DIndex));
+    }
+
     return result;
   }
   // ***************************************************************************
