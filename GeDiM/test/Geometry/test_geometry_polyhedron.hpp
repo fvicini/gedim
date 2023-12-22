@@ -2145,6 +2145,93 @@ namespace GedimUnitTesting
                 unalignedVertices);
     }
   }
+
+  TEST(TestGeometryUtilities, TestUnalignedPolyhedronPoints_Two)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance1D = 1.0e-6;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    std::string exportFolder = "./Export/TestUnalignedPolyhedronPoints_Two";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    {
+      // Aligned thetrahedron
+      Gedim::GeometryUtilities::Polyhedron polyhedron;
+
+      // create vertices
+      polyhedron.Vertices.resize(3, 6);
+      polyhedron.Vertices.row(0)<< 0.0000000000000000e+00,  0.0000000000000000e+00,  5.0000000000000000e-01,  0.0000000000000000e+00,  2.5000000000000000e-01,  1.6666666666666666e-01;
+      polyhedron.Vertices.row(1)<< 0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00,  0.0000000000000000e+00, -5.0000000000000000e-01, -3.3333333333333331e-01;
+      polyhedron.Vertices.row(2)<< 1.0000000000000000e+00,  0.0000000000000000e+00,  5.0000000000000000e-01,  5.0000000000000000e-01,  7.5000000000000000e-01,  5.0000000000000000e-01;
+
+      // create edges
+      polyhedron.Edges.resize(2, 9);
+      polyhedron.Edges.row(0)<< 2, 1, 4, 2, 3, 1, 0, 5, 5;
+      polyhedron.Edges.row(1)<< 4, 2, 5, 0, 0, 3, 4, 1, 0;
+
+      // create faces
+      polyhedron.Faces.resize(5);
+
+      polyhedron.Faces[0].resize(2, 4);
+      polyhedron.Faces[0].row(0)<< 1, 2, 0, 3;
+      polyhedron.Faces[0].row(1)<< 1, 3, 4, 5;
+
+      polyhedron.Faces[1].resize(2, 3);
+      polyhedron.Faces[1].row(0)<< 0, 4, 2;
+      polyhedron.Faces[1].row(1)<< 6, 0, 3;
+
+      polyhedron.Faces[2].resize(2, 4);
+      polyhedron.Faces[2].row(0)<< 3, 1, 5, 0;
+      polyhedron.Faces[2].row(1)<< 5, 7, 8, 4;
+
+      polyhedron.Faces[3].resize(2, 4);
+      polyhedron.Faces[3].row(0)<< 4, 2, 1, 5;
+      polyhedron.Faces[3].row(1)<< 0, 1, 7, 2;
+
+      polyhedron.Faces[4].resize(2, 3);
+      polyhedron.Faces[4].row(0)<< 5, 4, 0;
+      polyhedron.Faces[4].row(1)<< 2, 6, 8;
+
+
+      geometryUtilities.ExportPolyhedronToVTU(polyhedron.Vertices,
+                                              polyhedron.Edges,
+                                              polyhedron.Faces,
+                                              exportFolder);
+
+      const vector<Eigen::MatrixXd> faceVertices = geometryUtilities.PolyhedronFaceVertices(polyhedron.Vertices,
+                                                                                            polyhedron.Faces);
+      const vector<Eigen::Vector3d> faceNormals = geometryUtilities.PolyhedronFaceNormals(faceVertices);
+      const vector<Eigen::Vector3d> faceTranslations = geometryUtilities.PolyhedronFaceTranslations(faceVertices);
+      const vector<Eigen::Matrix3d> faceRotationMatrices = geometryUtilities.PolyhedronFaceRotationMatrices(faceVertices,
+                                                                                                            faceNormals,
+                                                                                                            faceTranslations);
+
+      const vector<Eigen::MatrixXd> face2DVertices = geometryUtilities.PolyhedronFaceRotatedVertices(faceVertices,
+                                                                                                     faceTranslations,
+                                                                                                     faceRotationMatrices);
+      const std::vector<std::vector<unsigned int>> facesUnalignedPoints = geometryUtilities.PolyhedronFacesUnalignedVertices(face2DVertices);
+
+
+      const std::vector<std::vector<unsigned int>> polyhedronUnaligedFaces =
+      {
+        { 1 },
+        { 2,4 },
+        { 0 },
+        { 3 }
+      };
+
+      const std::vector<unsigned int> unalignedVertices = geometryUtilities.UnalignedPolyhedronPoints(polyhedron.Vertices,
+                                                                                                      polyhedron.Faces,
+                                                                                                      faceTranslations,
+                                                                                                      faceRotationMatrices,
+                                                                                                      polyhedronUnaligedFaces,
+                                                                                                      facesUnalignedPoints);
+
+      ASSERT_EQ(std::vector<unsigned int>({0, 1, 2, 4}),
+                unalignedVertices);
+    }
+  }
 }
 
 #endif // __TEST_GEOMETRY_POLYHEDRON_H
