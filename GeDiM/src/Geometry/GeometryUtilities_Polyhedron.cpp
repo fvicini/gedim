@@ -1245,7 +1245,8 @@ namespace Gedim
           Gedim::Output::Assert(convexHullVertex >= numFacesUnalignedVertices[f]);
 
           const unsigned int polyhedronFace = faces[f];
-          const unsigned int faceUnalignedVertexIndex = convexHullVertex - numFacesUnalignedVertices[f];
+          const unsigned int unifyVertexIndex = convexHullVertex - numFacesUnalignedVertices[f];
+          const unsigned int faceUnalignedVertexIndex = polyhedronFacesUnalignedVertices[polyhedronFace][unifyVertexIndex];
           const unsigned int polyhedronVertex = polyhedronFaces[polyhedronFace](0, faceUnalignedVertexIndex);
 
           if (unalignedVertices.find(polyhedronVertex) ==
