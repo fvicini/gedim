@@ -90,6 +90,18 @@ namespace Gedim
           std::vector<Eigen::MatrixXi> Cell2Ds; ///< Cell2Ds vertices and edges, size Cell2DTotalNumber()x2xCell2DNumberVertices()
       };
 
+      struct ComputeMesh3DAlignedCell1DsResult final
+      {
+
+          Eigen::MatrixXi AlignedCell1Ds;
+          std::vector<Eigen::MatrixXi> Cell0DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell1DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell3DsAlignedCell1DsIndex;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell0Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell1Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_Cell3Ds;
+      };
+
       struct MeshGeometricData1D final
       {
           std::vector<Eigen::MatrixXd> Cell1DsVertices; ///< cell1D vertices coordinates
@@ -190,6 +202,13 @@ namespace Gedim
           std::vector<ConvexCell2D> ConcaveCell3DFacesConvexCell2D = {};
       };
 
+      struct Mesh3DPolyhedron final
+      {
+          std::vector<unsigned int> VerticesIndex;
+          std::vector<unsigned int> EdgesIndex;
+          std::vector<unsigned int> FacesIndex;
+      };
+
     public:
       MeshUtilities() { };
       ~MeshUtilities() { };
@@ -238,6 +257,12 @@ namespace Gedim
                       const std::vector<Eigen::MatrixXi>& cell2Ds,
                       IMeshDAO& mesh) const;
 
+      void FillMesh3D(const Eigen::MatrixXd& cell0Ds,
+                      const Eigen::MatrixXi& cell1Ds,
+                      const std::vector<Eigen::MatrixXi>& cell2Ds,
+                      const std::vector<Mesh3DPolyhedron>& cell3Ds,
+                      IMeshDAO& mesh) const;
+
       /// \brief Compute edges in a Mesh 2D with vertices and polygons
       /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
       /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
@@ -258,6 +283,15 @@ namespace Gedim
       void CheckMesh3D(const CheckMesh3DConfiguration& configuration,
                        const GeometryUtilities& geometryUtilities,
                        const IMeshDAO& mesh) const;
+
+      /// \brief Compute edges in a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
+      /// \return the Cell1Ds data
+      ComputeMesh3DAlignedCell1DsResult ComputeMesh3DAlignedCell1Ds(const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesVertices,
+                                                                    const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesEdges,
+                                                                    const IMeshDAO& mesh) const;
+
 
       /// \brief Check MeshGeometricData3D correctness
       /// \param geometryUtilities the geometry utilities

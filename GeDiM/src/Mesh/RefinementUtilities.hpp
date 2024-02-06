@@ -244,6 +244,7 @@ namespace Gedim
               std::vector<Eigen::MatrixXd> UnalignedVertices = {};
               std::vector<Eigen::VectorXd> UnalignedEdgesLength = {};
               std::vector<Eigen::VectorXd> CentroidEdgesDistance = {};
+              std::vector<Eigen::VectorXd> CentroidVerticesDistance = {};
               std::vector<double> InRadius = {};
               std::vector<double> Quality = {};
           };
@@ -379,7 +380,6 @@ namespace Gedim
       RefinePolyhedron_Result RefinePolyhedronCell_ByPlane(const unsigned int& cell3DIndex,
                                                            const Eigen::MatrixXd& cell3DVertices,
                                                            const Eigen::MatrixXi& cell3DEdges,
-                                                           const std::vector<bool>& cell3DEdgesDirection,
                                                            const Eigen::VectorXd& cell3DEdgesLength,
                                                            const std::vector<Eigen::MatrixXi>& cell3DFaces,
                                                            const std::vector<Eigen::MatrixXd>& cell3DFaces3DVertices,
@@ -437,6 +437,7 @@ namespace Gedim
                                                                   const std::vector<double>& cell2DsQuality,
                                                                   const std::vector<unsigned int>& cell1DsAligned,
                                                                   const double& cell1DsQualityWeight,
+                                                                  const double& cell1DsAlignedWeight,
                                                                   const double& cell2DArea,
                                                                   const std::vector<Eigen::VectorXd>& cell2DsEdgesLength,
                                                                   const std::vector<bool>& cell2DEdgesDirection,
@@ -474,6 +475,7 @@ namespace Gedim
                                                                                  const GeometryUtilities::LinePolygonPositionResult::EdgeIntersection& edgeIntersection,
                                                                                  const std::vector<Eigen::VectorXd>& cell2DsEdgesLength,
                                                                                  const double& cell1DsQualityWeight,
+                                                                                 const double& cell1DsAlignedWeight,
                                                                                  const std::vector<double>& cell2DsQuality,
                                                                                  const std::vector<unsigned int>& cell1DsAligned,
                                                                                  const IMeshDAO& mesh) const;

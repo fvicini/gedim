@@ -12,6 +12,15 @@ namespace Gedim
 {
   class GraphUtilities final
   {
+    public:
+      struct GraphAdjacencyData final
+      {
+          std::vector<std::vector<unsigned int>> GraphAdjacencyVertices;
+          std::vector<std::unordered_map<unsigned int, unsigned int>> GraphAdjacencyVerticesMap;
+          std::vector<std::vector<unsigned int>> GraphAdjacencyEdges;
+          std::vector<std::unordered_map<unsigned int, unsigned int>> GraphAdjacencyEdgesMap;
+      };
+
     private:
 
       /// Fills Stack with vertices (in increasing order of finishing
@@ -32,8 +41,9 @@ namespace Gedim
       std::vector<std::vector<unsigned int>> ExtractSubGraph(const std::vector<std::vector<unsigned int>>& graphAdjacency,
                                                              const std::unordered_map<unsigned int, unsigned int>& subGraphFilter) const;
 
-      std::vector<std::vector<unsigned int>> GraphConnectivityToGraphAdjacency(const unsigned int& graphNumVertices,
-                                                                               const Eigen::MatrixXi& graphConnectivity) const;
+      GraphAdjacencyData GraphConnectivityToGraphAdjacency(const unsigned int& graphNumVertices,
+                                                           const Eigen::MatrixXi& graphConnectivity,
+                                                           const bool& directEdges = true) const;
 
       Eigen::MatrixXi GraphAdjacencyToGraphConnectivity(const unsigned int& graphNumEdges,
                                                         const std::vector<std::vector<unsigned int>>& graphAdjacency) const;
@@ -49,6 +59,10 @@ namespace Gedim
                             const std::vector<std::vector<unsigned int>>& graphAdjacency,
                             std::vector<bool>& visited,
                             std::list<unsigned int>& visitedVertices) const;
+
+      /// A function to BFS starting from v
+      std::vector<unsigned int> BreadthFirstSearch(const unsigned int& vertex,
+                                                   const std::vector<std::vector<unsigned int>>& graphAdjacency) const;
 
       /// \return the reverse (or transpose) of a graph
       std::vector<std::vector<unsigned int>> ComputeAdjacencyTranspose(const std::vector<std::vector<unsigned int>>& graphAdjacency) const;

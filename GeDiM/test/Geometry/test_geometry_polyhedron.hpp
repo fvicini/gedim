@@ -7,6 +7,7 @@
 #include <numeric>
 
 #include "GeometryUtilities.hpp"
+#include "GraphUtilities.hpp"
 #include "VTKUtilities.hpp"
 
 using namespace testing;
@@ -2143,6 +2144,133 @@ namespace GedimUnitTesting
 
       ASSERT_EQ(std::vector<unsigned int>({0, 2, 5, 9}),
                 unalignedVertices);
+    }
+  }
+
+  TEST(TestGeometryUtilities, TestAlignedPolyhedronEdges)
+  {
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+    Gedim::GraphUtilities graphUtilities;
+
+    std::string exportFolder = "./Export/TestAlignedPolyhedronEdges";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    {
+      // Aligned thetrahedron
+      Gedim::GeometryUtilities::Polyhedron polyhedron;
+
+      // create vertices
+      polyhedron.Vertices.resize(3, 11);
+      polyhedron.Vertices.col(0)  << 0.0, 0.0, 0.0;
+      polyhedron.Vertices.col(1)  << 0.1, 0.0, 0.0;
+      polyhedron.Vertices.col(2)  << 1.0, 0.0, 0.0;
+      polyhedron.Vertices.col(3)  << 0.75, 0.0, 0.25;
+      polyhedron.Vertices.col(4)  << 0.25, 0.0, 0.75;
+      polyhedron.Vertices.col(5)  << 0.0, 0.0, 1.0;
+      polyhedron.Vertices.col(6)  << 0.0, 0.0, 0.5;
+      polyhedron.Vertices.col(7)  << 0.0, 0.5, 0.0;
+      polyhedron.Vertices.col(8)  << 0.5, 0.5, 0.0;
+      polyhedron.Vertices.col(9)  << 0.0, 1.0, 0.0;
+      polyhedron.Vertices.col(10) << 0.0, 0.5, 0.5;
+
+      // create edges
+      polyhedron.Edges.resize(2, 14);
+      polyhedron.Edges.col(0)  << 0, 1;
+      polyhedron.Edges.col(1)  << 1, 2;
+      polyhedron.Edges.col(2)  << 2, 3;
+      polyhedron.Edges.col(3)  << 3, 4;
+      polyhedron.Edges.col(4)  << 4, 5;
+      polyhedron.Edges.col(5)  << 5, 6;
+      polyhedron.Edges.col(6)  << 6, 0;
+      polyhedron.Edges.col(7)  << 0, 7;
+      polyhedron.Edges.col(8)  << 7, 9;
+      polyhedron.Edges.col(9)  << 9, 8;
+      polyhedron.Edges.col(10) << 2, 8;
+      polyhedron.Edges.col(11) << 5, 10;
+      polyhedron.Edges.col(12) << 9, 10;
+      polyhedron.Edges.col(13) << 7, 10;
+
+      // create faces
+      polyhedron.Faces.resize(5);
+
+      polyhedron.Faces[0].resize(2, 7);
+      polyhedron.Faces[0].row(0)<< 0, 1, 2, 3, 4, 5, 6;
+      polyhedron.Faces[0].row(1)<< 0, 1, 2, 3, 4, 5, 6;
+
+      polyhedron.Faces[1].resize(2, 7);
+      polyhedron.Faces[1].row(0)<< 2, 8, 9, 10, 5, 4, 3;
+      polyhedron.Faces[1].row(1)<< 10, 9, 12, 11, 4, 3, 2;
+
+      polyhedron.Faces[2].resize(2, 6);
+      polyhedron.Faces[2].row(0)<< 0, 1, 2, 8, 9, 7;
+      polyhedron.Faces[2].row(1)<< 0, 1, 10, 9, 8, 7;
+
+      polyhedron.Faces[3].resize(2, 5);
+      polyhedron.Faces[3].row(0)<< 0, 7, 10, 5, 6;
+      polyhedron.Faces[3].row(1)<< 7, 13, 11, 5, 6;
+
+      polyhedron.Faces[4].resize(2, 3);
+      polyhedron.Faces[4].row(0)<< 7, 9, 10;
+      polyhedron.Faces[4].row(1)<< 8, 12, 13;
+
+
+      geometryUtilities.ExportPolyhedronToVTU(polyhedron.Vertices,
+                                              polyhedron.Edges,
+                                              polyhedron.Faces,
+                                              exportFolder);
+
+      const Eigen::MatrixXd edgesTangent = geometryUtilities.PolyhedronEdgeTangents(polyhedron.Vertices,
+                                                                                    polyhedron.Edges);
+
+      const Eigen::VectorXd edgesLength = geometryUtilities.PolyhedronEdgesLength(polyhedron.Vertices,
+                                                                                   polyhedron.Edges);
+
+      const Gedim::GraphUtilities::GraphAdjacencyData edgesAdjacency =
+          graphUtilities.GraphConnectivityToGraphAdjacency(polyhedron.Vertices.cols(),
+                                                           polyhedron.Edges,
+                                                           false);
+
+      const Gedim::GeometryUtilities::AlignedPolyhedronEdgesResult alignedEdges = geometryUtilities.AlignedPolyhedronEdges(polyhedron.Vertices,
+                                                                                                                           edgesAdjacency.GraphAdjacencyVertices,
+                                                                                                                           edgesAdjacency.GraphAdjacencyEdges,
+                                                                                                                           edgesAdjacency.GraphAdjacencyVerticesMap,
+                                                                                                                           edgesTangent,
+                                                                                                                           edgesLength.array().square());
+
+      ASSERT_EQ(7,
+                alignedEdges.AlignedEdgesVertices.size());
+      ASSERT_EQ(7,
+                alignedEdges.AlignedEdgesEdges.size());
+      ASSERT_EQ(std::vector<unsigned int>({0,1,2}),
+                alignedEdges.AlignedEdgesVertices[0]);
+      ASSERT_EQ(std::vector<unsigned int>({0,1}),
+                alignedEdges.AlignedEdgesEdges[0]);
+      ASSERT_EQ(std::vector<unsigned int>({5,6,0}),
+                alignedEdges.AlignedEdgesVertices[1]);
+      ASSERT_EQ(std::vector<unsigned int>({5,6}),
+                alignedEdges.AlignedEdgesEdges[1]);
+      ASSERT_EQ(std::vector<unsigned int>({0,7,9}),
+                alignedEdges.AlignedEdgesVertices[2]);
+      ASSERT_EQ(std::vector<unsigned int>({7,8}),
+                alignedEdges.AlignedEdgesEdges[2]);
+      ASSERT_EQ(std::vector<unsigned int>({7,10}),
+                alignedEdges.AlignedEdgesVertices[3]);
+      ASSERT_EQ(std::vector<unsigned int>({13}),
+                alignedEdges.AlignedEdgesEdges[3]);
+      ASSERT_EQ(std::vector<unsigned int>({2,3,4,5}),
+                alignedEdges.AlignedEdgesVertices[4]);
+      ASSERT_EQ(std::vector<unsigned int>({2,3,4}),
+                alignedEdges.AlignedEdgesEdges[4]);
+      ASSERT_EQ(std::vector<unsigned int>({2,8,9}),
+                alignedEdges.AlignedEdgesVertices[5]);
+      ASSERT_EQ(std::vector<unsigned int>({10,9}),
+                alignedEdges.AlignedEdgesEdges[5]);
+      ASSERT_EQ(std::vector<unsigned int>({5,10,9}),
+                alignedEdges.AlignedEdgesVertices[6]);
+      ASSERT_EQ(std::vector<unsigned int>({11,12}),
+                alignedEdges.AlignedEdgesEdges[6]);
+
     }
   }
 

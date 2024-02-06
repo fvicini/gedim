@@ -665,6 +665,12 @@ namespace Gedim
           Types Type = Types::Unknown; /// type of split
       };
 
+      struct AlignedPolyhedronEdgesResult
+      {
+          std::vector<std::vector<unsigned int>> AlignedEdgesVertices;
+          std::vector<std::vector<unsigned int>> AlignedEdgesEdges;
+      };
+
     public:
       GeometryUtilities(const GeometryUtilitiesConfig& configuration);
       ~GeometryUtilities();
@@ -1589,6 +1595,13 @@ namespace Gedim
                                                    const Eigen::Vector3d& polygonCentroid,
                                                    const Eigen::MatrixXd& polygonEdgeNormals) const;
 
+
+      /// \param polygonVertices the polygon vertices, size 3 x numVertices
+      /// \param polygonCentroid the polygon centroid
+      /// \return the distance between the centroid and all the polygon vertices, size 1 x numEdges
+      Eigen::VectorXd PolygonCentroidVerticesDistance(const Eigen::MatrixXd& polygonVertices,
+                                                      const Eigen::Vector3d& polygonCentroid) const;
+
       /// \param polygonCentroidEdgesDistance the polygon centroid edges distance, size 1 x numEdges
       /// \return the polygon in radius, as the minimum distance between the polygon centroid and the edges
       inline double PolygonInRadius(const Eigen::VectorXd& polygonCentroidEdgesDistance) const
@@ -1784,6 +1797,13 @@ namespace Gedim
                                                           const std::vector<Eigen::Matrix3d>& polyhedronFacesRotationMatrix,
                                                           const std::vector<std::vector<unsigned int>>& polyhedronUnaligedFaces,
                                                           const std::vector<std::vector<unsigned int>>& polyhedronFacesUnalignedVertices) const;
+
+      AlignedPolyhedronEdgesResult AlignedPolyhedronEdges(const Eigen::MatrixXd& polyhedronVertices,
+                                                          const std::vector<std::vector<unsigned int>>& verticesAdjacency,
+                                                          const std::vector<std::vector<unsigned int>>& edgesAdjacency,
+                                                          const std::vector<std::unordered_map<unsigned int, unsigned int>>& adjacencyVerticesMap,
+                                                          const Eigen::MatrixXd& polyhedronEdgeTangents,
+                                                          const Eigen::VectorXd& polyhedronEdgeSquaredLenghts) const;
 
 
       /// \param points the points, size 3 x numPoints
