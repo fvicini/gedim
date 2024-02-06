@@ -253,6 +253,23 @@ namespace Gedim
     return centroidEdgesDistance;
   }
   // ***************************************************************************
+  VectorXd GeometryUtilities::PolygonCentroidVerticesDistance(const Eigen::MatrixXd& polygonVertices, const Eigen::Vector3d& polygonCentroid) const
+  {
+    Output::Assert(polygonVertices.rows() == 3 && polygonVertices.cols() > 2);
+
+    const unsigned int& numVertices = polygonVertices.cols();
+
+    Eigen::VectorXd centroidVerticesDistance(numVertices);
+
+    for (unsigned int v = 0; v < numVertices; v++)
+    {
+      centroidVerticesDistance[v] = PointDistance(polygonCentroid,
+                                                  polygonVertices.col(v));
+    }
+
+    return centroidVerticesDistance;
+  }
+  // ***************************************************************************
   Matrix3d GeometryUtilities::PolygonRotationMatrix(const Eigen::MatrixXd& polygonVertices,
                                                     const Eigen::Vector3d& polygonNormal,
                                                     const Eigen::Vector3d& polygonTranslation) const
@@ -1577,6 +1594,29 @@ namespace Gedim
                                                                                    edgeIntersections.end());
 
     return result;
+  }
+  // ***************************************************************************
+  bool GeometryUtilities::IsPolygonCoplanar(const Eigen::Vector3d& planeNormal,
+                                            const Eigen::Vector3d& planeOrigin,
+                                            const Eigen::MatrixXd& polygonVertices,
+                                            const std::vector<unsigned int>& polygonUnalignedVertices) const
+  {
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(0)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(1)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    if (!IsPointOnPlane(polygonVertices.col(polygonUnalignedVertices.at(2)),
+                        planeNormal,
+                        planeOrigin))
+      return false;
+
+    return true;
   }
   // ***************************************************************************
 }

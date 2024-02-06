@@ -64,10 +64,42 @@ namespace Gedim
           std::unordered_map<unsigned int, unsigned int> NewCell3DToOldCell3D; ///< each pair is {new Cell3D index, old Cell3D index}
       };
 
+      struct FilterMeshData final
+      {
+          std::vector<unsigned int> Cell0Ds = {};
+          std::vector<unsigned int> Cell1Ds = {};
+          std::vector<unsigned int> Cell2Ds = {};
+          std::vector<unsigned int> Cell3Ds = {};
+      };
+
+      struct ExtractMeshData final
+      {
+          std::vector<unsigned int> OldCell0DToNewCell0D = {}; ///< each element is [old Cell0D index] = new Cell0D index
+          std::vector<unsigned int> OldCell1DToNewCell1D = {}; ///< each element is [old Cell1D index] = new Cell1D index
+          std::vector<unsigned int> OldCell2DToNewCell2D = {}; ///< each element is [old Cell2D index] = new Cell2D index
+          std::vector<unsigned int> OldCell3DToNewCell3D = {}; ///< each element is [old Cell3D index] = new Cell3D index
+          std::vector<unsigned int> NewCell0DToOldCell0D = {}; ///< each element is [new Cell0D index] = old Cell0D index
+          std::vector<unsigned int> NewCell1DToOldCell1D = {}; ///< each element is [new Cell1D index] = old Cell1D index
+          std::vector<unsigned int> NewCell2DToOldCell2D = {}; ///< each element is [new Cell2D index] = old Cell2D index
+          std::vector<unsigned int> NewCell3DToOldCell3D = {}; ///< each element is [new Cell3D index] = old Cell3D index
+      };
+
       struct ComputeMesh2DCell1DsResult final
       {
           Eigen::MatrixXi Cell1Ds; /// Cell1Ds vertices, size 2 x Cell1DTotalNumber()
           std::vector<Eigen::MatrixXi> Cell2Ds; ///< Cell2Ds vertices and edges, size Cell2DTotalNumber()x2xCell2DNumberVertices()
+      };
+
+      struct ComputeMesh3DAlignedCell1DsResult final
+      {
+
+          Eigen::MatrixXi AlignedCell1Ds;
+          std::vector<Eigen::MatrixXi> Cell0DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell1DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell3DsAlignedCell1DsIndex;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell0Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell1Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_Cell3Ds;
       };
 
       struct MeshGeometricData1D final
@@ -100,6 +132,7 @@ namespace Gedim
           std::vector<double> Cell3DsVolumes;
           std::vector<double> Cell3DsDiameters;
           std::vector<Eigen::Vector3d> Cell3DsCentroids;
+          std::vector<Eigen::VectorXd> Cell3DsEdgeLengths;
           std::vector<Eigen::MatrixXd> Cell3DsEdgeTangents;
           std::vector<std::vector<bool>> Cell3DsEdgeDirections;
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsTetrahedronPoints;
@@ -117,7 +150,8 @@ namespace Gedim
           std::vector<std::vector<Eigen::Vector3d>> Cell3DsFaces2DCentroids; ///< faces centroids
           std::vector<std::vector<double>> Cell3DsFacesDiameters; ///< faces diameters
           std::vector<std::vector<Eigen::VectorXd>> Cell3DsFacesEdgeLengths; ///< faces edge lengths
-          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge3DTangents; ///< faces edge 3D tangents
+          std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DTangents; ///< faces edge 2D tangents
           std::vector<std::vector<Eigen::MatrixXd>> Cell3DsFacesEdge2DNormals; ///< faces edge normals
       };
 
@@ -168,6 +202,13 @@ namespace Gedim
           std::vector<ConvexCell2D> ConcaveCell3DFacesConvexCell2D = {};
       };
 
+      struct Mesh3DPolyhedron final
+      {
+          std::vector<unsigned int> VerticesIndex;
+          std::vector<unsigned int> EdgesIndex;
+          std::vector<unsigned int> FacesIndex;
+      };
+
     public:
       MeshUtilities() { };
       ~MeshUtilities() { };
@@ -176,6 +217,25 @@ namespace Gedim
       /// \note the resulting mesh has no inactive elements
       void ExtractActiveMesh(IMeshDAO& mesh,
                              ExtractActiveMeshData& extractionData) const;
+
+      /// \brief Extract mesh1D cells from a mesh
+      FilterMeshData FilterMesh1D(const std::vector<unsigned int>& cell1DsFilter,
+                                  const IMeshDAO& mesh) const;
+
+      /// \brief Extract mesh2D cells from a mesh
+      FilterMeshData FilterMesh2D(const std::vector<unsigned int>& cell2DsFilter,
+                                  const IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh1D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh) const;
+
+      ExtractMeshData ExtractMesh2D(const std::vector<unsigned int>& cell0DsFilter,
+                                    const std::vector<unsigned int>& cell1DsFilter,
+                                    const std::vector<unsigned int>& cell2DsFilter,
+                                    const IMeshDAO& originalMesh,
+                                    IMeshDAO& mesh) const;
 
       /// \brief Fill Mesh 1D From segment Coordinates
       /// \param segmentOrigin the segment origin
@@ -195,6 +255,12 @@ namespace Gedim
       void FillMesh2D(const Eigen::MatrixXd& cell0Ds,
                       const Eigen::MatrixXi& cell1Ds,
                       const std::vector<Eigen::MatrixXi>& cell2Ds,
+                      IMeshDAO& mesh) const;
+
+      void FillMesh3D(const Eigen::MatrixXd& cell0Ds,
+                      const Eigen::MatrixXi& cell1Ds,
+                      const std::vector<Eigen::MatrixXi>& cell2Ds,
+                      const std::vector<Mesh3DPolyhedron>& cell3Ds,
                       IMeshDAO& mesh) const;
 
       /// \brief Compute edges in a Mesh 2D with vertices and polygons
@@ -217,6 +283,15 @@ namespace Gedim
       void CheckMesh3D(const CheckMesh3DConfiguration& configuration,
                        const GeometryUtilities& geometryUtilities,
                        const IMeshDAO& mesh) const;
+
+      /// \brief Compute edges in a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
+      /// \return the Cell1Ds data
+      ComputeMesh3DAlignedCell1DsResult ComputeMesh3DAlignedCell1Ds(const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesVertices,
+                                                                    const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesEdges,
+                                                                    const IMeshDAO& mesh) const;
+
 
       /// \brief Check MeshGeometricData3D correctness
       /// \param geometryUtilities the geometry utilities
@@ -341,6 +416,10 @@ namespace Gedim
       /// \param mesh the resulting mesh
       void ComputeCell1DCell2DNeighbours(IMeshDAO& mesh) const;
 
+      /// \brief Compute Cell1D Cell3DNeighbours with given mesh data
+      /// \param mesh the resulting mesh
+      void ComputeCell1DCell3DNeighbours(IMeshDAO& mesh) const;
+
       /// \brief Compute Cell2D Cell3DNeighbours with given mesh data
       /// \param mesh the resulting mesh
       void ComputeCell2DCell3DNeighbours(IMeshDAO& mesh) const;
@@ -428,7 +507,8 @@ namespace Gedim
       /// \param exportFolder the folder in which the mesh is exported
       void ExportMeshToVTU(const IMeshDAO& mesh,
                            const std::string& exportFolder,
-                           const std::string& fileName) const;
+                           const std::string& fileName,
+                           const bool& separateFile = false) const;
 
       /// \brief Export Cell2D To VTU
       /// \param mesh the mesh
@@ -506,7 +586,18 @@ namespace Gedim
       /// \param mesh the mesh to update
       /// \return the list of new cell2Ds indices, from 0 to Cell2DTotalNumber()
       std::vector<unsigned int> SplitCell2D(const unsigned int& cell2DIndex,
-                                            const std::vector<Eigen::MatrixXi> subCell2Ds,
+                                            const std::vector<Eigen::MatrixXi>& subCell2Ds,
+                                            IMeshDAO& mesh) const;
+
+      /// \brief Split cell3D into subcells
+      /// \param cell3DIndex the index of Cell3D from 0 to Cell3DTotalNumber()
+      /// \param subCell3Ds the list of sub-cells 3D mesh vertices and edges indices, size numSubCells x (2 x numVertices)
+      /// \param mesh the mesh to update
+      /// \return the list of new cell3Ds indices, from 0 to Cell3DTotalNumber()
+      std::vector<unsigned int> SplitCell3D(const unsigned int& cell3DIndex,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsVertices,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsEdges,
+                                            const std::vector<std::vector<unsigned int>>& subCell3DsFaces,
                                             IMeshDAO& mesh) const;
 
       void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,

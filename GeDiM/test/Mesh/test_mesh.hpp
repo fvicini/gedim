@@ -72,8 +72,8 @@ namespace GedimUnitTesting
     EXPECT_EQ(meshDao.Cell1DEnd(1), 0);
     EXPECT_EQ(meshDao.Cell1DFindExtreme(1, 0), 1);
     EXPECT_EQ(meshDao.Cell1DFindExtreme(1, 1), 0);
-    EXPECT_THROW(meshDao.Cell1DFindExtreme(1, 2),
-                 std::runtime_error);
+    EXPECT_EQ(meshDao.Cell1DFindExtreme(1, 2),
+              2);
     EXPECT_NO_THROW(meshDao.Cell1DSetState(1, true));
     EXPECT_EQ(meshDao.Cell1DIsActive(0), false);
     EXPECT_EQ(meshDao.Cell1DIsActive(1), true);
@@ -115,15 +115,15 @@ namespace GedimUnitTesting
     EXPECT_EQ(meshDao.Cell2DNumberVertices(1), 2);
     EXPECT_EQ(meshDao.Cell2DFindVertex(1, 0), 1);
     EXPECT_EQ(meshDao.Cell2DFindVertex(1, 1), 0);
-    EXPECT_THROW(meshDao.Cell2DFindVertex(1, 3),
-                 std::runtime_error);
+    EXPECT_EQ(meshDao.Cell2DFindVertex(1, 3),
+              2);
     EXPECT_EQ(meshDao.Cell2DVertex(1, 0), 1);
     EXPECT_EQ(meshDao.Cell2DVertex(1, 1), 0);
     EXPECT_NO_THROW(meshDao.Cell2DAddEdges(1, {1, 0}));
     EXPECT_EQ(meshDao.Cell2DFindEdge(1, 0), 1);
     EXPECT_EQ(meshDao.Cell2DFindEdge(1, 1), 0);
-    EXPECT_THROW(meshDao.Cell2DFindEdge(1, 3),
-                 std::runtime_error);
+    EXPECT_EQ(meshDao.Cell2DFindEdge(1, 3),
+             2);
     EXPECT_EQ(meshDao.Cell2DNumberEdges(0), 0);
     EXPECT_EQ(meshDao.Cell2DNumberEdges(1), 2);
     EXPECT_EQ(meshDao.Cell2DEdge(1, 0), 1);
@@ -394,6 +394,7 @@ namespace GedimUnitTesting
     ASSERT_EQ(mesh.Mesh.ActiveCell3D, importedMesh.ActiveCell3D);
     ASSERT_EQ(mesh.Mesh.Cell3DDoublePropertyIds, importedMesh.Cell3DDoublePropertyIds);
     ASSERT_EQ(mesh.Mesh.UpdatedCell3Ds, importedMesh.UpdatedCell3Ds);
+    ASSERT_EQ(mesh.Mesh.Cell3DOriginalCell3Ds, importedMesh.Cell3DOriginalCell3Ds);
   }
 
   TEST(TestMesh, MeshDAOImporter2DFromCsv)

@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
+#include "GraphUtilities.hpp"
 #include "MeshMatrices.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "MeshMatrices_3D_22Cells_Mock.hpp"
@@ -424,6 +425,587 @@ namespace GedimUnitTesting
     meshUtilities.ExportMeshToOpenVolume(meshDao,
                                          meshCell3DsFacesOrientation,
                                          exportFolder + "/hex_parallel_1.ovm");
+  }
+
+  TEST(TestMeshUtilities, TestRefineMesh3D)
+  {
+    std::string exportFolder = "./Export/TestMeshUtilities/TestRefineMesh3D/";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.Tolerance1D = 1.0e-14;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    GedimUnitTesting::MeshMatrices_3D_1Cells_Mock mesh;
+    Gedim::MeshMatricesDAO meshDAO(mesh.Mesh);
+
+    Gedim::MeshUtilities meshUtilities;
+    meshUtilities.ComputeCell2DCell3DNeighbours(meshDAO);
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_R0");
+
+    // first refine
+    {
+      const unsigned int newCell1DIndex = meshDAO.Cell1DAppend(2);
+
+      meshDAO.Cell1DInsertExtremes(newCell1DIndex, 7, 5);
+      meshDAO.Cell1DSetMarker(newCell1DIndex, meshDAO.Cell2DMarker(1));
+      meshDAO.Cell1DSetState(newCell1DIndex, true);
+
+      meshDAO.Cell1DInsertExtremes(newCell1DIndex + 1, 3, 1);
+      meshDAO.Cell1DSetMarker(newCell1DIndex + 1, meshDAO.Cell2DMarker(0));
+      meshDAO.Cell1DSetState(newCell1DIndex + 1, true);
+
+      EXPECT_EQ(12, newCell1DIndex);
+
+      Eigen::MatrixXi subCell_0_0(2, 3);
+      subCell_0_0.row(0)<< 0, 3, 1;
+      subCell_0_0.row(1)<< 3, newCell1DIndex + 1, 0;
+      Eigen::MatrixXi subCell_0_1(2, 3);
+      subCell_0_1.row(0)<< 1, 3, 2;
+      subCell_0_1.row(1)<< newCell1DIndex + 1, 2, 1;
+
+      const std::vector<unsigned int> newCell2DsIndex_0 = meshUtilities.SplitCell2D(0,
+                                                                                    { subCell_0_0, subCell_0_1 },
+                                                                                    meshDAO);
+      EXPECT_EQ(std::vector<unsigned int>({ 6, 7 }), newCell2DsIndex_0);
+      EXPECT_FALSE(meshDAO.Cell2DIsActive(0));
+      EXPECT_TRUE(meshDAO.Cell2DIsActive(6));
+      EXPECT_TRUE(meshDAO.Cell2DIsActive(7));
+      EXPECT_EQ(meshDAO.Cell2DMarker(0), meshDAO.Cell2DMarker(6));
+      EXPECT_EQ(meshDAO.Cell2DMarker(0), meshDAO.Cell2DMarker(7));
+      EXPECT_EQ(0, meshDAO.Cell2DOriginalCell2D(6));
+      EXPECT_EQ(0, meshDAO.Cell2DOriginalCell2D(7));
+      std::list<unsigned int> updatedCell2Ds_0;
+      EXPECT_FALSE(meshDAO.Cell2DUpdatedCell2Ds(0,
+                                                updatedCell2Ds_0));
+      updatedCell2Ds_0.sort();
+      EXPECT_EQ(std::list<unsigned int>({6, 7}), updatedCell2Ds_0);
+
+      Eigen::MatrixXi subCell_1_0(2, 3);
+      subCell_1_0.row(0)<< 7, 4, 5;
+      subCell_1_0.row(1)<< 7, 4, newCell1DIndex;
+      Eigen::MatrixXi subCell_1_1(2, 3);
+      subCell_1_1.row(0)<< 7, 5, 6;
+      subCell_1_1.row(1)<< newCell1DIndex, 5, 6;
+
+      const std::vector<unsigned int> newCell2DsIndex_1 = meshUtilities.SplitCell2D(1,
+                                                                                    { subCell_1_0, subCell_1_1 },
+                                                                                    meshDAO);
+      EXPECT_EQ(std::vector<unsigned int>({ 8, 9 }), newCell2DsIndex_1);
+      EXPECT_FALSE(meshDAO.Cell2DIsActive(1));
+      EXPECT_TRUE(meshDAO.Cell2DIsActive(8));
+      EXPECT_TRUE(meshDAO.Cell2DIsActive(9));
+      EXPECT_EQ(meshDAO.Cell2DMarker(1), meshDAO.Cell2DMarker(8));
+      EXPECT_EQ(meshDAO.Cell2DMarker(1), meshDAO.Cell2DMarker(9));
+      EXPECT_EQ(1, meshDAO.Cell2DOriginalCell2D(9));
+      EXPECT_EQ(1, meshDAO.Cell2DOriginalCell2D(9));
+      std::list<unsigned int> updatedCell2Ds_1;
+      EXPECT_FALSE(meshDAO.Cell2DUpdatedCell2Ds(1,
+                                                updatedCell2Ds_1));
+      updatedCell2Ds_1.sort();
+      EXPECT_EQ(std::list<unsigned int>({8, 9}), updatedCell2Ds_1);
+
+      Eigen::MatrixXi newCell2D(2, 4);
+      newCell2D.row(0)<< 7, 5, 1, 3;
+      newCell2D.row(1)<< newCell1DIndex, 9, newCell1DIndex + 1, 11;
+      const unsigned int newCell2DIndex = meshDAO.Cell2DAppend(1);
+
+      meshDAO.Cell2DAddVerticesAndEdges(newCell2DIndex,
+                                        newCell2D);
+      meshDAO.Cell2DSetMarker(newCell2DIndex, 0);
+      meshDAO.Cell2DSetState(newCell2DIndex, true);
+      meshDAO.Cell2DInitializeNeighbourCell3Ds(newCell2DIndex, 2);
+
+      const std::vector<std::vector<unsigned int>> subCell3DsVertices =
+      {
+        { 0,1,3,7,4,5 },
+        { 1,2,3,5,6,7 }
+      };
+      const std::vector<std::vector<unsigned int>> subCell3DsEdges =
+      {
+        { 0,3,newCell1DIndex + 1,8,9,11,4,7,newCell2DIndex },
+        { 1,2,newCell1DIndex + 1,10,9,11,5,6,newCell2DIndex }
+      };
+      const std::vector<std::vector<unsigned int>> subCell3DsFaces =
+      {
+        { 4,2,newCell2DsIndex_0[0], newCell2DsIndex_1[0] },
+        { 3,5,newCell2DsIndex_0[1], newCell2DsIndex_1[1] }
+      };
+
+      const std::vector<unsigned int> newCell3DsIndex = meshUtilities.SplitCell3D(0,
+                                                                                  subCell3DsVertices,
+                                                                                  subCell3DsEdges,
+                                                                                  subCell3DsFaces,
+                                                                                  meshDAO);
+      EXPECT_EQ(std::vector<unsigned int>({ 1, 2 }), newCell3DsIndex);
+      EXPECT_FALSE(meshDAO.Cell3DIsActive(0));
+      EXPECT_TRUE(meshDAO.Cell3DIsActive(1));
+      EXPECT_TRUE(meshDAO.Cell3DIsActive(2));
+      EXPECT_EQ(meshDAO.Cell3DMarker(0), meshDAO.Cell3DMarker(1));
+      EXPECT_EQ(meshDAO.Cell3DMarker(0), meshDAO.Cell3DMarker(2));
+      EXPECT_EQ(0, meshDAO.Cell3DOriginalCell3D(1));
+      EXPECT_EQ(0, meshDAO.Cell3DOriginalCell3D(2));
+      std::list<unsigned int> updatedCell3Ds;
+      EXPECT_FALSE(meshDAO.Cell3DUpdatedCell3Ds(0,
+                                                updatedCell3Ds));
+      updatedCell3Ds.sort();
+      EXPECT_EQ(std::list<unsigned int>({1, 2}), updatedCell3Ds);
+
+      meshDAO.Cell2DInsertNeighbourCell3D(newCell2DIndex,
+                                          0,
+                                          newCell3DsIndex[1]); // right
+      meshDAO.Cell2DInsertNeighbourCell3D(newCell2DIndex,
+                                          1,
+                                          newCell3DsIndex[0]); // left
+
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(2, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(4, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(6, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(8, 0));
+      EXPECT_EQ(1, meshDAO.Cell2DNeighbourCell3D(10, 1));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(3, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(5, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(7, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(9, 0));
+      EXPECT_EQ(2, meshDAO.Cell2DNeighbourCell3D(10, 0));
+
+      meshUtilities.ExportMeshToVTU(meshDAO,
+                                    exportFolder,
+                                    "Mesh_R1");
+    }
+
+
+    Gedim::MeshUtilities::ExtractActiveMeshData extractionData;
+    meshUtilities.ExtractActiveMesh(meshDAO,
+                                    extractionData);
+
+    meshUtilities.ExportMeshToVTU(meshDAO,
+                                  exportFolder,
+                                  "Mesh_Final");
+
+  }
+
+  TEST(TestMeshUtilities, TestFillMesh3D)
+  {
+    std::string exportFolder = "./Export/TestMeshUtilities/TestFillMesh3D";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+
+    Gedim::MeshMatrices mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh);
+
+    Gedim::MeshUtilities meshUtilities;
+
+    Eigen::MatrixXd vertices = (Eigen::MatrixXd(3, 9)<<
+                                0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0).finished();
+    vertices.col(4)<< 0.5 * (vertices.col(1) + vertices.col(3));
+    vertices.col(5)<< 0.5 * (vertices.col(0) + vertices.col(2));
+    vertices.col(6)<< 0.5 * (vertices.col(4) + vertices.col(2));
+    vertices.col(7)<< 0.5 * (vertices.col(5) + vertices.col(1));
+
+    const Eigen::MatrixXi edges = (Eigen::MatrixXi(2, 21)<<
+                                   0, 0, 1, 2, 0, 2, 4, 4, 4, 0, 2, 2, 6, 6, 3, 4, 5, 7, 0, 1, 2,
+                                   3, 1, 2, 3, 4, 6, 6, 7, 5, 5, 5, 7, 5, 7, 4, 1, 7, 1, 8, 8, 8).finished();
+
+    vector<Eigen::MatrixXi> triangles(19);
+    triangles[0] = (Eigen::MatrixXi(2, 3)<<
+                    0,1,4,
+                    1,15,4).finished();
+    triangles[1] = (Eigen::MatrixXi(2, 3)<<
+                    0,4,3,
+                    4,14,0).finished();
+    triangles[2] = (Eigen::MatrixXi(2, 4)<<
+                    0,5,2,3,
+                    9,10,3,0).finished();
+    triangles[3] = (Eigen::MatrixXi(2, 3)<<
+                    0,8,1,
+                    18,19,1).finished();
+    triangles[4] = (Eigen::MatrixXi(2, 4)<<
+                    0,8,2,5,
+                    18,20,10,9).finished();
+    triangles[5] = (Eigen::MatrixXi(2, 4)<<
+                    0,1,7,5,
+                    1,17,16,9).finished();
+    triangles[6] = (Eigen::MatrixXi(2, 3)<<
+                    7,1,2,
+                    17,2,11).finished();
+    triangles[7] = (Eigen::MatrixXi(2, 3)<<
+                    5,7,2,
+                    16,11,10).finished();
+    triangles[8] = (Eigen::MatrixXi(2, 3)<<
+                    2,1,8,
+                    2,19,20).finished();
+    triangles[9] = (Eigen::MatrixXi(2, 3)<<
+                    0,4,5,
+                    4,8,9).finished();
+    triangles[10] = (Eigen::MatrixXi(2, 3)<<
+                     5,4,6,
+                     8,6,12).finished();
+    triangles[11] = (Eigen::MatrixXi(2, 3)<<
+                     5,6,2,
+                     12,5,10).finished();
+    triangles[12] = (Eigen::MatrixXi(2, 3)<<
+                     6,7,5,
+                     13,16,12).finished();
+    triangles[13] = (Eigen::MatrixXi(2, 4)<<
+                     3,4,6,2,
+                     14,6,5,3).finished();
+    triangles[14] = (Eigen::MatrixXi(2, 3)<<
+                     4,7,6,
+                     7,13,6).finished();
+    triangles[15] = (Eigen::MatrixXi(2, 3)<<
+                     6,7,2,
+                     13,11,5).finished();
+
+    triangles[16] = (Eigen::MatrixXi(2, 3)<<
+                     4,1,7,
+                     15,17,7).finished();
+    triangles[17] = (Eigen::MatrixXi(2, 4)<<
+                     4,1,2,6,
+                     15,2,5,6).finished();
+    triangles[18] = (Eigen::MatrixXi(2, 3)<<
+                     4,7,5,
+                     7,16,8).finished();
+
+    const vector<Gedim::MeshUtilities::Mesh3DPolyhedron> polyhedrons =
+    {
+      {
+        { 0,1,2,5,7,8 },
+        { 18,19,20,1,2,9,10,11,16,17 },
+        { 5,6,7,3,4,8 }
+      },
+      {
+        { 0,2,3,4,5,6 },
+        { 0,3,14,4,9,10,5,6,8,12 },
+        { 1,2,9,10,11,13 }
+      },
+      {
+        { 0,1,4,5,7 },
+        { 1,4,15,9,16,17,7,8 },
+        { 0,5,9,16,18 }
+      },
+      {
+        { 4,5,6,7 },
+        { 6,7,8,12,13,16 },
+        { 10,12,14,18 }
+      },
+      {
+        { 2,5,6,7 },
+        { 5,10,11,12,13,16 },
+        { 7,11,12,15 }
+      },
+      {
+        { 1,2,4,6,7 },
+        { 2,5,6,7,11,13,15,17 },
+        { 17,6,14,15,16 }
+      }
+    };
+
+    meshUtilities.FillMesh3D(vertices,
+                             edges,
+                             triangles,
+                             polyhedrons,
+                             meshDao);
+
+    meshUtilities.ExportMeshToVTU(meshDao,
+                                  exportFolder,
+                                  "Mesh");
+
+    ASSERT_EQ(vertices,
+              meshDao.Cell0DsCoordinates());
+    ASSERT_EQ(edges,
+              meshDao.Cell1DsExtremes());
+    Gedim::MeshUtilities::CheckMesh3DConfiguration checkConfig;
+    meshUtilities.CheckMesh3D(checkConfig,
+                              geometryUtilities,
+                              meshDao);
+  }
+
+  TEST(TestMeshUtilities, TestComputeMesh3DAlignedCell1Ds)
+  {
+    std::string exportFolder = "./Export/TestMeshUtilities/TestComputeMesh3DAlignedCell1Ds";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.MinTolerance = 1.0e-14;
+    geometryUtilitiesConfig.Tolerance1D = 1.0e-6;
+    geometryUtilitiesConfig.Tolerance2D = 1.0e-12;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+    Gedim::MeshUtilities meshUtilities;
+    Gedim::GraphUtilities graphUtilities;
+
+    Gedim::MeshMatrices meshData;
+    Gedim::MeshMatricesDAO mesh(meshData);
+
+    Eigen::MatrixXd vertices = (Eigen::MatrixXd(3, 9)<<
+                                0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0).finished();
+    vertices.col(4)<< 0.5 * (vertices.col(1) + vertices.col(3));
+    vertices.col(5)<< 0.5 * (vertices.col(0) + vertices.col(2));
+    vertices.col(6)<< 0.5 * (vertices.col(4) + vertices.col(2));
+    vertices.col(7)<< 0.5 * (vertices.col(5) + vertices.col(1));
+
+    const Eigen::MatrixXi edges = (Eigen::MatrixXi(2, 21)<<
+                                   0, 0, 1, 2, 0, 2, 4, 4, 4, 0, 2, 2, 6, 6, 3, 4, 5, 7, 0, 1, 2,
+                                   3, 1, 2, 3, 4, 6, 6, 7, 5, 5, 5, 7, 5, 7, 4, 1, 7, 1, 8, 8, 8).finished();
+
+    vector<Eigen::MatrixXi> triangles(19);
+    triangles[0] = (Eigen::MatrixXi(2, 3)<<
+                    0,1,4,
+                    1,15,4).finished();
+    triangles[1] = (Eigen::MatrixXi(2, 3)<<
+                    0,4,3,
+                    4,14,0).finished();
+    triangles[2] = (Eigen::MatrixXi(2, 4)<<
+                    0,5,2,3,
+                    9,10,3,0).finished();
+    triangles[3] = (Eigen::MatrixXi(2, 3)<<
+                    0,8,1,
+                    18,19,1).finished();
+    triangles[4] = (Eigen::MatrixXi(2, 4)<<
+                    0,8,2,5,
+                    18,20,10,9).finished();
+    triangles[5] = (Eigen::MatrixXi(2, 4)<<
+                    0,1,7,5,
+                    1,17,16,9).finished();
+    triangles[6] = (Eigen::MatrixXi(2, 3)<<
+                    7,1,2,
+                    17,2,11).finished();
+    triangles[7] = (Eigen::MatrixXi(2, 3)<<
+                    5,7,2,
+                    16,11,10).finished();
+    triangles[8] = (Eigen::MatrixXi(2, 3)<<
+                    2,1,8,
+                    2,19,20).finished();
+    triangles[9] = (Eigen::MatrixXi(2, 3)<<
+                    0,4,5,
+                    4,8,9).finished();
+    triangles[10] = (Eigen::MatrixXi(2, 3)<<
+                     5,4,6,
+                     8,6,12).finished();
+    triangles[11] = (Eigen::MatrixXi(2, 3)<<
+                     5,6,2,
+                     12,5,10).finished();
+    triangles[12] = (Eigen::MatrixXi(2, 3)<<
+                     6,7,5,
+                     13,16,12).finished();
+    triangles[13] = (Eigen::MatrixXi(2, 4)<<
+                     3,4,6,2,
+                     14,6,5,3).finished();
+    triangles[14] = (Eigen::MatrixXi(2, 3)<<
+                     4,7,6,
+                     7,13,6).finished();
+    triangles[15] = (Eigen::MatrixXi(2, 3)<<
+                     6,7,2,
+                     13,11,5).finished();
+
+    triangles[16] = (Eigen::MatrixXi(2, 3)<<
+                     4,1,7,
+                     15,17,7).finished();
+    triangles[17] = (Eigen::MatrixXi(2, 4)<<
+                     4,1,2,6,
+                     15,2,5,6).finished();
+    triangles[18] = (Eigen::MatrixXi(2, 3)<<
+                     4,7,5,
+                     7,16,8).finished();
+
+    const vector<Gedim::MeshUtilities::Mesh3DPolyhedron> polyhedrons =
+    {
+      {
+        { 0,1,2,5,7,8 },
+        { 18,19,20,1,2,9,10,11,16,17 },
+        { 5,6,7,3,4,8 }
+      },
+      {
+        { 0,2,3,4,5,6 },
+        { 0,3,14,4,9,10,5,6,8,12 },
+        { 1,2,9,10,11,13 }
+      },
+      {
+        { 0,1,4,5,7 },
+        { 1,4,15,9,16,17,7,8 },
+        { 0,5,9,16,18 }
+      },
+      {
+        { 4,5,6,7 },
+        { 6,7,8,12,13,16 },
+        { 10,12,14,18 }
+      },
+      {
+        { 2,5,6,7 },
+        { 5,10,11,12,13,16 },
+        { 7,11,12,15 }
+      },
+      {
+        { 1,2,4,6,7 },
+        { 2,5,6,7,11,13,15,17 },
+        { 17,6,14,15,16 }
+      }
+    };
+
+    const std::vector<unsigned int> cell2DsAligned =
+    { 0,1,2,3,4,5,5,5,8,9,9,9,12,13,14,14,16,17,18 };
+
+    meshUtilities.FillMesh3D(vertices,
+                             edges,
+                             triangles,
+                             polyhedrons,
+                             mesh);
+
+    meshUtilities.ExportMeshToVTU(mesh,
+                                  exportFolder,
+                                  "Mesh");
+
+    const Gedim::MeshUtilities::MeshGeometricData3D meshGeometricData = meshUtilities.FillMesh3DGeometricData(geometryUtilities,
+                                                                                                              mesh);
+
+
+    std::vector<std::vector<std::vector<unsigned int>>> cell3DsAlignedEdgesVertices(mesh.Cell3DTotalNumber());
+    std::vector<std::vector<std::vector<unsigned int>>> cell3DsAlignedEdgesEdges(mesh.Cell3DTotalNumber());
+    std::vector<Eigen::VectorXd> cell3DsAlignedEdgesLenght(mesh.Cell3DTotalNumber());
+
+    for (unsigned int c = 0; c < mesh.Cell3DTotalNumber(); c++)
+    {
+      if (!mesh.Cell3DIsActive(c))
+        continue;
+
+      const Eigen::MatrixXd& cell3DVertices = meshGeometricData.Cell3DsVertices.at(c);
+      const Eigen::MatrixXi& cell3DEdges = meshGeometricData.Cell3DsEdges.at(c);
+      const std::vector<Eigen::MatrixXi>& cell3DFaces = meshGeometricData.Cell3DsFaces.at(c);
+
+      const Gedim::GraphUtilities::GraphAdjacencyData cell3DAdjacency = graphUtilities.GraphConnectivityToGraphAdjacency(cell3DVertices.cols(),
+                                                                                                                         cell3DEdges,
+                                                                                                                         false);
+
+      const Gedim::GeometryUtilities::AlignedPolyhedronEdgesResult alignedEdges = geometryUtilities.AlignedPolyhedronEdges(cell3DVertices,
+                                                                                                                           cell3DAdjacency.GraphAdjacencyVertices,
+                                                                                                                           cell3DAdjacency.GraphAdjacencyEdges,
+                                                                                                                           cell3DAdjacency.GraphAdjacencyVerticesMap,
+                                                                                                                           meshGeometricData.Cell3DsEdgeTangents.at(c),
+                                                                                                                           meshGeometricData.Cell3DsEdgeLengths.at(c).array().square());
+
+      cell3DsAlignedEdgesVertices[c] = alignedEdges.AlignedEdgesVertices;
+      cell3DsAlignedEdgesEdges[c] = alignedEdges.AlignedEdgesEdges;
+    }
+
+    Gedim::MeshUtilities::ComputeMesh3DAlignedCell1DsResult result =
+        meshUtilities.ComputeMesh3DAlignedCell1Ds(cell3DsAlignedEdgesVertices,
+                                                  cell3DsAlignedEdgesEdges,
+                                                  mesh);
+
+    Eigen::MatrixXi alignedCell1Ds_expected(2, 24);
+    alignedCell1Ds_expected.row(0)<< 0, 0, 0, 1, 2, 1, 1, 2, 0, 0, 2, 3, 2, 4, 5, 0, 1, 4, 4, 6, 5, 2, 2, 1;
+    alignedCell1Ds_expected.row(1)<< 8, 1, 2, 8, 8, 2, 5, 7, 3, 4, 3, 4, 4, 5, 6, 5, 4, 7, 6, 7, 7, 6, 5, 7;
+
+    std::vector<Eigen::MatrixXi> cell0DsAlignedCell1DsIndex_expected =
+    {
+      (Eigen::MatrixXi(2,6) << 0,  1,  2,  8,  9, 15,
+      0,  0,  0,  0,  0,  0).finished(),
+      (Eigen::MatrixXi(2,6) << 1,  3,  5,  6, 16, 23,
+      1,  0,  0,  0,  0,  0).finished(),
+      (Eigen::MatrixXi(2,8) << 2,  4,  5,  7, 10, 12, 21, 22,
+      2,  0,  1,  0,  0,  0,  0,  0).finished(),
+      (Eigen::MatrixXi(2,3) << 8, 10, 11,
+      1,  1,  0).finished(),
+      (Eigen::MatrixXi(2,7) << 9, 11, 12, 13, 16, 17, 18,
+      1,  1,  2,  0,  1,  0,  0).finished(),
+      (Eigen::MatrixXi(2,7) << 2,  6, 13, 14, 15, 20, 22,
+      1,  2,  1,  0,  1,  0,  1).finished(),
+      (Eigen::MatrixXi(2,5) << 12, 14, 18, 19, 21,
+      1 , 1 , 1 , 0 , 1).finished(),
+      (Eigen::MatrixXi(2,6) << 6,  7, 17, 19, 20, 23,
+      1,  1,  1,  1,  1,  1).finished(),
+      (Eigen::MatrixXi(2,3) << 0, 3, 4,
+      1, 1, 1).finished()
+    };
+
+    std::vector<Eigen::MatrixXi> cell1DsAlignedCell1DsIndex_expected =
+    {
+      (Eigen::MatrixXi(2,1) << 8,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 1,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 5,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 10,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 9,
+      0).finished(),
+      (Eigen::MatrixXi(2,2) << 12, 21,
+      0,  0).finished(),
+      (Eigen::MatrixXi(2,2) << 12, 18,
+      1,  0).finished(),
+      (Eigen::MatrixXi(2,1) << 17,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 13,
+      0).finished(),
+      (Eigen::MatrixXi(2,2) << 2, 15,
+      0,  0).finished(),
+      (Eigen::MatrixXi(2,2) << 2, 22,
+      1,  0).finished(),
+      (Eigen::MatrixXi(2,1) << 7,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 14,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 19,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 11,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 16,
+      0).finished(),
+      (Eigen::MatrixXi(2,2) << 6, 20,
+      1,  0).finished(),
+      (Eigen::MatrixXi(2,2) << 6, 23,
+      0,  0).finished(),
+      (Eigen::MatrixXi(2,1) << 0,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 3,
+      0).finished(),
+      (Eigen::MatrixXi(2,1) << 4,
+      0).finished()
+    };
+
+    std::vector<Eigen::MatrixXi> cell3DsAlignedCell1DsIndex_expected =
+    {
+      (Eigen::MatrixXi(2,8) << 0, 1, 2, 3, 4, 5, 6, 7,
+      0, 0, 0, 0, 0, 0, 0, 0).finished(),
+      (Eigen::MatrixXi(2,8) << 8,  9,  2, 10, 11, 12, 13, 14,
+      0,  0,  1,  0,  0,  0,  0,  0).finished(),
+      (Eigen::MatrixXi(2,7) << 1,  9, 15, 16,  6, 17, 13,
+      1,  1,  0,  0,  1,  0,  1).finished(),
+      (Eigen::MatrixXi(2,6) << 18, 17, 13, 14, 19, 20,
+      0 , 1 , 2 , 1 , 0 , 0).finished(),
+      (Eigen::MatrixXi(2,6) << 21, 22,  7, 14, 19, 20,
+      0 , 0 , 1 , 2 , 1 , 1).finished(),
+      (Eigen::MatrixXi(2,7) << 5, 16, 23, 12,  7, 17, 19,
+      1,  1,  0,  1,  2,  2,  2).finished()
+    };
+
+    ASSERT_EQ(alignedCell1Ds_expected,
+              result.AlignedCell1Ds);
+    ASSERT_EQ(
+          std::vector<std::vector<unsigned int>>({{0,8}, {0,1}, {0,5,2}, {1,8}, {2,8}, {1,2}, {1,7,5}, {2,7}, {0,3}, {0,4}, {2,3}, {3,4}, {2,6,4}, {4,5}, {5,6}, {0,5}, {1,4}, {4,7}, {4,6}, {6,7}, {5,7}, {2,6}, {2,5}, {1,7}}),
+          result.AlignedCell1Ds_SubCell0Ds);
+    ASSERT_EQ(
+          std::vector<std::vector<unsigned int>>({{18}, {1}, {9,10}, {19}, {20}, {2}, {17,16}, {11}, {0}, {4}, {3}, {14}, {5,6}, {8}, {12}, {9}, {15}, {7}, {6}, {13}, {16}, {5}, {10}, {17}}),
+          result.AlignedCell1Ds_SubCell1Ds);
+    ASSERT_EQ(
+          std::vector<std::vector<unsigned int>>({{0}, {0,2}, {0,1}, {0}, {0}, {0,5}, {0,2}, {0,4,5}, {1}, {1,2}, {1}, {1}, {1,5}, {1,2,3}, {1,3,4}, {2}, {2,5}, {2,3,5}, {3}, {3,4,5}, {3,4}, {4}, {4}, {5}}),
+          result.AlignedCell1Ds_Cell3Ds);
+    ASSERT_EQ(cell0DsAlignedCell1DsIndex_expected,
+              result.Cell0DsAlignedCell1DsIndex);
+    ASSERT_EQ(cell1DsAlignedCell1DsIndex_expected,
+              result.Cell1DsAlignedCell1DsIndex);
+    ASSERT_EQ(cell3DsAlignedCell1DsIndex_expected,
+              result.Cell3DsAlignedCell1DsIndex);
   }
 }
 

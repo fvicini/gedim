@@ -20,8 +20,9 @@ namespace Gedim
   }
   // ***************************************************************************
   MetisUtilities::MeshToNetwork MetisUtilities::Mesh3DToDualGraph(const IMeshDAO& mesh,
+                                                                  const std::vector<unsigned int>& cell3DsWeight,
                                                                   const std::vector<bool>& cell2DsConstrained,
-                                                                  const Eigen::SparseMatrix<unsigned int>& weights) const
+                                                                  const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight) const
   {
     MeshToNetwork meshToNetwork;
 
@@ -108,7 +109,7 @@ namespace Gedim
     {
       for (const Connection& connection : verticesConnections[v])
       {
-        unsigned int weight = (weights.size() > 0) ? weights.coeff(v, connection.Cell3DIndex) : 1;
+        unsigned int weight = (networkEdgesWeight.size() > 0) ? networkEdgesWeight.coeff(v, connection.Cell3DIndex) : 1;
         network.EdgesWeight[counter++] = !checkConstraints ? weight :
                                                              (constraints.find(std::make_pair(v, connection.Cell3DIndex)) != constraints.end() ?
                                                                                                                                1 :
@@ -116,42 +117,77 @@ namespace Gedim
       }
     }
 
+    network.NodesWeight = cell3DsWeight;
+
     return meshToNetwork;
   }
   // ***************************************************************************
-  MetisUtilities::MetisNetwork MetisUtilities::Mesh2DToGraph(const unsigned int& numVertices,
-                                                             const Eigen::MatrixXi& edges,
-                                                             const bool& undirectEdges) const
+  MetisUtilities::MetisNetwork MetisUtilities::MeshToGraph(const unsigned int& numVertices,
+                                                           const Eigen::MatrixXi& edges,
+                                                           const bool& undirectEdges,
+                                                           const std::vector<unsigned int>& verticesWeight,
+                                                           const std::vector<unsigned int>& edgesWeight) const
   {
     const unsigned int& numEdges = edges.cols();
 
     MetisNetwork network;
-    std::list<unsigned int> adjacencyCols;
 
-    std::vector<std::list<unsigned int>> verticesConnections(numVertices);
+    struct Connection final
+    {
+        unsigned int From;
+        unsigned int To;
+        unsigned int Weight;
+    };
+
+
+    std::vector<std::list<Connection>> verticesConnections(numVertices);
     for (unsigned int e = 0; e < numEdges; e++)
     {
       const Eigen::VectorXi& edge = edges.col(e);
-      verticesConnections[edge[0]].push_back(edge[1]);
+
+      verticesConnections[edge[0]].push_back(
+            Connection {
+              static_cast<unsigned int>(edge[0]),
+              static_cast<unsigned int>(edge[1]),
+              (edgesWeight.size() == 0 ? static_cast<unsigned int>(1) : edgesWeight[e])
+            });
+
       if (undirectEdges)
-        verticesConnections[edge[1]].push_back(edge[0]);
+      {
+        verticesConnections[edge[1]].push_back(
+              Connection {
+                static_cast<unsigned int>(edge[1]),
+                static_cast<unsigned int>(edge[0]),
+                (edgesWeight.size() == 0 ? static_cast<unsigned int>(1) : edgesWeight[e])
+              });
+      }
     }
+
+    std::list<unsigned int> adjacencyCols;
+    std::list<unsigned int> networkEdgesWeight;
 
     network.Adjacency.Rows.resize(numVertices + 1, 0);
     for (unsigned int v = 0; v < numVertices; v++)
     {
-      const std::list<unsigned int>& vertexConnections = verticesConnections[v];
+      const std::list<Connection>& vertexConnections = verticesConnections[v];
       const unsigned int& numberConnections = vertexConnections.size();
 
       network.Adjacency.Rows[v + 1] = network.Adjacency.Rows[v] +
                                       numberConnections;
 
-      for (const unsigned int& connection : vertexConnections)
-        adjacencyCols.push_back(connection);
+      for (const Connection& connection : vertexConnections)
+      {
+        adjacencyCols.push_back(connection.To);
+        networkEdgesWeight.push_back(connection.Weight);
+      }
     }
 
     network.Adjacency.Cols = std::vector<unsigned int>(adjacencyCols.begin(),
                                                        adjacencyCols.end());
+
+    network.NodesWeight = verticesWeight;
+    network.EdgesWeight = std::vector<unsigned int>(networkEdgesWeight.begin(),
+                                                    networkEdgesWeight.end());
 
     return network;
   }
@@ -196,8 +232,9 @@ namespace Gedim
   }
   // ***************************************************************************
   MetisUtilities::MeshToNetwork MetisUtilities::Mesh2DToDualGraph(const IMeshDAO& mesh,
+                                                                  const std::vector<unsigned int>& cell2DsWeight,
                                                                   const std::vector<bool>& cell1DsConstrained,
-                                                                  const Eigen::SparseMatrix<unsigned int>& weights) const
+                                                                  const Eigen::SparseMatrix<unsigned int>& networkEdgesWeight) const
   {
     MeshToNetwork meshToNetwork;
 
@@ -282,13 +319,15 @@ namespace Gedim
     {
       for (const Connection& connection : verticesConnections[v])
       {
-        unsigned int weight = (weights.size() > 0) ? weights.coeff(v, connection.Cell2DIndex) : 1;
+        unsigned int weight = (networkEdgesWeight.size() > 0) ? networkEdgesWeight.coeff(v, connection.Cell2DIndex) : 1;
         network.EdgesWeight[counter++] = !checkConstraints ? weight :
                                                              (constraints.find(std::make_pair(v, connection.Cell2DIndex)) != constraints.end() ?
                                                                                                                                1 :
                                                                                                                                weight + numEdges);
       }
     }
+
+    network.NodesWeight = cell2DsWeight;
 
     return meshToNetwork;
   }

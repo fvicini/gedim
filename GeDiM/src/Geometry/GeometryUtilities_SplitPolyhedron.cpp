@@ -197,6 +197,15 @@ namespace Gedim
           }
           
           positiveUsed = true;
+
+          for (unsigned int p = 0; p < splitFaceByPlane.PointsOnPlane.size(); p++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
+
+            polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PointsOnPlane[p]);
+            if (pointsOnPlaneIndices.find(polyhedronVertexIndex) == pointsOnPlaneIndices.end())
+              pointsOnPlaneIndices.insert(polyhedronVertexIndex);
+          }
         }
           break;
           
@@ -297,6 +306,15 @@ namespace Gedim
           }
 
           negativeUsed = true;
+
+          for (unsigned int p = 0; p < splitFaceByPlane.PointsOnPlane.size(); p++)
+          {
+            unsigned int polyhedronVertexIndex = 0;
+
+            polyhedronVertexIndex = polyhedronFaces[f](0, splitFaceByPlane.PointsOnPlane[p]);
+            if (pointsOnPlaneIndices.find(polyhedronVertexIndex) == pointsOnPlaneIndices.end())
+              pointsOnPlaneIndices.insert(polyhedronVertexIndex);
+          }
         }
           break;
         default:
@@ -486,6 +504,8 @@ namespace Gedim
     // Create new polyhedra edges
     result.Edges.Edges.resize(2, newEdges.size());
     result.Edges.NewEdgesOriginalEdges.resize(newEdges.size(), -1);
+    result.Edges.NewEdgesOriginalFace.resize(newEdges.size(), -1);
+    result.OriginalEdgesNewEdges.resize(originalEdges.size());
 
     {
       for (const auto& it : newEdges)
@@ -498,7 +518,13 @@ namespace Gedim
         result.Edges.Edges(0, newEdgeIndex) = newEdgeOriginEnd[0];
         result.Edges.Edges(1, newEdgeIndex) = newEdgeOriginEnd[1];
         result.Edges.NewEdgesOriginalEdges[newEdgeIndex] = originalEdge;
+
+        if (originalEdge >= 0)
+          result.OriginalEdgesNewEdges[originalEdge].push_back(newEdgeIndex);
       }
+
+      for (auto& originalEdgeNewEdges : result.OriginalEdgesNewEdges)
+        originalEdgeNewEdges.shrink_to_fit();
     }
 
     result.PositivePolyhedron.Edges.reserve(positiveEdges.size());
@@ -519,6 +545,8 @@ namespace Gedim
     result.Faces.NewFacesOriginalFaces.resize(positivePolyhedronFaces.size() + negativePolyhedronFaces.size() - 1, -1);
     result.PositivePolyhedron.Faces.resize(positivePolyhedronFaces.size());
     result.NegativePolyhedron.Faces.resize(negativePolyhedronFaces.size());
+    std::vector<std::list<unsigned int>> originalFacesNewFaces(polyhedronFaces.size());
+
 
     {
       unsigned int f = 0;
@@ -537,6 +565,17 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = positivePolyhedronOriginalFaces[pf];
         result.PositivePolyhedron.Faces[pf] = f;
+        originalFacesNewFaces[positivePolyhedronOriginalFaces[pf]].push_back(f);
+
+        for (unsigned int fv = 0; fv < newFace.cols(); fv++)
+        {
+          const unsigned int edgeIndex = newFace(1, fv);
+          if (result.Edges.NewEdgesOriginalEdges[edgeIndex] >= 0)
+            continue;
+
+          result.Edges.NewEdgesOriginalFace[edgeIndex] = positivePolyhedronOriginalFaces[pf];
+        }
+
         pf++;
         f++;
       }
@@ -552,9 +591,18 @@ namespace Gedim
         result.Faces.Faces[f] = newFace;
         result.Faces.NewFacesOriginalFaces[f] = negativePolyhedronOriginalFaces[nf];
         result.NegativePolyhedron.Faces[nf] = f;
+        originalFacesNewFaces[negativePolyhedronOriginalFaces[nf]].push_back(f);
+
         nf++;
         f++;
       }
+
+      result.OriginalFacesNewFaces.resize(originalFacesNewFaces.size());
+      unsigned int of = 0;
+      for (const auto& originalFaceNewFaces : originalFacesNewFaces)
+        result.OriginalFacesNewFaces[of++] = std::vector<unsigned int>(originalFaceNewFaces.begin(),
+                                                                       originalFaceNewFaces.end());
+
     }
 
     //    cerr<< "RESULT"<< endl;

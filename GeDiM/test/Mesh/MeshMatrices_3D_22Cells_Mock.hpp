@@ -37,6 +37,8 @@ namespace GedimUnitTesting
         Mesh.NumberCell1DNeighbourCell2D = { 0,4,8,14,19,23,26,29,33,38,42,46,51,55,59,63,67,70,74,79,82,84,86,88,91,95,100,104,107,109,111,116,120,122,125,129,133,135,137,139,143,145,147,149,152,154,156,158,162,164,166,168,170,172,174,177,179,181,183,186 };
         Mesh.Cell1DNeighbourCell2Ds = { 0,1,57,58,1,2,31,39,2,3,10,20,23,32,0,3,9,56,61,0,2,12,13,1,3,8,4,5,34,5,6,16,17,6,7,13,14,32,4,7,35,38,4,6,19,33,5,7,20,22,48,8,9,53,54,9,10,37,46,8,10,36,50,11,12,58,59,11,14,19,11,13,31,40,12,14,16,18,61,15,16,19,17,18,15,18,15,17,20,21,38,21,22,43,45,22,23,29,30,37,21,23,36,51,24,25,28,25,26,26,27,24,27,30,46,56,24,26,29,48,25,27,28,30,47,28,29,42,43,31,32,38,41,33,34,34,35,33,35,36,37,47,49,39,40,40,41,39,41,43,44,48,44,45,42,45,42,44,46,47,52,53,49,50,50,51,49,51,54,55,52,55,52,54,53,55,56,59,60,57,60,57,59,58,60,61 };
         std::replace(Mesh.Cell1DNeighbourCell2Ds.begin(), Mesh.Cell1DNeighbourCell2Ds.end(), static_cast<unsigned int>(62), std::numeric_limits<unsigned int>::max());
+        Mesh.NumberCell1DNeighbourCell3D.resize(Mesh.NumberCell1D + 1, 0);
+        Mesh.Cell1DNeighbourCell3Ds = { };
         Mesh.Cell1DDoublePropertyIds = {};
         Mesh.Cell1DDoublePropertyIndices = {};
         Mesh.Cell1DDoublePropertySizes = {};
@@ -67,6 +69,7 @@ namespace GedimUnitTesting
         Mesh.Cell3DFaces = { 3,0,1,2,7,4,5,6,3,8,9,10,14,11,12,13,18,15,16,17,14,16,19,6,23,20,21,22,27,24,25,26,30,28,24,29,32,2,31,13,35,4,33,34,23,36,10,37,7,20,38,32,41,31,39,40,45,42,43,44,30,46,47,37,22,48,43,29,51,36,49,50,55,52,53,54,56,53,46,9,60,57,58,59,61,58,0,12 };
         Mesh.Cell3DMarkers = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
         Mesh.ActiveCell3D = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+        Mesh.Cell3DOriginalCell3Ds.resize(Mesh.NumberCell3D, std::numeric_limits<unsigned int>::max());
         Mesh.UpdatedCell3Ds = {};
         Mesh.Cell3DDoublePropertyIds = {};
         Mesh.Cell3DDoublePropertyIndices = {};
