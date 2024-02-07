@@ -90,14 +90,26 @@ public:
         std::vector<Eigen::MatrixXi> Cell2Ds; ///< Cell2Ds vertices and edges, size Cell2DTotalNumber()x2xCell2DNumberVertices()
     };
 
-    struct MeshGeometricData1D final
-    {
-        std::vector<Eigen::MatrixXd> Cell1DsVertices; ///< cell1D vertices coordinates
-        std::vector<Eigen::Vector3d> Cell1DsTangents; ///< cell1D tangents
-        std::vector<double> Cell1DsLengths; ///< cell1D lengths
-        std::vector<double> Cell1DsSquaredLengths; ///< cell1D squared lengths
-        std::vector<Eigen::Vector3d> Cell1DsCentroids; ///< cell1D centroids
-    };
+      struct ComputeMesh3DAlignedCell1DsResult final
+      {
+
+          Eigen::MatrixXi AlignedCell1Ds;
+          std::vector<Eigen::MatrixXi> Cell0DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell1DsAlignedCell1DsIndex;
+          std::vector<Eigen::MatrixXi> Cell3DsAlignedCell1DsIndex;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell0Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_SubCell1Ds;
+          std::vector<std::vector<unsigned int>> AlignedCell1Ds_Cell3Ds;
+      };
+
+      struct MeshGeometricData1D final
+      {
+          std::vector<Eigen::MatrixXd> Cell1DsVertices; ///< cell1D vertices coordinates
+          std::vector<Eigen::Vector3d> Cell1DsTangents; ///< cell1D tangents
+          std::vector<double> Cell1DsLengths; ///< cell1D lengths
+          std::vector<double> Cell1DsSquaredLengths; ///< cell1D squared lengths
+          std::vector<Eigen::Vector3d> Cell1DsCentroids; ///< cell1D centroids
+      };
 
     struct MeshGeometricData2D final
     {
@@ -190,9 +202,17 @@ public:
         std::vector<ConvexCell2D> ConcaveCell3DFacesConvexCell2D = {};
     };
 
-public:
-    MeshUtilities() { };
-    ~MeshUtilities() { };
+      struct Mesh3DPolyhedron final
+      {
+          std::vector<unsigned int> VerticesIndex;
+          std::vector<unsigned int> EdgesIndex;
+          std::vector<unsigned int> FacesIndex;
+      };
+
+    public:
+      MeshUtilities() { };
+      ~MeshUtilities() { };
+
 
     /// \brief Extract Active Cells from mesh
     /// \note the resulting mesh has no inactive elements
@@ -238,12 +258,19 @@ public:
                     const std::vector<Eigen::MatrixXi>& cell2Ds,
                     IMeshDAO& mesh) const;
 
-    /// \brief Compute edges in a Mesh 2D with vertices and polygons
-    /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
-    /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
-    /// \return the Cell1Ds data
-    ComputeMesh2DCell1DsResult ComputeMesh2DCell1Ds(const Eigen::MatrixXd& cell0Ds,
-                                                    const std::vector<Eigen::VectorXi>& cell2Ds) const;
+      void FillMesh3D(const Eigen::MatrixXd& cell0Ds,
+                      const Eigen::MatrixXi& cell1Ds,
+                      const std::vector<Eigen::MatrixXi>& cell2Ds,
+                      const std::vector<Mesh3DPolyhedron>& cell3Ds,
+                      IMeshDAO& mesh) const;
+
+      /// \brief Compute edges in a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
+      /// \return the Cell1Ds data
+      ComputeMesh2DCell1DsResult ComputeMesh2DCell1Ds(const Eigen::MatrixXd& cell0Ds,
+                                                      const std::vector<Eigen::VectorXi>& cell2Ds) const;
+
 
     /// \brief Check Mesh2D correctness
     /// \param geometryUtilities the geometry utilities
@@ -259,14 +286,23 @@ public:
                      const GeometryUtilities& geometryUtilities,
                      const IMeshDAO& mesh) const;
 
-    /// \brief Check MeshGeometricData3D correctness
-    /// \param geometryUtilities the geometry utilities
-    /// \param mesh the 3D mesh
-    /// \param geometricData the mesh geometric data
-    void CheckMeshGeometricData3D(const CheckMeshGeometricData3DConfiguration& configuration,
-                                  const GeometryUtilities& geometryUtilities,
-                                  const IMeshDAO& mesh,
-                                  const MeshGeometricData3D& geometricData) const;
+      /// \brief Compute edges in a Mesh 2D with vertices and polygons
+      /// \param cell0Ds the coordinates as Eigen MatrixXd of cell0Ds, size 3xCell0DTotalNumber()
+      /// \param cell2Ds the vertices indices of the cell2Ds ordered counterclockwise, size Cell2DTotalNumber()xCell2DNumberVertices()
+      /// \return the Cell1Ds data
+      ComputeMesh3DAlignedCell1DsResult ComputeMesh3DAlignedCell1Ds(const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesVertices,
+                                                                    const std::vector<std::vector<std::vector<unsigned int>>>& cell3DsAlignedEdgesEdges,
+                                                                    const IMeshDAO& mesh) const;
+
+
+      /// \brief Check MeshGeometricData3D correctness
+      /// \param geometryUtilities the geometry utilities
+      /// \param mesh the 3D mesh
+      /// \param geometricData the mesh geometric data
+      void CheckMeshGeometricData3D(const CheckMeshGeometricData3DConfiguration& configuration,
+                                    const GeometryUtilities& geometryUtilities,
+                                    const IMeshDAO& mesh,
+                                    const MeshGeometricData3D& geometricData) const;
 
     /// \brief Create a Mesh 1D with a segment
     /// \param segmentVertices the segment coordinates, size 3x2
