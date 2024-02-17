@@ -79,6 +79,21 @@ namespace GedimUnitTesting
       data[1] = 20 + g;
       data[2] = 30 + g;
       data[3] = 40 + g;
+      vector<double> u(3 * 4);
+      for (unsigned int p = 0; p < 4; p++)
+      {
+        u[3 * p] = (p + 1) + g + 1;
+        u[3 * p + 1] = (p + 1) + g + 2;
+        u[3 * p + 2] = (p + 1) + g + 3;
+      }
+
+      vector<double> w(3 * 4);
+      for (unsigned int p = 0; p < 4; p++)
+      {
+        w[3 * p] = (p + 1) + g + 1;
+        w[3 * p + 1] = (p + 1) + g + 2;
+        w[3 * p + 2] = (p + 1) + g + 3;
+      }
 
       vtpUtilities.AddPoints(geometry,
                              {
@@ -93,6 +108,18 @@ namespace GedimUnitTesting
                                  Gedim::VTPProperty::Formats::Points,
                                  static_cast<unsigned int>(data.size()),
                                  data.data()
+                               },
+                               {
+                                 "u",
+                                 Gedim::VTPProperty::Formats::PointsArray,
+                                 static_cast<unsigned int>(u.size()),
+                                 u.data()
+                               },
+                               {
+                                 "w",
+                                 Gedim::VTPProperty::Formats::CellsArray,
+                                 static_cast<unsigned int>(w.size()),
+                                 w.data()
                                }
                              });
     }
@@ -166,11 +193,27 @@ namespace GedimUnitTesting
       vector<double> id(5);
       vector<double> data(4);
 
-      for (unsigned int e = 0; e < 4; e++)
+      for (unsigned int e = 0; e < 5; e++)
         id[e] = 10.8 + g + e;
 
       for (unsigned int v = 0; v < 4; v++)
         data[v] = 10.8 + g + v;
+
+      vector<double> u(3 * 4);
+      for (unsigned int p = 0; p < 4; p++)
+      {
+        u[3 * p] = 10.8 + (p + 1) + g + 1;
+        u[3 * p + 1] = 10.8 + (p + 1) + g + 2;
+        u[3 * p + 2] = 10.8 + (p + 1) + g + 3;
+      }
+
+      vector<double> w(3 * 5);
+      for (unsigned int e = 0; e < 5; e++)
+      {
+        w[3 * e] = 10.8 + (e + 1) + g + 1;
+        w[3 * e + 1] = 10.8 + (e + 1) + g + 2;
+        w[3 * e + 2] = 10.8 + (e + 1) + g + 3;
+      }
 
       vtpUtilities.AddSegments(vertices,
                                edges,
@@ -186,6 +229,18 @@ namespace GedimUnitTesting
                                    Gedim::VTPProperty::Formats::Points,
                                    static_cast<unsigned int>(data.size()),
                                    data.data()
+                                 },
+                                 {
+                                   "u",
+                                   Gedim::VTPProperty::Formats::PointsArray,
+                                   static_cast<unsigned int>(u.size()),
+                                   u.data()
+                                 },
+                                 {
+                                   "w",
+                                   Gedim::VTPProperty::Formats::CellsArray,
+                                   static_cast<unsigned int>(w.size()),
+                                   w.data()
                                  }
                                });
     }
