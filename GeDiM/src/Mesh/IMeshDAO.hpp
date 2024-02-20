@@ -858,17 +858,17 @@ namespace Gedim
       /// \param cell0DIndex the index of cell0D from 0 to Cell0DTotalNumber()
       /// \return the index of the cell0DIndex on the cell3D from 0 to NumberCell3DVertices(cell3DIndex), NumberCell3DVertices(cell3DIndex) if not found
       virtual unsigned int Cell3DFindVertex(const unsigned int& cell3DIndex,
-                                    const unsigned int& cell0DIndex) const = 0;
+                                            const unsigned int& cell0DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param cell1DIndex the index of cell1D from 0 to Cell1DTotalNumber()
       /// \return the index of the cell1DIndex on the cell3D from 0 to NumberCell3DEdges(cell3DIndex), NumberCell3DEdges(cell3DIndex) if not found
       virtual unsigned int Cell3DFindEdge(const unsigned int& cell3DIndex,
-                                  const unsigned int& cell1DIndex) const = 0;
+                                          const unsigned int& cell1DIndex) const = 0;
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param cell2DIndex the index of cell2D from 0 to Cell2DTotalNumber()
       /// \return the index of the cell2DIndex on the cell3D from 0 to NumberCell3DFaces(cell3DIndex), NumberCell3DFaces(cell3DIndex) if not found
       virtual unsigned int Cell3DFindFace(const unsigned int& cell3DIndex,
-                                  const unsigned int& cell2DIndex) const = 0;
+                                          const unsigned int& cell2DIndex) const = 0;
 
       /// \param cell3DIndex the index of cell3D from 0 to Cell3DTotalNumber()
       /// \param originCell0DIndex the Cell0D Id of origin from 0 to Cell0DTotalNumber()
