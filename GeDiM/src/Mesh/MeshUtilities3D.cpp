@@ -1106,6 +1106,23 @@ namespace Gedim
         const vector<unsigned int> faceConvexHull = geometryUtilities.ConvexHull(result.Cell3DsFaces2DVertices[c][f],
                                                                                  false);
 
+
+        if (geometryUtilities.PolygonOrientation(faceConvexHull) ==
+            Gedim::GeometryUtilities::PolygonOrientations::Clockwise)
+        {
+          const auto cell2DIndex = convexMesh.Cell3DFace(c,
+                                                         f);
+          std::cout<< "Cell3D "<< c<< " face "<< cell2DIndex<< std::endl;
+          std::cout<< "Cell3D vertices "<< convexMesh.Cell3DVertices(c)<< std::endl;
+          std::cout<< "Cell2D vertices "<< convexMesh.Cell2DVertices(cell2DIndex)<< std::endl;
+
+          std::cout<< "Cell2D hull vertices";
+          for (const auto faceConvexHullIndex : faceConvexHull)
+            std::cout<< " "<< convexMesh.Cell2DVertex(cell2DIndex,
+                                                      faceConvexHullIndex);
+          std::cout<< std::endl;
+        }
+
         Output::Assert(geometryUtilities.PolygonOrientation(faceConvexHull) ==
                        Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
       }
@@ -1415,6 +1432,22 @@ namespace Gedim
         {
           const vector<unsigned int> faceConvexHull = geometryUtilities.ConvexHull(convexCell3DFaces2DVertices[ccf],
                                                                                    false);
+
+          if (geometryUtilities.PolygonOrientation(faceConvexHull) ==
+              Gedim::GeometryUtilities::PolygonOrientations::Clockwise)
+          {
+            const auto cell2DIndex = convexMesh.Cell3DFace(convexCell3DIndex,
+                                                           ccf);
+            std::cout<< "Cell3D "<< convexCell3DIndex<< " face "<< cell2DIndex<< std::endl;
+            std::cout<< "Cell3D vertices "<< convexMesh.Cell3DVertices(convexCell3DIndex)<< std::endl;
+            std::cout<< "Cell2D vertices "<< convexMesh.Cell2DVertices(cell2DIndex)<< std::endl;
+
+            std::cout<< "Cell2D hull vertices";
+            for (const auto faceConvexHullIndex : faceConvexHull)
+              std::cout<< " "<< convexMesh.Cell2DVertex(cell2DIndex,
+                                                        faceConvexHullIndex);
+            std::cout<< std::endl;
+          }
 
           Output::Assert(geometryUtilities.PolygonOrientation(faceConvexHull) ==
                          Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
