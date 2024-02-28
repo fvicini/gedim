@@ -431,12 +431,14 @@ namespace Gedim
         {
           polyData->GetPointData()->AddArray(vtkSolution);
 
+          vtkSolution->SetNumberOfComponents(3);
+
           if (s == 0)
             polyData->GetPointData()->SetActiveVectors(property.Label.c_str());
 
-          vtkSolution->SetNumberOfComponents(3);
-          vtkSolution->SetNumberOfTuples(property.Size);
-          for (unsigned int p = 0; p < property.Size; p++)
+          const unsigned int numTuples = property.Size / 3;
+          vtkSolution->SetNumberOfTuples(numTuples);
+          for (unsigned int p = 0; p < numTuples; p++)
           {
             vtkSolution->SetTuple3(p,
                                    property.Data[3 * p],
@@ -449,12 +451,14 @@ namespace Gedim
         {
           polyData->GetCellData()->AddArray(vtkSolution);
 
+          vtkSolution->SetNumberOfComponents(3);
+
           if (s == 0)
             polyData->GetCellData()->SetActiveVectors(property.Label.c_str());
 
-          vtkSolution->SetNumberOfComponents(3);
-          vtkSolution->SetNumberOfTuples(property.Size);
-          for (unsigned int p = 0; p < property.Size; p++)
+          const unsigned int numTuples = property.Size / 3;
+          vtkSolution->SetNumberOfTuples(numTuples);
+          for (unsigned int p = 0; p < numTuples; p++)
           {
             vtkSolution->SetTuple3(p,
                                    property.Data[3 * p],
