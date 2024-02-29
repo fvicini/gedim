@@ -620,6 +620,15 @@ namespace Gedim
                                             const std::vector<std::vector<unsigned int>>& subCell3DsFaces,
                                             IMeshDAO& mesh) const;
 
+      unsigned int AgglomerateCell3Ds(const std::vector<unsigned int>& subCell3DsIndex,
+                                      const std::vector<unsigned int>& agglomerateCell3DVertices,
+                                      const std::vector<unsigned int>& agglomerateCell3DEdges,
+                                      const std::vector<unsigned int>& agglomerateCell3DFaces,
+                                      const std::vector<unsigned int>& subCell3DsRemovedVertices,
+                                      const std::vector<unsigned int>& subCell3DsRemovedEdges,
+                                      const std::vector<unsigned int>& subCell3DsRemovedFaces,
+                                      IMeshDAO& mesh) const;
+
       void CreateRandomlyDeformedQuadrilaterals(const GeometryUtilities& geometryUtilities,
                                                 const Eigen::Vector3d& rectangleOrigin,
                                                 const Eigen::Vector3d& rectangleBaseTangent,

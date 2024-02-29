@@ -1007,6 +1007,26 @@ namespace GedimUnitTesting
     ASSERT_EQ(cell3DsAlignedCell1DsIndex_expected,
               result.Cell3DsAlignedCell1DsIndex);
   }
+
+  TEST(TestMeshUtilities, TestAgglomerateCell3Ds_ByFace)
+  {
+    std::string exportFolder = "./Export/TestMeshUtilities/TestAgglomerateCell3Ds_ByFace";
+    Gedim::Output::CreateFolder(exportFolder);
+
+    Gedim::GeometryUtilitiesConfig geometryUtilitiesConfig;
+    geometryUtilitiesConfig.MinTolerance = 1.0e-14;
+    geometryUtilitiesConfig.Tolerance1D = 1.0e-6;
+    geometryUtilitiesConfig.Tolerance2D = 1.0e-12;
+    Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
+    Gedim::MeshUtilities meshUtilities;
+
+    GedimUnitTesting::MeshMatrices_3D_22Cells_Mock mesh;
+    Gedim::MeshMatricesDAO meshDao(mesh.Mesh);
+
+    meshUtilities.ExportMeshToVTU(meshDao,
+                                  exportFolder,
+                                  "OriginalMesh");
+  }
 }
 
 #endif // __TEST_MESH_UTILITIES3D_H

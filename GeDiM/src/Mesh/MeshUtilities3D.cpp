@@ -1106,6 +1106,23 @@ namespace Gedim
         const vector<unsigned int> faceConvexHull = geometryUtilities.ConvexHull(result.Cell3DsFaces2DVertices[c][f],
                                                                                  false);
 
+
+        if (geometryUtilities.PolygonOrientation(faceConvexHull) ==
+            Gedim::GeometryUtilities::PolygonOrientations::Clockwise)
+        {
+          const auto cell2DIndex = convexMesh.Cell3DFace(c,
+                                                         f);
+          std::cout<< "Cell3D "<< c<< " face "<< cell2DIndex<< std::endl;
+          std::cout<< "Cell3D vertices "<< convexMesh.Cell3DVertices(c)<< std::endl;
+          std::cout<< "Cell2D vertices "<< convexMesh.Cell2DVertices(cell2DIndex)<< std::endl;
+
+          std::cout<< "Cell2D hull vertices";
+          for (const auto faceConvexHullIndex : faceConvexHull)
+            std::cout<< " "<< convexMesh.Cell2DVertex(cell2DIndex,
+                                                      faceConvexHullIndex);
+          std::cout<< std::endl;
+        }
+
         Output::Assert(geometryUtilities.PolygonOrientation(faceConvexHull) ==
                        Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
       }
@@ -1415,6 +1432,22 @@ namespace Gedim
         {
           const vector<unsigned int> faceConvexHull = geometryUtilities.ConvexHull(convexCell3DFaces2DVertices[ccf],
                                                                                    false);
+
+          if (geometryUtilities.PolygonOrientation(faceConvexHull) ==
+              Gedim::GeometryUtilities::PolygonOrientations::Clockwise)
+          {
+            const auto cell2DIndex = convexMesh.Cell3DFace(convexCell3DIndex,
+                                                           ccf);
+            std::cout<< "Cell3D "<< convexCell3DIndex<< " face "<< cell2DIndex<< std::endl;
+            std::cout<< "Cell3D vertices "<< convexMesh.Cell3DVertices(convexCell3DIndex)<< std::endl;
+            std::cout<< "Cell2D vertices "<< convexMesh.Cell2DVertices(cell2DIndex)<< std::endl;
+
+            std::cout<< "Cell2D hull vertices";
+            for (const auto faceConvexHullIndex : faceConvexHull)
+              std::cout<< " "<< convexMesh.Cell2DVertex(cell2DIndex,
+                                                        faceConvexHullIndex);
+            std::cout<< std::endl;
+          }
 
           Output::Assert(geometryUtilities.PolygonOrientation(faceConvexHull) ==
                          Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise);
@@ -1827,6 +1860,92 @@ namespace Gedim
     }
 
     return newCell3DsIndex;
+  }
+  // ***************************************************************************
+  unsigned int MeshUtilities::AgglomerateCell3Ds(const std::vector<unsigned int>& subCell3DsIndex,
+                                                 const std::vector<unsigned int>& agglomerateCell3DVertices,
+                                                 const std::vector<unsigned int>& agglomerateCell3DEdges,
+                                                 const std::vector<unsigned int>& agglomerateCell3DFaces,
+                                                 const std::vector<unsigned int>& subCell3DsRemovedCell0Ds,
+                                                 const std::vector<unsigned int>& subCell3DsRemovedCell1Ds,
+                                                 const std::vector<unsigned int>& subCell3DsRemovedCell2Ds,
+                                                 IMeshDAO& mesh) const
+  {
+    const unsigned int agglomeratedCell3DIndex = mesh.Cell3DAppend(1);
+
+    unsigned int max_marker = 0;
+    for (const auto subCell3DIndex : subCell3DsIndex)
+    {
+      mesh.Cell3DSetState(subCell3DIndex, false);
+
+      if (mesh.Cell3DMarker(subCell3DIndex) > max_marker)
+        max_marker = mesh.Cell3DMarker(subCell3DIndex);
+    }
+
+    mesh.Cell3DAddVertices(agglomeratedCell3DIndex,
+                           agglomerateCell3DVertices);
+    mesh.Cell3DAddEdges(agglomeratedCell3DIndex,
+                        agglomerateCell3DEdges);
+    mesh.Cell3DAddFaces(agglomeratedCell3DIndex,
+                        agglomerateCell3DFaces);
+
+    mesh.Cell3DSetMarker(agglomeratedCell3DIndex,
+                         max_marker);
+    mesh.Cell3DSetState(agglomeratedCell3DIndex,
+                        true);
+
+    for (unsigned int e = 0; e < mesh.Cell3DNumberEdges(agglomeratedCell3DIndex); e++)
+    {
+      const unsigned int cell1DIndex = mesh.Cell3DEdge(agglomeratedCell3DIndex, e);
+
+      for (unsigned int n = 0; n < mesh.Cell1DNumberNeighbourCell3D(cell1DIndex); n++)
+      {
+        if (!mesh.Cell1DHasNeighbourCell3D(cell1DIndex, n))
+          continue;
+
+        const unsigned int neighCell3DIndex = mesh.Cell1DNeighbourCell3D(cell1DIndex, n);
+
+        if (std::find(subCell3DsIndex.begin(),
+                      subCell3DsIndex.end(),
+                      neighCell3DIndex) != subCell3DsIndex.end())
+        {
+          mesh.Cell1DInsertNeighbourCell3D(cell1DIndex,
+                                           n,
+                                           agglomeratedCell3DIndex);
+        }
+      }
+    }
+
+    for (unsigned int f = 0; f < mesh.Cell3DNumberFaces(agglomeratedCell3DIndex); f++)
+    {
+      const unsigned int cell2DIndex = mesh.Cell3DFace(agglomeratedCell3DIndex, f);
+
+      for (unsigned int n = 0; n < mesh.Cell2DNumberNeighbourCell3D(cell2DIndex); n++)
+      {
+        if (!mesh.Cell2DHasNeighbourCell3D(cell2DIndex, n))
+          continue;
+
+        const unsigned int neighCell3DIndex = mesh.Cell2DNeighbourCell3D(cell2DIndex, n);
+
+        if (std::find(subCell3DsIndex.begin(),
+                      subCell3DsIndex.end(),
+                      neighCell3DIndex) != subCell3DsIndex.end())
+        {
+          mesh.Cell2DInsertNeighbourCell3D(cell2DIndex,
+                                           n,
+                                           agglomeratedCell3DIndex);
+        }
+      }
+    }
+
+    for (const auto cell0DIndex : subCell3DsRemovedCell0Ds)
+      mesh.Cell0DSetState(cell0DIndex, false);
+    for (const auto cell1DIndex : subCell3DsRemovedCell1Ds)
+      mesh.Cell1DSetState(cell1DIndex, false);
+    for (const auto cell2DIndex : subCell3DsRemovedCell2Ds)
+      mesh.Cell2DSetState(cell2DIndex, false);
+
+    return agglomeratedCell3DIndex;
   }
   // ***************************************************************************
 }
