@@ -1948,4 +1948,177 @@ namespace Gedim
     return agglomeratedCell3DIndex;
   }
   // ***************************************************************************
+  MeshUtilities::FilterMeshData MeshUtilities::FilterMesh3D(const std::vector<unsigned int>& cell3DsFilter,
+                                                            const IMeshDAO& mesh) const
+  {
+    list<unsigned int> cell3Ds;
+    std::set<unsigned int> cell0Ds, cell1Ds, cell2Ds;
+
+    for (const unsigned int cell3DIndex : cell3DsFilter)
+    {
+      if (!mesh.Cell3DIsActive(cell3DIndex))
+        continue;
+
+      cell3Ds.push_back(cell3DIndex);
+
+      for (unsigned int v = 0; v < mesh.Cell3DNumberVertices(cell3DIndex); v++)
+      {
+        const unsigned int cell0DIndex = mesh.Cell3DVertex(cell3DIndex, v);
+
+        if (cell0Ds.find(cell0DIndex) == cell0Ds.end())
+          cell0Ds.insert(cell0DIndex);
+      }
+
+      for (unsigned int v = 0; v < mesh.Cell3DNumberEdges(cell3DIndex); v++)
+      {
+        const unsigned int cell1DIndex = mesh.Cell3DEdge(cell3DIndex, v);
+
+        if (cell1Ds.find(cell1DIndex) == cell1Ds.end())
+          cell1Ds.insert(cell1DIndex);
+      }
+
+      for (unsigned int v = 0; v < mesh.Cell3DNumberFaces(cell3DIndex); v++)
+      {
+        const unsigned int cell2DIndex = mesh.Cell3DFace(cell3DIndex, v);
+
+        if (cell2Ds.find(cell2DIndex) == cell2Ds.end())
+          cell2Ds.insert(cell2DIndex);
+      }
+    }
+
+    MeshUtilities::FilterMeshData result;
+
+    result.Cell0Ds = std::vector<unsigned int>(cell0Ds.begin(),
+                                               cell0Ds.end());
+    result.Cell1Ds = std::vector<unsigned int>(cell1Ds.begin(),
+                                               cell1Ds.end());
+    result.Cell2Ds = std::vector<unsigned int>(cell2Ds.begin(),
+                                               cell2Ds.end());
+    result.Cell3Ds = std::vector<unsigned int>(cell3Ds.begin(),
+                                               cell3Ds.end());
+
+    return result;
+  }
+  // ***************************************************************************
+  MeshUtilities::ExtractMeshData MeshUtilities::ExtractMesh3D(const std::vector<unsigned int>& cell0DsFilter,
+                                                              const std::vector<unsigned int>& cell1DsFilter,
+                                                              const std::vector<unsigned int>& cell2DsFilter,
+                                                              const std::vector<unsigned int>& cell3DsFilter,
+                                                              const IMeshDAO& originalMesh,
+                                                              IMeshDAO& mesh) const
+  {
+    ExtractMeshData result;
+    result.NewCell0DToOldCell0D.resize(cell0DsFilter.size(), std::numeric_limits<unsigned int>::max());
+    result.NewCell1DToOldCell1D.resize(cell1DsFilter.size(), std::numeric_limits<unsigned int>::max());
+    result.NewCell2DToOldCell2D.resize(cell2DsFilter.size(), std::numeric_limits<unsigned int>::max());
+    result.NewCell3DToOldCell3D.resize(cell3DsFilter.size(), std::numeric_limits<unsigned int>::max());
+    result.OldCell0DToNewCell0D.resize(originalMesh.Cell0DTotalNumber(), std::numeric_limits<unsigned int>::max());
+    result.OldCell1DToNewCell1D.resize(originalMesh.Cell1DTotalNumber(), std::numeric_limits<unsigned int>::max());
+    result.OldCell2DToNewCell2D.resize(originalMesh.Cell2DTotalNumber(), std::numeric_limits<unsigned int>::max());
+    result.OldCell3DToNewCell3D.resize(originalMesh.Cell3DTotalNumber(), std::numeric_limits<unsigned int>::max());
+
+    Eigen::MatrixXd newCell0Ds(3, cell0DsFilter.size());
+    for (unsigned int v = 0; v < cell0DsFilter.size(); v++)
+    {
+      const unsigned int oldCell0DIndex = cell0DsFilter[v];
+      result.NewCell0DToOldCell0D[v] = oldCell0DIndex;
+      result.OldCell0DToNewCell0D[oldCell0DIndex] = v;
+
+      newCell0Ds.col(v) = originalMesh.Cell0DCoordinates(oldCell0DIndex);
+    }
+
+    Eigen::MatrixXi newCell1Ds(2, cell1DsFilter.size());
+    for (unsigned int e = 0; e < cell1DsFilter.size(); e++)
+    {
+      const unsigned int oldCell1DIndex = cell1DsFilter[e];
+      result.NewCell1DToOldCell1D[e] = oldCell1DIndex;
+      result.OldCell1DToNewCell1D[oldCell1DIndex] = e;
+
+      const Eigen::VectorXi cell1DExtremes = originalMesh.Cell1DExtremes(oldCell1DIndex);
+
+      newCell1Ds(0, e) = result.OldCell0DToNewCell0D.at(cell1DExtremes[0]);
+      newCell1Ds(1, e) = result.OldCell0DToNewCell0D.at(cell1DExtremes[1]);
+    }
+
+    std::vector<Eigen::MatrixXi> newCell2Ds(cell2DsFilter.size());
+    for (unsigned int p = 0; p < cell2DsFilter.size(); p++)
+    {
+      const unsigned int oldCell2DIndex = cell2DsFilter[p];
+      result.NewCell2DToOldCell2D[p] = oldCell2DIndex;
+      result.OldCell2DToNewCell2D[oldCell2DIndex] = p;
+
+      const std::vector<unsigned int> vertices = originalMesh.Cell2DVertices(oldCell2DIndex);
+      const std::vector<unsigned int> edges = originalMesh.Cell2DEdges(oldCell2DIndex);
+
+      Gedim::Output::Assert(vertices.size() == edges.size());
+
+      newCell2Ds[p].resize(2, vertices.size());
+      for (unsigned int v = 0; v < vertices.size(); v++)
+      {
+        newCell2Ds[p](0, v) = result.OldCell0DToNewCell0D.at(vertices[v]);
+        newCell2Ds[p](1, v) = result.OldCell1DToNewCell1D.at(edges[v]);
+      }
+    }
+
+    std::vector<Mesh3DPolyhedron> newCell3Ds(cell3DsFilter.size());
+    for (unsigned int p = 0; p < cell3DsFilter.size(); p++)
+    {
+      const unsigned int oldCell3DIndex = cell3DsFilter[p];
+      result.NewCell3DToOldCell3D[p] = oldCell3DIndex;
+      result.OldCell3DToNewCell3D[oldCell3DIndex] = p;
+
+      const std::vector<unsigned int> vertices = originalMesh.Cell3DVertices(oldCell3DIndex);
+      const std::vector<unsigned int> edges = originalMesh.Cell3DEdges(oldCell3DIndex);
+      const std::vector<unsigned int> faces = originalMesh.Cell3DFaces(oldCell3DIndex);
+
+      Mesh3DPolyhedron& polyhedron = newCell3Ds.at(p);
+      polyhedron.VerticesIndex.resize(vertices.size());
+      polyhedron.EdgesIndex.resize(edges.size());
+      polyhedron.FacesIndex.resize(faces.size());
+
+      for (unsigned int v = 0; v < vertices.size(); v++)
+        polyhedron.VerticesIndex[v] = result.OldCell0DToNewCell0D.at(vertices[v]);
+      for (unsigned int v = 0; v < edges.size(); v++)
+        polyhedron.EdgesIndex[v] = result.OldCell1DToNewCell1D.at(edges[v]);
+      for (unsigned int v = 0; v < faces.size(); v++)
+        polyhedron.FacesIndex[v] = result.OldCell2DToNewCell2D.at(faces[v]);
+    }
+
+    FillMesh3D(newCell0Ds,
+               newCell1Ds,
+               newCell2Ds,
+               newCell3Ds,
+               mesh);
+
+    for (unsigned int v = 0; v < cell0DsFilter.size(); v++)
+    {
+      const unsigned int oldCell0DIndex = result.NewCell0DToOldCell0D[v];
+      mesh.Cell0DSetMarker(v, originalMesh.Cell0DMarker(oldCell0DIndex));
+      mesh.Cell0DSetState(v, originalMesh.Cell0DIsActive(oldCell0DIndex));
+    }
+
+    for (unsigned int e = 0; e < cell1DsFilter.size(); e++)
+    {
+      const unsigned int oldCell1DIndex = result.NewCell1DToOldCell1D[e];
+      mesh.Cell1DSetMarker(e, originalMesh.Cell1DMarker(oldCell1DIndex));
+      mesh.Cell1DSetState(e, originalMesh.Cell1DIsActive(oldCell1DIndex));
+    }
+
+    for (unsigned int f = 0; f < cell2DsFilter.size(); f++)
+    {
+      const unsigned int oldCell2DIndex = result.NewCell2DToOldCell2D[f];
+      mesh.Cell2DSetMarker(f, originalMesh.Cell2DMarker(oldCell2DIndex));
+      mesh.Cell2DSetState(f, originalMesh.Cell2DIsActive(oldCell2DIndex));
+    }
+
+    for (unsigned int p = 0; p < cell3DsFilter.size(); p++)
+    {
+      const unsigned int oldCell3DIndex = result.NewCell3DToOldCell3D[p];
+      mesh.Cell3DSetMarker(p, originalMesh.Cell3DMarker(oldCell3DIndex));
+      mesh.Cell3DSetState(p, originalMesh.Cell3DIsActive(oldCell3DIndex));
+    }
+
+    return result;
+  }
+  // ***************************************************************************
 }

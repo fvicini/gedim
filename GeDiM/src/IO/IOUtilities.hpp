@@ -228,6 +228,82 @@ namespace Gedim
                             const double& localTime);
   };
 
+  template <typename matrixType>
+  std::string MatrixToString(const matrixType& mat,
+                             const std::string& matrixTypeStr,
+                             const std::string& matrixName)
+  {
+    std::ostringstream str;
+    str.precision(16);
+    str<< matrixName<< " = "<< matrixTypeStr<< "("<< mat.rows()<< ", "<< mat.cols()<< ");"<< std::endl;
+    for (unsigned int c = 0; c < mat.cols(); c++)
+    {
+      str<< matrixName<< ".col("<< c<< ")<< ";
+      for (unsigned int r = 0; r < mat.rows(); r++)
+        str<< std::scientific<< (r == 0 ? "" : ",")<< mat(r, c);
+      str<< ";"<< std::endl;
+    }
+
+    return str.str();
+  }
+
+  template <typename matrixType>
+  std::string MatrixCollectionToString(const std::vector<matrixType>& matCollection,
+                                       const std::string& matrixTypeStr,
+                                       const std::string& matrixName)
+  {
+    std::ostringstream str;
+    str.precision(16);
+
+    str<< matrixName<< " = std::vector<"<< matrixTypeStr<< ">("<< matCollection.size()<< ");"<< std::endl;
+    for (unsigned int v = 0; v < matCollection.size(); v++)
+    {
+      str<< MatrixToString<matrixType>(matCollection.at(v),
+                                       matrixTypeStr,
+                                       matrixName + "[" + std::to_string(v) + "]");
+    }
+
+    return str.str();
+  }
+
+  template <typename matrixType>
+  std::string MatrixCollectionToString(const std::vector<std::vector<matrixType>>& matCollection,
+                                       const std::string& matrixTypeStr,
+                                       const std::string& matrixName)
+  {
+    std::ostringstream str;
+    str.precision(16);
+
+    str<< matrixName<< " = std::vector<std::vector<"<< matrixTypeStr<< ">>("<< matCollection.size()<< ");"<< std::endl;
+    for (unsigned int v = 0; v < matCollection.size(); v++)
+    {
+      str<< MatrixCollectionToString<matrixType>(matCollection.at(v),
+                                                 matrixTypeStr,
+                                                 matrixName + "[" + std::to_string(v) + "]");
+    }
+
+    return str.str();
+  }
+
+  template <typename matrixType>
+  std::string MatrixCollectionToString(const std::vector<std::vector<std::vector<matrixType>>>& matCollection,
+                                       const std::string& matrixTypeStr,
+                                       const std::string& matrixName)
+  {
+    std::ostringstream str;
+    str.precision(16);
+
+    str<< matrixName<< " = std::vector<std::vector<std::vector<"<< matrixTypeStr<< ">>>("<< matCollection.size()<< ");"<< std::endl;
+    for (unsigned int v = 0; v < matCollection.size(); v++)
+    {
+      str<< MatrixCollectionToString<matrixType>(matCollection.at(v),
+                                                 matrixTypeStr,
+                                                 matrixName + "[" + std::to_string(v) + "]");
+    }
+
+    return str.str();
+  }
+
   /// General print of a vector
   template <typename T>
   std::ostream& operator<<(std::ostream& out, const std::vector<T>& vec)
