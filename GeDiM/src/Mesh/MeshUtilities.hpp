@@ -300,9 +300,9 @@ namespace Gedim
           struct Mesh_Intersections final
           {
               std::map<unsigned int, unsigned int> Cell0Ds_intersections;
-              std::map<unsigned int, unsigned int> Cell1Ds_intersections;
-              std::map<unsigned int, unsigned int> Cell2Ds_intersections;
-              std::map<unsigned int, unsigned int> Cell3Ds_intersections;
+              std::map<unsigned int, std::vector<unsigned int>> Cell1Ds_intersections;
+              std::map<unsigned int, std::vector<unsigned int>> Cell2Ds_intersections;
+              std::map<unsigned int, std::vector<unsigned int>> Cell3Ds_intersections;
           };
 
           Types Type;
@@ -450,6 +450,13 @@ namespace Gedim
                                 const unsigned int& marker,
                                 IMeshDAO& mesh) const;
 
+      void SetMeshMarkersOnSegment(const GeometryUtilities& geometryUtilities,
+                                   const Eigen::Vector3d& segment_origin,
+                                   const Eigen::Vector3d& segment_tangent,
+                                   const double& segment_tangent_squared_length,
+                                   const unsigned int& marker,
+                                   IMeshDAO& mesh) const;
+
       /// \brief Create a Mesh 3D with a polyhedron
       /// \param polyhedronVertices the polyhedron vertices, size 3 x numVertices
       /// \param polyhedronEdges the polyhedron edges, size 2 x numEdges
@@ -476,6 +483,33 @@ namespace Gedim
                                  const Eigen::Vector3d& planeOrigin,
                                  const unsigned int& marker,
                                  IMeshDAO& mesh) const;
+
+      void SetMeshMarkersByFaceNormal(const GeometryUtilities& geometryUtilities,
+                                      const Eigen::Vector3d& normal,
+                                      const std::vector<Eigen::Vector3d>& cell2Ds_normal,
+                                      const unsigned int& marker,
+                                      IMeshDAO& mesh) const;
+
+      /// \warning Only for convex points
+      void SetMeshMarkersOnPolygon(const GeometryUtilities& geometryUtilities,
+                                   const Eigen::Vector3d& polygon_plane_normal,
+                                   const Eigen::Vector3d& polygon_plane_origin,
+                                   const Eigen::MatrixXd& polygon_vertices_2D,
+                                   const Eigen::Vector3d& polygon_translation,
+                                   const Eigen::Matrix3d& polygon_rotation_matrix,
+                                   const unsigned int& marker,
+                                   IMeshDAO& mesh) const;
+
+      void SetMeshMarkersOnPolygon(const GeometryUtilities& geometryUtilities,
+                                   const Eigen::Vector3d& polygon_plane_normal,
+                                   const Eigen::Vector3d& polygon_plane_origin,
+                                   const Eigen::MatrixXd& polygon_vertices_2D,
+                                   const Eigen::Vector3d& polygon_translation,
+                                   const Eigen::Matrix3d& polygon_rotation_matrix,
+                                   const std::vector<Eigen::Vector3d>& cell1Ds_centroid,
+                                   const std::vector<Eigen::Vector3d>& cell2Ds_centroid,
+                                   const unsigned int& marker,
+                                   IMeshDAO& mesh) const;
 
       /// \brief Extract the mesh Cell2D Roots
       /// \param mesh the mesh
@@ -673,6 +707,24 @@ namespace Gedim
                                     const std::vector<unsigned int>& cell0DMarkers,
                                     const std::vector<unsigned int>& cell1DMarkers,
                                     IMeshDAO& mesh) const;
+
+      void ChangePolyhedronMeshMarkers(const GeometryUtilities& geometryUtilities,
+                                       const Eigen::MatrixXd& polyhedron_vertices,
+                                       const Eigen::MatrixXi& polyhedron_edges,
+                                       const std::vector<Eigen::MatrixXi>& polyhedron_faces,
+                                       const Eigen::MatrixXd& polyhedron_edges_tangent,
+                                       const Eigen::VectorXd& polyhedron_edges_length,
+                                       const std::vector<Eigen::Vector3d>& polyhedron_faces_normal,
+                                       const std::vector<Eigen::MatrixXd>& polyhedron_faces_vertices,
+                                       const std::vector<Eigen::MatrixXd>& polyhedron_faces_vertices_2D,
+                                       const std::vector<Eigen::Vector3d>& polyhedron_faces_translation,
+                                       const std::vector<Eigen::Matrix3d>& polyhedron_faces_rotation_matrix,
+                                       const std::vector<unsigned int>& polyhedron_vertices_marker,
+                                       const std::vector<unsigned int>& polyhedron_edges_marker,
+                                       const std::vector<unsigned int>& polyhedron_faces_marker,
+                                       const std::vector<Eigen::Vector3d>& cell1Ds_centroid,
+                                       const std::vector<Eigen::Vector3d>& cell2Ds_centroid,
+                                       IMeshDAO& mesh) const;
 
       /// \brief Export Mesh To VTU
       /// \param mesh the mesh

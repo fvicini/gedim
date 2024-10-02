@@ -566,27 +566,41 @@ namespace GedimUnitTesting
     geometryUtilitiesConfig.Tolerance1D = 1.0e-8;
     Gedim::GeometryUtilities geometryUtilities(geometryUtilitiesConfig);
 
-//    Eigen::MatrixXd polygonVertices(3, 5);
+//     Eigen::MatrixXd polygonVertices(3, 5);
+//     polygonVertices.col(0)<< -4.0, -2.0, +0.0;
+//     polygonVertices.col(1)<< +2.0, -3.0, +0.0;
+//     polygonVertices.col(2)<< +9.0, -1.0, +0.0;
+//     polygonVertices.col(3)<< +9.0, +2.0, +0.0;
+//     polygonVertices.col(4)<< -11.0, +3.0, +0.0;
+
+//    Eigen::MatrixXd polygonVertices(3, 4);
 //    polygonVertices.col(0)<< -4.0, -2.0, +0.0;
-//    polygonVertices.col(1)<< +2.0, -3.0, +0.0;
-//    polygonVertices.col(2)<< +9.0, -1.0, +0.0;
-//    polygonVertices.col(3)<< +9.0, +2.0, +0.0;
-//    polygonVertices.col(4)<< -11.0, +3.0, +0.0;
-    Eigen::MatrixXd polygonVertices(3, 14);
-    polygonVertices.col(0)<< -4.0, -2.0, +0.0;
-    polygonVertices.col(1)<< +2.0, -3.0, +0.0;
-    polygonVertices.col(2)<< +5.0, +1.0, +0.0;
-    polygonVertices.col(3)<< +2.0, +4.0, +0.0;
-    polygonVertices.col(4)<< +1.0, +2.0, +0.0;
-    polygonVertices.col(5)<< +2.0, +0.0, +0.0;
-    polygonVertices.col(6)<< +0.0, -1.0, +0.0;
-    polygonVertices.col(7)<< -2.0, +0.0, +0.0;
-    polygonVertices.col(8)<< -1.0, +3.0, +0.0;
-    polygonVertices.col(9)<< -3.0, +3.0, +0.0;
-    polygonVertices.col(10)<< -5.0, +1.0, +0.0;
-    polygonVertices.col(11)<< -8.0, +1.0, +0.0;
-    polygonVertices.col(12)<< -8.0, -4.0, +0.0;
-    polygonVertices.col(13)<< -6.0, -1.0, +0.0;
+//    polygonVertices.col(1)<< -1.0, -2.5, +0.0;
+//    polygonVertices.col(2)<< -1.0, +2.5, +0.0;
+//    polygonVertices.col(3)<< -11.0, +3.0, +0.0;
+
+     Eigen::MatrixXd polygonVertices(3, 5);
+     polygonVertices.col(0)<< -1.0, -2.5, +0.0;
+     polygonVertices.col(1)<< +2.0, -3.0, +0.0;
+     polygonVertices.col(2)<< +9.0, -1.0, +0.0;
+     polygonVertices.col(3)<< +9.0, +2.0, +0.0;
+     polygonVertices.col(4)<< -1.0, +2.5, +0.0;
+
+    //    Eigen::MatrixXd polygonVertices(3, 14);
+    //    polygonVertices.col(0)<< -4.0, -2.0, +0.0;
+    //    polygonVertices.col(1)<< +2.0, -3.0, +0.0;
+    //    polygonVertices.col(2)<< +5.0, +1.0, +0.0;
+    //    polygonVertices.col(3)<< +2.0, +4.0, +0.0;
+    //    polygonVertices.col(4)<< +1.0, +2.0, +0.0;
+    //    polygonVertices.col(5)<< +2.0, +0.0, +0.0;
+    //    polygonVertices.col(6)<< +0.0, -1.0, +0.0;
+    //    polygonVertices.col(7)<< -2.0, +0.0, +0.0;
+    //    polygonVertices.col(8)<< -1.0, +3.0, +0.0;
+    //    polygonVertices.col(9)<< -3.0, +3.0, +0.0;
+    //    polygonVertices.col(10)<< -5.0, +1.0, +0.0;
+    //    polygonVertices.col(11)<< -8.0, +1.0, +0.0;
+    //    polygonVertices.col(12)<< -8.0, -4.0, +0.0;
+    //    polygonVertices.col(13)<< -6.0, -1.0, +0.0;
 
     const auto polygon_edges_centroid = geometryUtilities.PolygonEdgesCentroid(polygonVertices);
     const auto triangulation = geometryUtilities.PolygonTriangulationByEarClipping(polygonVertices);
@@ -609,6 +623,27 @@ namespace GedimUnitTesting
 
     const Eigen::Matrix3d polygon_inertia = geometryUtilities.PolygonInertia(polygon_centroid,
                                                                              triangulation_points);
+
+    const auto polygon_edges_normal = geometryUtilities.PolygonEdgeNormals(polygonVertices);
+    const auto polygon_edges_length = geometryUtilities.PolygonEdgeLengths(polygonVertices);
+    const auto polygon_centroid_edges_distance = geometryUtilities.PolygonCentroidEdgesDistance(polygonVertices,
+                                                                                                polygon_centroid,
+                                                                                                polygon_edges_normal);
+    const auto polygon_centroid_vertices_distance = geometryUtilities.PolygonCentroidVerticesDistance(polygonVertices,
+                                                                                                      polygon_centroid);
+    const auto polygon_diameter = geometryUtilities.PolygonDiameter(polygonVertices);
+    const auto polygon_in_radius = geometryUtilities.PolygonInRadius(polygon_centroid_edges_distance);
+
+    const auto maxCentroidVerticesDistance = polygon_centroid_vertices_distance.maxCoeff();
+    const auto minCell2DsMinEdgesLength = polygon_edges_length.minCoeff();
+    const auto AR_Rr = maxCentroidVerticesDistance / polygon_in_radius;
+    const auto AR_Rh = maxCentroidVerticesDistance / minCell2DsMinEdgesLength;
+    const auto gamma_r = polygon_in_radius / polygon_diameter;
+    const auto gamma_h = minCell2DsMinEdgesLength / polygon_diameter;
+
+    std::cout.precision(2);
+    std::cout<< std::scientific<< "AR_Rr "<< AR_Rr<< " gamma_r "<< gamma_r<< std::endl;
+    std::cout<< std::scientific<< "AR_Rh "<< AR_Rh<< " gamma_h "<< gamma_h<< std::endl;
 
     Eigen::Vector3d eig_min(0.0, 0.0, 0.0), eig_max(0.0, 0.0, 0.0);
     {

@@ -1001,6 +1001,221 @@ namespace Gedim
     }
   }
   // ***************************************************************************
+  void MeshUtilities::SetMeshMarkersByFaceNormal(const GeometryUtilities& geometryUtilities,
+                                                 const Eigen::Vector3d& normal,
+                                                 const std::vector<Eigen::Vector3d>& cell2Ds_normal,
+                                                 const unsigned int& marker,
+                                                 IMeshDAO& mesh) const
+  {
+    const double normal_norm = normal.norm();
+
+    for (unsigned int f = 0; f < mesh.Cell2DTotalNumber(); ++f)
+    {
+      unsigned int num_cell3D_neighs = 0;
+
+      for (unsigned int n = 0; n < mesh.Cell2DNumberNeighbourCell3D(f); ++n)
+      {
+        if (!mesh.Cell2DHasNeighbourCell3D(f, n))
+          continue;
+
+        num_cell3D_neighs++;
+      }
+
+      if (num_cell3D_neighs != 1)
+        continue;
+
+      const auto& cell2D_normal = cell2Ds_normal.at(f);
+
+      if (!geometryUtilities.AreValuesEqual(normal_norm * cell2D_normal.norm(),
+                                            std::abs(cell2D_normal.dot(normal)),
+                                            geometryUtilities.Tolerance1DSquared()))
+        continue;
+
+      for (unsigned int v = 0; v < mesh.Cell2DNumberVertices(f); ++v)
+      {
+        mesh.Cell0DSetMarker(mesh.Cell2DVertex(f, v),
+                             marker);
+      }
+
+      for (unsigned int e = 0; e < mesh.Cell2DNumberEdges(f); ++e)
+      {
+        mesh.Cell1DSetMarker(mesh.Cell2DEdge(f, e),
+                             marker);
+      }
+
+      mesh.Cell2DSetMarker(f,
+                           marker);
+    }
+  }
+  // ***************************************************************************
+  void MeshUtilities::SetMeshMarkersOnPolygon(const GeometryUtilities& geometryUtilities,
+                                              const Eigen::Vector3d& polygon_plane_normal,
+                                              const Eigen::Vector3d& polygon_plane_origin,
+                                              const MatrixXd& polygon_vertices_2D,
+                                              const Vector3d& polygon_translation,
+                                              const Matrix3d& polygon_rotation_matrix,
+                                              const unsigned int& marker,
+                                              IMeshDAO& mesh) const
+  {
+    // set cell0Ds markers
+    std::vector<bool> vertices_on_polygon(mesh.Cell0DTotalNumber(),
+                                          false);
+
+    for (unsigned int v = 0; v < mesh.Cell0DTotalNumber(); v++)
+    {
+      const Eigen::Vector3d vertex = mesh.Cell0DCoordinates(v);
+
+      if (!geometryUtilities.IsPointOnPlane(vertex,
+                                            polygon_plane_normal,
+                                            polygon_plane_origin))
+        continue;
+
+      const Eigen::Vector3d vertex_2D = geometryUtilities.RotatePointsFrom3DTo2D(vertex,
+                                                                                 polygon_rotation_matrix.transpose(),
+                                                                                 polygon_translation);
+
+      if (!geometryUtilities.IsPointInsidePolygon(vertex_2D,
+                                                  polygon_vertices_2D))
+        continue;
+
+
+      vertices_on_polygon[v] = true;
+      mesh.Cell0DSetMarker(v,
+                           marker);
+    }
+
+    // set cell1Ds markers
+    for (unsigned int s = 0; s < mesh.Cell1DTotalNumber(); s++)
+    {
+      const Eigen::VectorXi extremes = mesh.Cell1DExtremes(s);
+
+      if (vertices_on_polygon[extremes[0]] &&
+          vertices_on_polygon[extremes[1]])
+      {
+        mesh.Cell1DSetMarker(s,
+                             marker);
+      }
+    }
+
+    // set cell2Ds markers
+    for (unsigned int p = 0; p < mesh.Cell2DTotalNumber(); p++)
+    {
+      const vector<unsigned int> extremes = mesh.Cell2DVertices(p);
+
+      bool is_on_polygon = true;
+      for (unsigned int v = 0; v < extremes.size(); v++)
+      {
+        if (!vertices_on_polygon[extremes[v]])
+        {
+          is_on_polygon = false;
+          break;
+        }
+      }
+
+      if (!is_on_polygon)
+        continue;
+
+      mesh.Cell2DSetMarker(p,
+                           marker);
+    }
+  }
+  // ***************************************************************************
+  void MeshUtilities::SetMeshMarkersOnPolygon(const GeometryUtilities& geometryUtilities,
+                                              const Eigen::Vector3d& polygon_plane_normal,
+                                              const Eigen::Vector3d& polygon_plane_origin,
+                                              const Eigen::MatrixXd& polygon_vertices_2D,
+                                              const Eigen::Vector3d& polygon_translation,
+                                              const Eigen::Matrix3d& polygon_rotation_matrix,
+                                              const std::vector<Eigen::Vector3d>& cell1Ds_centroid,
+                                              const std::vector<Eigen::Vector3d>& cell2Ds_centroid,
+                                              const unsigned int& marker,
+                                              IMeshDAO& mesh) const
+  {
+    // set cell0Ds markers
+    std::vector<bool> vertices_on_polygon(mesh.Cell0DTotalNumber(),
+                                          false);
+
+    for (unsigned int v = 0; v < mesh.Cell0DTotalNumber(); v++)
+    {
+      const Eigen::Vector3d vertex = mesh.Cell0DCoordinates(v);
+
+      if (!geometryUtilities.IsPointOnPlane(vertex,
+                                            polygon_plane_normal,
+                                            polygon_plane_origin))
+        continue;
+
+      const Eigen::Vector3d vertex_2D = geometryUtilities.RotatePointsFrom3DTo2D(vertex,
+                                                                                 polygon_rotation_matrix.transpose(),
+                                                                                 polygon_translation);
+
+      if (!geometryUtilities.IsPointInsidePolygon_RayCasting(vertex_2D,
+                                                             polygon_vertices_2D))
+        continue;
+
+
+      vertices_on_polygon[v] = true;
+      mesh.Cell0DSetMarker(v,
+                           marker);
+    }
+
+    // set cell1Ds markers
+    for (unsigned int s = 0; s < mesh.Cell1DTotalNumber(); s++)
+    {
+      const Eigen::VectorXi extremes = mesh.Cell1DExtremes(s);
+
+      if (!vertices_on_polygon[extremes[0]] ||
+          !vertices_on_polygon[extremes[1]])
+        continue;
+
+      const Eigen::Vector3d& cell1D_centroid = cell1Ds_centroid.at(s);
+
+      const Eigen::Vector3d cell1D_centroid_2D = geometryUtilities.RotatePointsFrom3DTo2D(cell1D_centroid,
+                                                                                          polygon_rotation_matrix.transpose(),
+                                                                                          polygon_translation);
+
+
+      if (!geometryUtilities.IsPointInsidePolygon_RayCasting(cell1D_centroid_2D,
+                                                             polygon_vertices_2D))
+        continue;
+
+      mesh.Cell1DSetMarker(s,
+                           marker);
+    }
+
+    // set cell2Ds markers
+    for (unsigned int p = 0; p < mesh.Cell2DTotalNumber(); p++)
+    {
+      const vector<unsigned int> extremes = mesh.Cell2DVertices(p);
+
+      bool is_on_polygon = true;
+      for (unsigned int v = 0; v < extremes.size(); v++)
+      {
+        if (!vertices_on_polygon[extremes[v]])
+        {
+          is_on_polygon = false;
+          break;
+        }
+      }
+
+      if (!is_on_polygon)
+        continue;
+
+      const Eigen::Vector3d& cell2D_centroid = cell2Ds_centroid.at(p);
+
+      const Eigen::Vector3d cell2D_centroid_2D = geometryUtilities.RotatePointsFrom3DTo2D(cell2D_centroid,
+                                                                                          polygon_rotation_matrix.transpose(),
+                                                                                          polygon_translation);
+
+
+      if (!geometryUtilities.IsPointInsidePolygon_RayCasting(cell2D_centroid_2D,
+                                                             polygon_vertices_2D))
+        continue;
+
+      mesh.Cell2DSetMarker(p,
+                           marker);
+    }
+  }
+  // ***************************************************************************
   MeshUtilities::MeshGeometricData3D MeshUtilities::FillMesh3DGeometricData(const GeometryUtilities& geometryUtilities,
                                                                             const IMeshDAO& convexMesh) const
   {
@@ -1672,7 +1887,6 @@ namespace Gedim
       // fix orientation for concave cells
       std::vector<bool> face2DCCWOrientation(numFaces);
       std::vector<Eigen::MatrixXd> face2DVerticesCCW(numFaces);
-      std::vector<std::vector<unsigned int>> face2DsCCW(numFaces);
 
       for (unsigned int f = 0; f < numFaces; f++)
       {
@@ -1684,18 +1898,15 @@ namespace Gedim
           case Gedim::GeometryUtilities::PolygonOrientations::Clockwise:
           {
             face2DCCWOrientation[f] = false;
-            face2DsCCW[f] = geometryUtilities.ChangePolygonOrientation(result.Cell3DsFaces2DVertices[c][f].cols());
+            const auto new_orientation_points = geometryUtilities.ChangePolygonOrientation(result.Cell3DsFaces2DVertices[c][f].cols());
             face2DVerticesCCW[f] = geometryUtilities.ExtractPoints(result.Cell3DsFaces2DVertices[c][f],
-                                                                   face2DsCCW[f]);
+                                                                   new_orientation_points);
           }
             break;
           case Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise:
           {
             face2DCCWOrientation[f] = true;
             face2DVerticesCCW[f] = result.Cell3DsFaces2DVertices[c][f];
-
-            face2DsCCW[f].resize(result.Cell3DsFaces2DVertices[c][f].cols());
-            std::iota(face2DsCCW[f].begin(), face2DsCCW[f].end(), 0);
           }
             break;
           default:
@@ -1734,6 +1945,24 @@ namespace Gedim
                 geometryUtilities.RotatePointsFrom3DTo2D(result.Cell3DsFaces3DTriangulations[c][f][t],
                                                          face_rotation.transpose(),
                                                          face_translation);
+
+            const vector<unsigned int> face_triangle_convex_hull = geometryUtilities.ConvexHull(result.Cell3DsFaces2DTriangulations[c][f][t],
+                                                                                                false);
+
+            switch (geometryUtilities.PolygonOrientation(face_triangle_convex_hull))
+            {
+              case Gedim::GeometryUtilities::PolygonOrientations::Clockwise:
+              {
+                const auto new_orientation = geometryUtilities.ChangePolygonOrientation(result.Cell3DsFaces2DTriangulations[c][f][t].cols());
+                result.Cell3DsFaces2DTriangulations[c][f][t] = geometryUtilities.ExtractPoints(result.Cell3DsFaces2DTriangulations[c][f][t],
+                                                                                               new_orientation);
+              }
+                break;
+              case Gedim::GeometryUtilities::PolygonOrientations::CounterClockwise:
+                break;
+              default:
+                throw std::runtime_error("Not managed face orientation case");
+            }
           }
         }
       }
@@ -1794,6 +2023,7 @@ namespace Gedim
       for (unsigned int t = 0; t < num_cell3D_tetra; ++t)
       {
         const auto& tetra_vertices = result.Cell3DsTetrahedronPoints.at(c).at(t);
+
         const auto tetra = geometryUtilities.CreateTetrahedronWithVertices(tetra_vertices.col(0),
                                                                            tetra_vertices.col(1),
                                                                            tetra_vertices.col(2),
@@ -2036,7 +2266,7 @@ namespace Gedim
       const Eigen::Vector3d& faceTranslation = concaveCell3DFacesTranslation[f];
       const Eigen::Vector3d& faceNormal = concaveCell3DFacesNormal[f];
 
-      const Eigen::Matrix3d& face_2D_triangle = concaveCell3D_faces_2D_triangles.at(f).at(0);
+      Eigen::Matrix3d face_2D_triangle = concaveCell3D_faces_2D_triangles.at(f).at(0);
 
       int convexCellFound = -1, convexFaceFound = -1;
 
@@ -2046,6 +2276,8 @@ namespace Gedim
                                             geometryUtilities.Tolerance1D()))
       {
         throw std::runtime_error("Face triangle not unclockwise " + std::to_string(concaveCell3DIndex) + " " + std::to_string(f));
+        // std::cout<< "WARNING: concave face triangle not unclockwise "<< concaveCell3DIndex<< " "<< f<< std::endl;
+        //face_2D_triangle.block(0, 1, 3, face_2D_triangle.cols() - 1).rowwise().reverseInPlace();
       }
 
       // find convex cell3D face parallel to concave face normal
@@ -2079,6 +2311,7 @@ namespace Gedim
                                                        convexFace2DTriangle.col(2)),
                                                 geometryUtilities.Tolerance1D()))
           {
+            // std::cout<< "WARNING: convex face triangle not unclockwise "<< cc<< " "<< ccf<< std::endl;
             convexFace2DTriangle.block(0, 1, 3, convexFace2DTriangle.cols() - 1).rowwise().reverseInPlace();
           }
 
@@ -3066,6 +3299,79 @@ namespace Gedim
                               cell2D_index);
 
       mesh.Cell3DSetState(c, false);
+    }
+  }
+  // ***************************************************************************
+  void MeshUtilities::ChangePolyhedronMeshMarkers(const GeometryUtilities& geometryUtilities,
+                                                  const Eigen::MatrixXd& polyhedron_vertices,
+                                                  const Eigen::MatrixXi& polyhedron_edges,
+                                                  const std::vector<Eigen::MatrixXi>& polyhedron_faces,
+                                                  const Eigen::MatrixXd& polyhedron_edges_tangent,
+                                                  const Eigen::VectorXd& polyhedron_edges_length,
+                                                  const std::vector<Eigen::Vector3d>& polyhedron_faces_normal,
+                                                  const std::vector<Eigen::MatrixXd>& polyhedron_faces_vertices,
+                                                  const std::vector<Eigen::MatrixXd>& polyhedron_faces_vertices_2D,
+                                                  const std::vector<Eigen::Vector3d>& polyhedron_faces_translation,
+                                                  const std::vector<Eigen::Matrix3d>& polyhedron_faces_rotation_matrix,
+                                                  const std::vector<unsigned int>& polyhedron_vertices_marker,
+                                                  const std::vector<unsigned int>& polyhedron_edges_marker,
+                                                  const std::vector<unsigned int>& polyhedron_faces_marker,
+                                                  const std::vector<Eigen::Vector3d>& cell1Ds_centroid,
+                                                  const std::vector<Eigen::Vector3d>& cell2Ds_centroid,
+                                                  IMeshDAO& mesh) const
+  {
+    const unsigned int num_polyhedron_edges = polyhedron_edges.cols();
+    const unsigned int num_polyhedron_faces = polyhedron_faces.size();
+
+    for (unsigned int f = 0; f < num_polyhedron_faces; ++f)
+    {
+      const auto& face_vertices_2d = polyhedron_faces_vertices_2D.at(f);
+      const auto& face_plane_normal = polyhedron_faces_normal.at(f);
+      const Eigen::Vector3d face_plane_origin = polyhedron_faces_vertices.at(f).col(0);
+      const auto& face_translation = polyhedron_faces_translation.at(f);
+      const auto& face_rotation_matrix = polyhedron_faces_rotation_matrix.at(f);
+      const unsigned int face_marker = polyhedron_faces_marker.at(f);
+
+      SetMeshMarkersOnPolygon(geometryUtilities,
+                              face_plane_normal,
+                              face_plane_origin,
+                              face_vertices_2d,
+                              face_translation,
+                              face_rotation_matrix,
+                              cell1Ds_centroid,
+                              cell2Ds_centroid,
+                              face_marker,
+                              mesh);
+    }
+
+    for (unsigned int e = 0; e < num_polyhedron_edges; ++e)
+    {
+      const auto edge_line_tangent = polyhedron_edges_tangent.col(e);
+      const auto edge_length = polyhedron_edges_length[e];
+      const Eigen::VectorXd edge_line_origin = polyhedron_vertices.col(polyhedron_edges(0, e));
+      const unsigned int edge_marker = polyhedron_edges_marker.at(e);
+
+      SetMeshMarkersOnSegment(geometryUtilities,
+                              edge_line_origin,
+                              edge_line_tangent,
+                              edge_length * edge_length,
+                              edge_marker,
+                              mesh);
+    }
+
+
+    for (unsigned int c_0D = 0; c_0D < mesh.Cell0DTotalNumber(); ++c_0D)
+    {
+      const Eigen::Vector3d cell0D_coordinate = mesh.Cell0DCoordinates(c_0D);
+
+      const auto vertex_found = geometryUtilities.FindPointInPoints(polyhedron_vertices,
+                                                                    cell0D_coordinate);
+
+      for (const auto& vertex_index : vertex_found)
+      {
+        mesh.Cell0DSetMarker(c_0D,
+                             polyhedron_vertices_marker.at(vertex_index));
+      }
     }
   }
   // ***************************************************************************
