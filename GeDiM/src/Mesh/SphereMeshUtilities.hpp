@@ -1,11 +1,12 @@
 #ifndef __SphereMeshUtilities_H
 #define __SphereMeshUtilities_H
 
-#include "IMeshDAO.hpp"
 #include "GeometryUtilities.hpp"
+#include "IMeshDAO.hpp"
 #include "MeshMatricesDAO.hpp"
 #include "MeshUtilities.hpp"
 #include "PlatonicSolid.hpp"
+#include <numbers>
 #include <numeric>
 
 namespace Gedim
@@ -16,21 +17,18 @@ namespace Gedim
 /// https://danielsieger.com/blog/2021/03/27/generating-spheres.html
 class SphereMeshUtilities final
 {
-    const GeometryUtilities& geometryUtilities;
+    const GeometryUtilities &geometryUtilities;
     const MeshUtilities &meshUtilities;
 
-public:
+  public:
+    SphereMeshUtilities(const GeometryUtilities &geometryUtilities, const MeshUtilities &meshUtilities)
+        : geometryUtilities(geometryUtilities), meshUtilities(meshUtilities)
+    {
+    }
 
-    SphereMeshUtilities(const GeometryUtilities& geometryUtilities,
-                        const MeshUtilities &meshUtilities):
-        geometryUtilities(geometryUtilities),
-        meshUtilities(meshUtilities)
-    {}
+    virtual ~SphereMeshUtilities(){};
 
-    virtual ~SphereMeshUtilities() {};
-
-    GeometryUtilities::Polyhedron uv_sphere(const unsigned int &meridians,
-                                            const unsigned int &parallels) const
+    GeometryUtilities::Polyhedron uv_sphere(const unsigned int &meridians, const unsigned int &parallels) const
     {
         Output::Assert(meridians >= 4 && parallels >= 2);
 
@@ -43,10 +41,10 @@ public:
         // generate vertices per stack / slice
         for (int i = 0; i < parallels - 1; i++)
         {
-            const double phi = M_PI * double(i + 1) / double(parallels);
+            const double phi = std::numbers::pi * double(i + 1) / double(parallels);
             for (int j = 0; j < meridians; j++)
             {
-                const double theta = 2.0 * M_PI * double(j) / double(meridians);
+                const double theta = 2.0 * std::numbers::pi * double(j) / double(meridians);
                 polyhedron.Vertices.col(v++) << std::sin(phi) * std::cos(theta), std::cos(phi), std::sin(phi) * std::sin(theta);
             }
         }
@@ -58,19 +56,20 @@ public:
         std::vector<Eigen::VectorXi> faces;
 
         // add top / bottom triangles
-        for(unsigned int i = 0; i < meridians; ++i)
+        for (unsigned int i = 0; i < meridians; ++i)
         {
             Eigen::VectorXi face_top(3);
             face_top << 0, i + 1, (i + 1) % meridians + 1;
             faces.push_back(face_top);
 
             Eigen::VectorXi face_bottom(3);
-            face_bottom << idLastVertices, i + meridians * (parallels - 2) + 1, (i + 1) % meridians + meridians * (parallels - 2) + 1;
+            face_bottom << idLastVertices, i + meridians * (parallels - 2) + 1,
+                (i + 1) % meridians + meridians * (parallels - 2) + 1;
             faces.push_back(face_bottom);
         }
 
         // add quads per stack / slice
-        for(unsigned int j = 0; j < parallels - 2; j++)
+        for (unsigned int j = 0; j < parallels - 2; j++)
         {
             const unsigned int j0 = j * meridians + 1;
             const unsigned int j1 = (j + 1) * meridians + 1;
@@ -87,18 +86,15 @@ public:
             }
         }
 
-
-        Gedim::MeshUtilities::ComputeMesh2DCell1DsResult result = meshUtilities.ComputeMesh2DCell1Ds(polyhedron.Vertices,
-                                                                                                     faces);
+        Gedim::MeshUtilities::ComputeMesh2DCell1DsResult result = meshUtilities.ComputeMesh2DCell1Ds(polyhedron.Vertices, faces);
 
         polyhedron.Edges = result.Cell1Ds;
         polyhedron.Faces = result.Cell2Ds;
 
         return polyhedron;
     }
-
 };
 
-}
+} // namespace Gedim
 
 #endif // __SphereMeshUtilities_H
