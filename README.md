@@ -1,2 +1,2 @@
-# gedim
-GEneric DIscretization MEthod library
+# GeDiM
+GEometry for DIscretization MEthod library
