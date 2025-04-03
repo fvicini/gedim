@@ -14,6 +14,7 @@ To build the library we require **C++-20** standard.
 
 We develop and test with `gcc` compiler.
 Minimum version required is `gcc-10`.
+See [compiler support](https://en.cppreference.com/w/cpp/compiler_support/20) for more information. 
 
 After the build process the library is installed in `CMAKE_INSTALL_PREFIX` folder.
 
