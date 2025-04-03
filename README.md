@@ -51,7 +51,7 @@ Moreover, **`GeDiM`** currently interfaces and exploits the following optional l
 - [METIS](https://karypislab.github.io/METIS/)  <a href="https://github.com/KarypisLab/METIS/blob/master/LICENSE"><img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/regular/file.svg" width="10" height="10"></a>                        
 - [VTK](https://vtk.org/) <a href="https://vtk.org/about/"><img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/regular/file.svg" width="10" height="10"></a> 
 
-To activate the use of them you can use the CMake variables:
+To activate them can use the CMake variables:
 
 ```bash
 Name                         Default
