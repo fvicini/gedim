@@ -15,5 +15,6 @@ authors:
     orcid: https://orcid.org/0000-0001-7123-9199
 title: "GEDiM: GEometry for DIscretization MEthod library"
 version: v0.0.48
-doi: 10.5281/zenodo.15146658
+doi: https://doi.org/10.5281/zenodo.15146658
+url: https://github.com/AURION-Polito/gedim
 date-released: 2025-04-04
